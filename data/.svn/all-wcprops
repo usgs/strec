@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/subversion/!svn/ver/72/seisreg/trunk/data
+END
+splitfegrs.txt
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/subversion/!svn/ver/72/seisreg/trunk/data/splitfegrs.txt
+END
+fecodes.csv
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/subversion/!svn/ver/72/seisreg/trunk/data/fecodes.csv
+END
+coordinates.txt
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/subversion/!svn/ver/72/seisreg/trunk/data/coordinates.txt
+END
+polygons.txt
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/subversion/!svn/ver/72/seisreg/trunk/data/polygons.txt
+END
+trenches.txt
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/subversion/!svn/ver/72/seisreg/trunk/data/trenches.txt
+END
