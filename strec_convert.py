@@ -9,8 +9,34 @@ import datetime
 from strec.mtreader import createDataFile,appendDataFile
 
 usage = """usage: %prog [options] infile outfile
-Convert data from CSV, NDK, or XML into internal database format (SQLite).
+Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
 The default input format is CSV.
+CSV format columns:
+(Required)
+1) Date/time (YYYYMMDDHHMMSS or YYYYMMDDHHMM)
+2) Lat (dd)
+3) Lon (dd)
+4) Depth (km)
+5) Mag
+6) Mrr (dyne-cm)
+7) Mtt (dyne-cm)
+8) Mpp (dyne-cm)
+9) Mrt (dyne-cm)
+10) Mrp (dyne-cm)
+11) Mtp (dyne-cm)
+(Optional - if these are not supplied STREC will calculate them from moment tensor components above).
+12) T Azimuth (deg)
+13) T Plunge (deg)
+14) N Azimuth (deg)
+15) N Plunge (deg)
+16) P Azimuth (deg)
+17) P Plunge (deg)
+18) NP1 Strike (deg)
+19) NP1 Dip (deg)
+20) NP1 Rake (deg)
+21) NP2 Strike (deg)
+22) NP2 Dip (deg)
+23) NP2 Rake (deg)
 """
 parser = OptionParser(usage=usage)
 parser.add_option("-n", "--ndk",
@@ -18,7 +44,7 @@ parser.add_option("-n", "--ndk",
                   help="Input file is in NDK format")
 parser.add_option("-x", "--xml",
                   action="store_true", dest="usexml", default=False,
-                  help="Input file is in XML format")
+                  help="Input file is in QuakeML XML format")
 parser.add_option("-c", "--csv",
                   action="store_true", dest="usecsv", default=False,
                   help="Input file is in CSV format (Default)")
