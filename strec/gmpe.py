@@ -355,7 +355,7 @@ class GMPESelector(object):
                 gmpe,warning = self.getGMPE(trdict,depth)
                 warning = self.combineWarnings(warning,distwarning,fmwarning)
                 sresults = StrecResults(lat,lon,depth,magnitude,date,
-                                        gmpe,fmstring,regdict,trdict2,
+                                        gmpe,fmstring,regdict,trdict,
                                         plungevals,slabvals,eqdict,warning,mtsource)
                 return sresults
             #at this point, seis. category is either 31 or 34
@@ -394,7 +394,7 @@ class GMPESelector(object):
                                                         plungevals,slabvals,eqdict,warning,mtsource)
                                 return sresults
                             else: #slabflag is 'c'
-                                gmpe,slabvals,eqdict,warning = self.getAllSubductionZoneInfo(lat,lon,depth,plungevals,slabvals[0],trdict['slabflag'],fmstring,trdict)
+                                gmpe,slabvals,eqdict,warning = self.getAllSubductionZoneInfo(lat,lon,depth,plungevals,slabvals,trdict['slabflag'],fmstring,trdict)
                                 warning = self.combineWarnings(warning,distwarning,fmwarning)
                                 sresults = StrecResults(lat,lon,depth,magnitude,date,
                                                         gmpe,fmstring,regdict,trdict,

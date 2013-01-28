@@ -72,7 +72,7 @@ def createDataFile(infile,dbfile,filetype,dtype,hasHeader=False):
     conn.commit()
     cursor.close()
     conn.close()
-    appendDataFile(infile,dbfile,filetype,dtype,hasHeader=False)
+    appendDataFile(infile,dbfile,filetype,dtype,hasHeader=hasHeader)
     return True
 
 class MTReader(object):
