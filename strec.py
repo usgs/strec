@@ -13,6 +13,7 @@ import strec.utils
 if __name__ == '__main__':
 
     usage = """usage: %prog [options] -- lat lon depth magnitude [date]
+    STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
     GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
     GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
     User-defined, GCMT Historical, or GCMT Composite:%prog -d datafolder lat lon depth magnitude [date]
