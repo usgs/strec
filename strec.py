@@ -67,6 +67,10 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
+    if len(args) == 0:
+        parser.print_help()
+        sys.exit(0)
+    
     #Get the user parameters config object (should be stored in ~/.strec/strec.ini)
     try:
         config,configfile = strec.utils.getConfig()
