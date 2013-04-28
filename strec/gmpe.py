@@ -267,7 +267,9 @@ class GMPESelector(object):
                 plungevals,fmwarning,mtsource = self.getFocMechAxes(lat,lon,depth,magnitude)
             else:
                 plungevals,fmwarning,mtsource = self.getFocMechAxes(lat,lon,depth,magnitude,date=date)
-
+        else:
+            mtsource = 'input'
+            fmwarning = ''
         if plungevals is None:
             plungevals = {'T':{},'N':{},'P':{},'NP1':{},'NP2':{}}
             plungevals['T']['plunge'] = numpy.nan

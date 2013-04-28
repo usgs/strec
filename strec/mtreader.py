@@ -1,15 +1,24 @@
 #!/usr/bin/env python
 
+#stdlib imports
 import re
 import datetime
+import pytz
 import math
 from xml.dom.minidom import parse
-from cmt import compToAxes
 import os.path
 import sqlite3
+import urllib,urllib2
+import json
+import sys
+import copy
 
-class CSVReaderError(Exception):
-    """Used to indicate errors in the CSV reader class."""
+#local imports
+from cmt import compToAxes
+
+
+class ReaderError(Exception):
+    """Used to indicate errors in the reader classes."""
 
 def appendDataFile(infile,dbfile,filetype,dtype,hasHeader=False):
     if filetype == 'ndk':
@@ -84,6 +93,135 @@ class MTReader(object):
     def generateRecords(self,startDate=None,enddate=None,hasHeader=False):
         pass
 
+class ComCatReader(MTReader):
+    URLBASE = 'http://comcat.cr.usgs.gov/earthquakes/feed/search.php?%s'
+    def __init__(self):
+        pass
+
+    def getEvents(self,pdict):
+        params = urllib.urlencode(pdict)
+        searchurl = self.URLBASE % params
+        datadict = None
+        try:
+            fh = urllib2.urlopen(searchurl)
+            data = fh.read()
+            data2 = data[len(pdict['callback'])+1:-2]
+            datadict = json.loads(data2)
+            fh.close()
+        except Exception,errorobj:
+            raise errorobj
+        return datadict['features']
+            
+    def generateRecords(self,startdate=None,enddate=None,hasHeader=False):
+        utc = pytz.UTC
+        if startdate is None:
+            startdate = datetime.datetime(1971,1,1)
+            startdate = utc.localize(startdate)
+        if enddate is None:
+            enddate = datetime.datetime(1971,1,1)
+            enddate = utc.localize(enddate)
+        if (enddate-startdate).days < 365:
+            mintime = int(startdate.strftime('%s'))*1000
+            maxtime = int(enddate.strftime('%s'))*1000
+            params = pdict = {'productType[]':'moment-tensor,',
+                              'minEventTime':mintime,
+                              'maxEventTime':maxtime,
+                              'callback':'comsearch'}
+            events = self.getEvents(params)
+        else:
+            ndays = (enddate-startdate).days
+            nyears = int(math.ceil(ndays/365.0))
+            events = []
+            mindate = startdate
+            maxdate = mindate + datetime.timedelta(days=365)
+            for i in range(0,nyears):
+                mintime = int(mindate.strftime('%s'))*1000
+                maxtime = int(maxdate.strftime('%s'))*1000
+                params = pdict = {'productType[]':'moment-tensor,',
+                                  'minEventTime':mintime,
+                                  'maxEventTime':maxtime,
+                                  'callback':'comsearch'}
+                events = events + self.getEvents(params)
+                mindate = maxdate
+                maxdate = mindate + datetime.timedelta(days=365)
+        for event in events:
+            etimesecs = int(event['properties']['time'])/1000
+            etime = datetime.datetime.utcfromtimestamp(etimesecs)
+            if etime < startdate or etime > enddate:
+                continue
+            edicts = self.getMomentDicts(event)
+            for edict in edicts:
+                yield edict
+                
+    def getMomentDicts(self,event):
+        eventdicts = []
+        datadict = {}
+        url = event['properties']['url'] + '.json'
+        try:
+            fh = urllib2.urlopen(url)
+            data = fh.read()
+            datadict = json.loads(data)
+            fh.close()
+        except Exception,errorobj:
+            raise errorobj
+        eqtime = datadict['summary']['time']
+        eqid = str(datetime.datetime.utcfromtimestamp(int(eqtime)/1000))
+        lat = float(datadict['summary']['latitude'])
+        lon = float(datadict['summary']['longitude'])
+        depth = float(datadict['summary']['depth'])
+        mag = float(datadict['summary']['magnitude'])
+        for mt in datadict['products']['moment-tensor']:
+            if mt['status'] == 'DELETE':
+                continue
+            bsource = mt['properties']['beachball-source']
+            bcode = mt['code']
+            #we have gcmt data going back further, directly from GCMT website
+            if bsource == 'LD' and bcode.find('GCMT') > -1:
+                continue
+                
+            mttype = mt['properties']['beachball-type']
+            try:
+                mrr = float(mt['properties']['tensor-mrr'])
+                mtt = float(mt['properties']['tensor-mtt'])
+                mpp = float(mt['properties']['tensor-mpp'])
+                mrt = float(mt['properties']['tensor-mrt'])
+                mrp = float(mt['properties']['tensor-mrp'])
+                mtp = float(mt['properties']['tensor-mtp'])
+            except:
+                continue
+            np1strike = float(mt['properties']['nodal-plane-1-strike'])
+            np2strike = float(mt['properties']['nodal-plane-2-strike'])
+            np1dip = float(mt['properties']['nodal-plane-1-dip'])
+            np2dip = float(mt['properties']['nodal-plane-2-dip'])
+            try:
+                np1rake = float(mt['properties']['nodal-plane-1-rake'])
+            except:
+                np1rake = float(mt['properties']['nodal-plane-1-slip'])
+            try:
+                np2rake = float(mt['properties']['nodal-plane-2-rake'])
+            except:
+                np2rake = float(mt['properties']['nodal-plane-2-slip'])
+            try:
+                T,N,P,NP1,NP2 = compToAxes(mrr,mtt,mpp,mrt,mrp,mtp)
+            except Exception,exc:
+                pass
+            tplunge = T['plunge']
+            tazimuth = T['azimuth']
+            nplunge = N['plunge']
+            nazimuth = N['azimuth']
+            pplunge = P['plunge']
+            pazimuth = P['azimuth']
+            eventdicts.append({'id':eqid,'type':mttype,
+                               'lat':lat,'lon':lon,
+                               'depth':depth,'mag':mag,
+                               'mrr':mrr,'mtt':mtt,
+                               'mpp':mpp,'mrt':mrt,
+                               'mrp':mrp,'mtp':mtp,
+                               'tplunge':tplunge,'tazimuth':tazimuth,
+                               'nplunge':nplunge,'nazimuth':nazimuth,
+                               'pplunge':pplunge,'pazimuth':pazimuth})
+        return eventdicts
+        
 class CSVReader(MTReader):
     idfmtsec = '%Y%m%d%H%M%S'
     idfmtmin = '%Y%m%d%H%M'
@@ -102,7 +240,7 @@ class CSVReader(MTReader):
                 else:
                     yield self.readline(line)
             except Exception,msg:
-                raise CSVReaderError,"Error reading line %s" % line
+                raise ReaderError,'Error reading data from line:\n"%s".\nIs this a header row?' % line.strip()
 
         self.fh.close()
 
@@ -409,10 +547,23 @@ class QuakeMLReader(MTReader):
         self.dom.unlink()
     
 if __name__ == '__main__':
+    #get a months worth of moment tensor records from ComCat
+    comreader = ComCatReader()
+    d1 = datetime.datetime(1976,1,1,0,0)
+    #d2 = datetime.datetime.now()
+    #d2 = datetime.datetime(2002,10,1)
+    d2 = datetime.datetime.now()
+    nc = 0
+    for record in comreader.generateRecords(startdate=d1,enddate=d2):
+        print '%s,%.1f,%s' % (record['id'],record['mag'],record['type'])
+        sys.stdout.flush()
+        nc += 1
+    print 'There are %i moment tensor records in ComCat' % nc
+    sys.exit(0)
     xreader = QuakeMLReader('xmlsample.xml',type='GCMT')
     for record in xreader.generateRecords():
         print '%s,%.1f,%s' % (record['id'],record['mag'],record['type'])
-
+        
     creader = CSVReader('csvtest.csv','User')
     for record in creader.generateRecords():
         print record['id'],record['mag'],record['type']

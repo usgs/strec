@@ -6,9 +6,31 @@ import os.path
 import ConfigParser
 import getpass
 import datetime
+import math
 
 from strec.gmpe import GMPESelector
 import strec.utils
+from strec import cmt
+
+def getPlungeValues(strike,dip,rake,mag):
+    mom = 10**((mag*1.5)+16.1)
+    d2r = math.pi/180.0
+    
+    mrr=mom*math.sin(2*dip*d2r)*math.sin(rake*d2r)
+    mtt=-mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.sin(2*strike*d2r))+(math.sin(2*dip*d2r)*math.sin(rake*d2r)*(math.sin(strike*d2r)*math.sin(strike*d2r))))
+    mpp=mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.sin(2*strike*d2r))-(math.sin(2*dip*d2r)*math.sin(rake*d2r)*(math.cos(strike*d2r)*math.cos(strike*d2r))))
+    mrt=-mom*((math.cos(dip*d2r)*math.cos(rake*d2r)*math.cos(strike*d2r))+(math.cos(2*dip*d2r)*math.sin(rake*d2r)*math.sin(strike*d2r)))
+    mrp=mom*((math.cos(dip*d2r)*math.cos(rake*d2r)*math.sin(strike*d2r))-(math.cos(2*dip*d2r)*math.sin(rake*d2r)*math.cos(strike*d2r)))
+    mtp=-mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.cos(2*strike*d2r))+(0.5*math.sin(2*dip*d2r)*math.sin(rake*d2r)*math.sin(2*strike*d2r)))
+
+    plungetuple = cmt.compToAxes(mrr,mtt,mpp,mrt,mrp,mtp)
+    plungevals = {}
+    plungevals['T'] = plungetuple[0].copy()
+    plungevals['N'] = plungetuple[1].copy()
+    plungevals['P'] = plungetuple[2].copy()
+    plungevals['NP1'] = plungetuple[3].copy()
+    plungevals['NP2'] = plungetuple[4].copy()
+    return plungevals
 
 if __name__ == '__main__':
 
@@ -26,6 +48,9 @@ if __name__ == '__main__':
     parser.add_option("-d", "--datafile",dest="datafile",
                       metavar="DATAFILE",
                       help="Specify the database (.db) file containing moment tensor solutions.")
+    parser.add_option("-a", "--angles",dest="angles",
+                      metavar="ANGLES",
+                      help='Specify the focal mechanism by providing "strike dip rake"')
     parser.add_option("-c", "--csv-out",
                       action="store_true", dest="outputCSV", default=False,
                       help="print output as csv")
@@ -42,6 +67,10 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
+    if len(args) == 0:
+        parser.print_help()
+        sys.exit(0)
+    
     #Get the user parameters config object (should be stored in ~/.strec/strec.ini)
     try:
         config,configfile = strec.utils.getConfig()
@@ -80,14 +109,30 @@ if __name__ == '__main__':
         etime = None
         forceComposite = True
 
+    if options.angles is not None:
+        parts = options.angles.split()
+        try:
+            strike = float(parts[0])
+            dip = float(parts[1])
+            rake = float(parts[2])
+            plungevals = getPlungeValues(strike,dip,rake,magnitude)
+        except:
+            print 'Could not parse Strike, Dip and Rake from "%s"' % options.angles
+            sys.exit(1)
+    else:
+        plungevals = None
+        
     if options.forceComposite:
         forceComposite = True
+        plungevals = None
 
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     zoneconfigfile = os.path.join(homedir,'strec.ini')
     gs = GMPESelector(zoneconfigfile,datafile,homedir,datafolder)
 
-    strecresults = gs.selectGMPE(lat,lon,depth,magnitude,date=etime,forceComposite=forceComposite)
+    strecresults = gs.selectGMPE(lat,lon,depth,magnitude,date=etime,
+                                 forceComposite=forceComposite,
+                                 plungevals=plungevals)
     
     if options.outputCSV:
         strecresults.renderCSV(sys.stdout)

@@ -82,6 +82,14 @@ if options.usexml:
 
 if os.path.isfile(outfile):
     print '%s already exists - appending new data.' % outfile
-    appendDataFile(infile,outfile,filetype,options.fmtype,hasHeader=options.hasheader)
+    try:
+        appendDataFile(infile,outfile,filetype,options.fmtype,hasHeader=options.hasheader)
+    except Exception,msg:
+        print 'Error reading input file %s.\n%s' % (infile,msg)
+        sys.exit(1)
 else:
-    createDataFile(infile,outfile,filetype,options.fmtype,hasHeader=options.hasheader)
+    try:
+        createDataFile(infile,outfile,filetype,options.fmtype,hasHeader=options.hasheader)
+    except Exception,msg:
+        print 'Error reading input file %s.\n"%s"' % (infile,msg)
+        sys.exit(1)

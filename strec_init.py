@@ -128,6 +128,9 @@ if __name__ == '__main__':
     parser.add_option("-g", "--gcmt",
                       action="store_true", dest="getGCMT", default=False,
                       help="Download all GCMT moment tensor data")
+    parser.add_option("-c", "--comcat",
+                      action="store_true", dest="getComCat", default=False,
+                      help="Download all USGS ComCat moment tensor data (sans GCMT)")
     parser.add_option("-n", "--noslab",
                       action="store_true", dest="noSlab", default=False,
                       help="Do NOT download slab data")
@@ -196,6 +199,9 @@ if __name__ == '__main__':
         createDataFile(histfile,outfile,'ndk','gcmt',hasHeader=False)
         print 'Finished converting historical GCMT data.'
         os.remove(histfile)
+    if options.getComCat:
+        
+    
     if options.update:
         mostrecent = getMostRecent(outfile)
         ryear = mostrecent.year
@@ -226,6 +232,7 @@ if __name__ == '__main__':
         mostrecent = getMostRecent(outfile)
         print 'GCMT database contains events through %s.' % str(mostrecent)
         sys.exit(0)
+    
         
 
 
