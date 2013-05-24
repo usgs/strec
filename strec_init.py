@@ -200,7 +200,7 @@ if __name__ == '__main__':
         print 'Finished converting historical GCMT data.'
         os.remove(histfile)
     if options.getComCat:
-        
+        pass        
     
     if options.update:
         mostrecent = getMostRecent(outfile)
