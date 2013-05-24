@@ -781,10 +781,19 @@ class GMPESelector(object):
             return False
         a = plungevals['P']['azimuth']
     
-        b1 = (normAngle((slabvals['strike']-90))-DSTRIKE)
-        b2 = (normAngle((slabvals['strike']-90))+DSTRIKE)
-        b3 = (normAngle((slabvals['strike']+90))-DSTRIKE)
-        b4 = (normAngle((slabvals['strike']+90))+DSTRIKE)
+	#new set of equations (default slab keeps old format; new Gavin's
+	#format uses slabs rotated 90 degrees)
+        if (slabvals['dip'] == 17.0):
+            b1 = (normAngle((slabvals['strike']-90))-DSTRIKE)
+            b2 = (normAngle((slabvals['strike']-90))+DSTRIKE)
+            b3 = (normAngle((slabvals['strike']+90))-DSTRIKE)
+            b4 = (normAngle((slabvals['strike']+90))+DSTRIKE)
+	else:
+            b1 = (normAngle((slabvals['strike']))-DSTRIKE)
+            b2 = (normAngle((slabvals['strike']))+DSTRIKE)
+            b3 = (normAngle((slabvals['strike']))-DSTRIKE)
+            b4 = (normAngle((slabvals['strike']))+DSTRIKE)
+
         if a > 270 and b1 < 90:
             b1 = b1 + 360
         if a > 270 and b2 < 90:
