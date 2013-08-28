@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from optparse import OptionParser
+import argparse
 import sqlite3
 import os.path
 import sys
@@ -8,8 +8,7 @@ import datetime
 
 from strec.mtreader import createDataFile,appendDataFile
 
-usage = """usage: %prog [options] infile outfile
-Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
+usage = """Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
 The default input format is CSV.
 CSV format columns:
 (Required)
@@ -38,24 +37,26 @@ CSV format columns:
 22) NP2 Dip (deg)
 23) NP2 Rake (deg)
 """
-parser = OptionParser(usage=usage)
-parser.add_option("-n", "--ndk",
+parser = argparse.ArgumentParser(description=usage,formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('infile')
+parser.add_argument('outfile')
+parser.add_argument("-n", "--ndk",
                   action="store_true", dest="usendk", default=False,
                   help="Input file is in NDK format")
-parser.add_option("-x", "--xml",
+parser.add_argument("-x", "--xml",
                   action="store_true", dest="usexml", default=False,
                   help="Input file is in QuakeML XML format")
-parser.add_option("-c", "--csv",
+parser.add_argument("-c", "--csv",
                   action="store_true", dest="usecsv", default=False,
                   help="Input file is in CSV format (Default)")
-parser.add_option("-s", "--skipfirst",
+parser.add_argument("-s", "--skipfirst",
                   action="store_true", dest="hasheader", default=False,
                   help="CSV file has a header row which should be skipped")
-parser.add_option("-t", "--type",dest="fmtype",
+parser.add_argument("-t", "--type",dest="fmtype",
                   metavar="TYPE", help="Specify the moment tensor type (cmt,body wave,etc.) Defaults to 'User'.")
 
-(options, args) = parser.parse_args()
-if len(args) < 2:
+args = parser.parse_args()
+if not args.infile or not args.outfile:
     print 'Missing input and/or output files.'
     parser.print_help()
     sys.exit(0)
@@ -67,29 +68,29 @@ if suminput > 1:
     parser.print_usage()
     sys.exit(0)
 
-infile = args[0]
-outfile = args[1]
+infile = args.infile
+outfile = args.outfile
 
-if options.fmtype is None:
-    options.fmtype = 'User'
+if args.fmtype is None:
+    args.fmtype = 'User'
 
-if options.usendk:
+if args.usendk:
     filetype = 'ndk'
-if options.usecsv:
+if args.usecsv:
     filetype = 'csv'
-if options.usexml:
+if args.usexml:
     filetype = 'xml'
 
 if os.path.isfile(outfile):
     print '%s already exists - appending new data.' % outfile
     try:
-        appendDataFile(infile,outfile,filetype,options.fmtype,hasHeader=options.hasheader)
+        appendDataFile(infile,outfile,filetype,args.fmtype,hasHeader=args.hasheader)
     except Exception,msg:
         print 'Error reading input file %s.\n%s' % (infile,msg)
         sys.exit(1)
 else:
     try:
-        createDataFile(infile,outfile,filetype,options.fmtype,hasHeader=options.hasheader)
+        createDataFile(infile,outfile,filetype,args.fmtype,hasHeader=args.hasheader)
     except Exception,msg:
         print 'Error reading input file %s.\n"%s"' % (infile,msg)
         sys.exit(1)
