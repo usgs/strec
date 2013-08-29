@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from optparse import OptionParser
+import argparse
 import sqlite3
 import os.path
 import sys
@@ -121,33 +121,31 @@ def fetchSlabs(datafolder):
         raise Exception,msg
 
 if __name__ == '__main__':
-    usage = """usage: %prog [options]
-    Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
-    """
-    parser = OptionParser(usage=usage)
-    parser.add_option("-g", "--gcmt",
+    usage = 'Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.'
+    parser = argparse.ArgumentParser(description=usage,formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("-g", "--gcmt",
                       action="store_true", dest="getGCMT", default=False,
                       help="Download all GCMT moment tensor data")
-    parser.add_option("-c", "--comcat",
+    parser.add_argument("-c", "--comcat",
                       action="store_true", dest="getComCat", default=False,
                       help="Download all USGS ComCat moment tensor data (sans GCMT)")
-    parser.add_option("-n", "--noslab",
+    parser.add_argument("-n", "--noslab",
                       action="store_true", dest="noSlab", default=False,
                       help="Do NOT download slab data")
-    parser.add_option("-r", "--reinit",
+    parser.add_argument("-r", "--reinit",
                       action="store_true", dest="reInitialize", default=False,
                       help="Re-initialize STREC application.")
-    parser.add_option("-u", "--update",
+    parser.add_argument("-u", "--update",
                       action="store_true", dest="update", default=False,
                       help="Update gcmt data.")
     
 
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
-    if options.getGCMT:
-        options.update = True
+    if args.getGCMT:
+        args.update = True
     
-    if options.reInitialize:
+    if args.reInitialize:
         config,configfile = strec.utils.getConfig()
         if config is not None:
             datafolder = config.get('DATA','folder')
@@ -180,7 +178,7 @@ if __name__ == '__main__':
         config.set('DATA','folder',datafolder)
         config.write(open(configfile,'wt'))
     try:
-        if not options.noSlab:
+        if not args.noSlab:
             print 'Downloading all required slab data (this may take a while...)'
             fetchSlabs(datafolder)
             print 'Finished downloading slab data.'
@@ -189,7 +187,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     outfile = os.path.join(datafolder,strec.utils.GCMT_OUTPUT)
-    if options.getGCMT:
+    if args.getGCMT:
         try:
             print 'Downloading and converting historical GCMT data...'
             histfile = getHistoricalGCMT()
@@ -199,10 +197,10 @@ if __name__ == '__main__':
         createDataFile(histfile,outfile,'ndk','gcmt',hasHeader=False)
         print 'Finished converting historical GCMT data.'
         os.remove(histfile)
-    if options.getComCat:
+    if args.getComCat:
         pass        
     
-    if options.update:
+    if args.update:
         mostrecent = getMostRecent(outfile)
         ryear = mostrecent.year
         rmonth = mostrecent.month+1
