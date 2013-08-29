@@ -6,7 +6,7 @@ STREC
 TOOLS
 =====
 
-There are a couple of tools that come with STREC:
+There are three tools that come with STREC:
 
 - strec.py - Determine the best seismo-tectonic regime and focal mechanism for an input earthquake.
 - strec_convert.py - Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
