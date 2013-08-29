@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from optparse import OptionParser
+import argparse
 import sys
 import os.path
 import ConfigParser
@@ -32,42 +32,43 @@ def getPlungeValues(strike,dip,rake,mag):
     plungevals['NP2'] = plungetuple[4].copy()
     return plungevals
 
-if __name__ == '__main__':
+def processDate(datestr):
+    etime = datetime.datetime.strptime(args[4],'%Y%m%d%H%M')
+    return etime
 
-    usage = """usage: %prog [options] -- lat lon depth magnitude [date]
+if __name__ == '__main__':
+    usage = """Determine most likely seismo-tectonic regime of given earthquake.
     STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
     GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
     GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
     User-defined, GCMT Historical, or GCMT Composite:%prog -d datafolder lat lon depth magnitude [date]
-
-    NB: If you are specifying a negative latitude or longitude, you must add "--" at the
-    end of the optional arguments so that the command line parser knows not to treat the
-    negative sign as an optional argument.
     """
-    parser = OptionParser(usage=usage)
-    parser.add_option("-d", "--datafile",dest="datafile",
+    parser = argparse.ArgumentParser(description=usage,formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("eqinfo", nargs='*',metavar='LAT LON DEPTH MAG [DATE]',
+                        help='lat,lon,depth,magnitude and optionally date/time (YYYYMMDDHHMM) of earthquake')
+    parser.add_argument("-d", "--datafile",dest="datafile",
                       metavar="DATAFILE",
                       help="Specify the database (.db) file containing moment tensor solutions.")
-    parser.add_option("-a", "--angles",dest="angles",
+    parser.add_argument("-a", "--angles",dest="angles",
                       metavar="ANGLES",
                       help='Specify the focal mechanism by providing "strike dip rake"')
-    parser.add_option("-c", "--csv-out",
+    parser.add_argument("-c", "--csv-out",
                       action="store_true", dest="outputCSV", default=False,
                       help="print output as csv")
-    parser.add_option("-x", "--xml-out",
+    parser.add_argument("-x", "--xml-out",
                       action="store_true", dest="outputXML", default=False,
                       help="print output as csv")
-    parser.add_option("-p", "--pretty-out",
+    parser.add_argument("-p", "--pretty-out",
                       action="store_true", dest="outputPretty", default=False,
                       help="print output as human readable text")
-    parser.add_option("-f", "--force-composite",
+    parser.add_argument("-f", "--force-composite",
                       action="store_true", dest="forceComposite", default=False,
                       help="Force a composite solution, even if an exact historical moment tensor can be found.")
 
 
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
-    if len(args) == 0:
+    if len(args.eqinfo) < 4:
         parser.print_help()
         sys.exit(0)
     
@@ -85,44 +86,44 @@ if __name__ == '__main__':
     datafolder = config.get('DATA','folder')
     gcmtfile = os.path.join(datafolder,strec.utils.GCMT_OUTPUT)
 
-    if options.datafile is None:
+    if args.datafile is None:
         if not os.path.isfile(gcmtfile):
             fmt = 'You are missing the default GCMT database file %s. Run strec_init.py to retrieve it.'
             print fmt % gcmtfile
             sys.exit(0)
         datafile = gcmtfile
     else:
-        datafile = options.datafile
+        datafile = args.datafile
         
     if not os.path.isfile(datafile):
         print 'Could not your file %s. You may need to run strec_convert.py first.' % datafile
         sys.exit(0)
 
     forceComposite = False
-    lat = float(args[0])
-    lon = float(args[1])
-    depth = float(args[2])
-    magnitude = float(args[3])
-    if len(args) == 5:
-        etime = datetime.datetime.strptime(args[4],'%Y%m%d%H%M')
+    lat = float(args.eqinfo[0])
+    lon = float(args.eqinfo[1])
+    depth = float(args.eqinfo[2])
+    magnitude = float(args.eqinfo[3])
+    if len(args.eqinfo) == 5:
+        etime = datetime.datetime.strptime(args.eqinfo[4],'%Y%m%d%H%M')
     else:
         etime = None
         forceComposite = True
 
-    if options.angles is not None:
-        parts = options.angles.split()
+    if args.angles is not None:
+        parts = args.angles.split()
         try:
             strike = float(parts[0])
             dip = float(parts[1])
             rake = float(parts[2])
             plungevals = getPlungeValues(strike,dip,rake,magnitude)
         except:
-            print 'Could not parse Strike, Dip and Rake from "%s"' % options.angles
+            print 'Could not parse Strike, Dip and Rake from "%s"' % args.angles
             sys.exit(1)
     else:
         plungevals = None
         
-    if options.forceComposite:
+    if args.forceComposite:
         forceComposite = True
         plungevals = None
 
@@ -134,9 +135,9 @@ if __name__ == '__main__':
                                  forceComposite=forceComposite,
                                  plungevals=plungevals)
     
-    if options.outputCSV:
+    if args.outputCSV:
         strecresults.renderCSV(sys.stdout)
-    elif options.outputXML:
+    elif args.outputXML:
         strecresults.renderXML(sys.stdout)
     else:
         strecresults.renderPretty(sys.stdout)
