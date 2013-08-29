@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+import os.path
+
+STRECFOLDER = os.path.join(os.path.expanduser('~'),'.strec')
 
 setup(name='STREC',
       version='0.2',
@@ -9,6 +12,6 @@ setup(name='STREC',
       author_email='mhearne@usgs.gov, garciajimenez.d@gmail.com',
       url='https://github.com/usgs/strec/',
       packages=['strec'],
-      scripts = ['strec.py','strec_init.py','strec_convert.py'],
-      data_files=(os.path.expanduser('~'),['strec.ini']),
+      scripts = ['getstrec.py','strec_init.py','strec_convert.py'],
+      data_files=[(STRECFOLDER,['strec.ini'])],
      )
