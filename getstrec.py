@@ -127,9 +127,7 @@ if __name__ == '__main__':
         forceComposite = True
         plungevals = None
 
-    homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
-    zoneconfigfile = os.path.join(homedir,'strec.ini')
-    gs = GMPESelector(zoneconfigfile,datafile,homedir,datafolder)
+    gs = GMPESelector(configfile,datafile,datafolder)
 
     strecresults = gs.selectGMPE(lat,lon,depth,magnitude,date=etime,
                                  forceComposite=forceComposite,

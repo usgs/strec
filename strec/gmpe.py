@@ -223,11 +223,11 @@ class StrecResults(object):
 class GMPESelector(object):
     Config = None
     dbfile = None
-    def __init__(self,configfile,dbfile,homedir,datafolder):
+    def __init__(self,configfile,dbfile,datafolder):
         self.Config = config = ConfigParser.ConfigParser()
         self.Config.readfp(open(configfile))
         self.dbfile = dbfile
-        self.homedir = homedir
+        self.homedir = os.path.dirname(os.path.abspath(__file__)) #where is this file?
         self.datafolder = datafolder
 
     def selectGMPE(self,lat,lon,depth,magnitude,date=None,forceComposite=False,plungevals=None):

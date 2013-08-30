@@ -4,6 +4,7 @@ from distutils.core import setup
 import os.path
 
 STRECFOLDER = os.path.join(os.path.expanduser('~'),'.strec')
+DATAFOLDER = os.path.join(os.path.expanduser('~'),'.strec','data')
 
 setup(name='STREC',
       version='0.2',
@@ -13,5 +14,6 @@ setup(name='STREC',
       url='https://github.com/usgs/strec/',
       packages=['strec'],
       scripts = ['getstrec.py','strec_init.py','strec_convert.py'],
-      data_files=[(STRECFOLDER,['strec.ini'])],
+      data_files=[(STRECFOLDER,['strec.ini']),],
+      package_data = {'strec':['data/*.csv','data/*.txt']},
      )

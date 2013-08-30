@@ -158,7 +158,7 @@ if __name__ == '__main__':
     except Exception,msg:
         print msg
         sys.exit(1)
-    if config is not None:
+    if config is not None and config.has_option('DATA','folder'):
         datafolder = config.get('DATA','folder')
     else:
         datafolder = raw_input('Enter the desired storage location for STREC data: ')
@@ -172,8 +172,7 @@ if __name__ == '__main__':
             except Exception,msg:
                 print 'Could not make %s due to error "%s".  Stopping.' % (datafolder,msg)
                 sys.exit(1)
-        configfile = configfolder = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
-        config = ConfigParser.RawConfigParser()
+        #config = ConfigParser.RawConfigParser()
         config.add_section('DATA')
         config.set('DATA','folder',datafolder)
         config.write(open(configfile,'wt'))
