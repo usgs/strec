@@ -64,6 +64,37 @@ From the command line, type:
 To install obspy with pip:
    [sudo] pip install obspy
 
+Installing STREC
+----------------
+
+Click on the <a href="https://github.com/usgs/strec/archive/master.zip">Download ZIP</a> button on the 
+STREC github repository page and save the file.  For the purposes of this example, assume that location is "/home/username/strec-master.zip".
+Unzip that file, which should create a directory called "/home/username/strec-master".
+
+At the command line, do the following:
+   cd /home/username/
+   [sudo] pip install strec-master/
+
+(The trailing slash is important - it tells pip that you want to install code in that directory, *not* to search the PyPI archives).
+
+Usage
+=====
+
+To begin using STREC, you will need to first download some binary data that is not included with the source code.
+
+   strec_init.py --help
+   usage: strec_init.py [-h] [-g] [-c] [-n] [-r] [-u]
+   
+   Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
+   
+   optional arguments:
+     -h, --help    show this help message and exit
+     -g, --gcmt    Download all GCMT moment tensor data
+     -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)
+     -n, --noslab  Do NOT download slab data
+     -r, --reinit  Re-initialize STREC application.
+     -u, --update  Update gcmt data.
+
 
 
 
