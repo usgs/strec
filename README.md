@@ -82,56 +82,52 @@ Usage
 
 To begin using STREC, you will need to first download some binary data that is not included with the source code.
 
->strec_init.py --help
->usage: strec_init.py [-h] [-g] [-c] [-n] [-r] [-u]
->   
->Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
->   
->optional arguments:  
+<pre>
+strec_init.py --help
+usage: strec_init.py [-h] [-g] [-c] [-n] [-r] [-u]
 
->  -h, --help    show this help message and exit  
+Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
 
->  -g, --gcmt    Download all GCMT moment tensor data  
+optional arguments:
+  -h, --help    show this help message and exit
+  -g, --gcmt    Download all GCMT moment tensor data
+  -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)
+  -n, --noslab  Do NOT download slab data
+  -r, --reinit  Re-initialize STREC application.
+  -u, --update  Update gcmt data.
+</pre>
 
->  -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)  
+Most users will want to download the GCMT data - this is used to populate a database used to determine the earthquake's focal 
+mechanism based on historical seismicity.
 
->  -n, --noslab  Do NOT download slab data  
+<pre>
+getstrec.py --help
+usage: getstrec.py [-h] [-d DATAFILE] [-a ANGLES] [-c] [-x] [-p] [-f]
+                   [LAT LON DEPTH MAG [DATE] [LAT LON DEPTH MAG [DATE] ...]]
 
->  -r, --reinit  Re-initialize STREC application.  
+Determine most likely seismo-tectonic regime of given earthquake.
+    STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
+    GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
+    GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
+    User-defined, GCMT Historical, or GCMT Composite:%prog -d datafolder lat lon depth magnitude [date]
+    
 
->  -u, --update  Update gcmt data.
+positional arguments:
+  LAT LON DEPTH MAG [DATE]
+                        lat,lon,depth,magnitude and optionally date/time (YYYYMMDDHHMM) of earthquake
 
-Most users will want to download the GCMT data - this is used to populate a database used to determine the 
-earthquake's focal mechanism based on historical seismicity.
-
->getstrec.py --help  
-
->usage: getstrec.py [-h] [-d DATAFILE] [-a ANGLES] [-c] [-x] [-p] [-f]  
-
->                   [LAT LON DEPTH MAG [DATE] [LAT LON DEPTH MAG [DATE] ...]]
->
->Determine most likely seismo-tectonic regime of given earthquake.  
->    STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
->    GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
->    GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
->    User-defined, GCMT Historical, or GCMT Composite:%prog -d datafolder lat lon depth magnitude [date]
->    
->
->positional arguments:
->  LAT LON DEPTH MAG [DATE]
->                        lat,lon,depth,magnitude and optionally date/time (YYYYMMDDHHMM) of earthquake
->
->optional arguments:
->  -h, --help            show this help message and exit
->  -d DATAFILE, --datafile DATAFILE
->                        Specify the database (.db) file containing moment tensor solutions.
->  -a ANGLES, --angles ANGLES
->                        Specify the focal mechanism by providing "strike dip rake"
->  -c, --csv-out         print output as csv
->  -x, --xml-out         print output as csv
->  -p, --pretty-out      print output as human readable text
->  -f, --force-composite
-
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATAFILE, --datafile DATAFILE
+                        Specify the database (.db) file containing moment tensor solutions.
+  -a ANGLES, --angles ANGLES
+                        Specify the focal mechanism by providing "strike dip rake"
+  -c, --csv-out         print output as csv
+  -x, --xml-out         print output as csv
+  -p, --pretty-out      print output as human readable text
+  -f, --force-composite
+                        Force a composite solution, even if an exact historical moment tensor can be found.
+</pre>
 
 
 
