@@ -72,8 +72,10 @@ STREC github repository page and save the file.  For the purposes of this exampl
 Unzip that file, which should create a directory called "/home/username/strec-master".
 
 At the command line, do the following:
-   cd /home/username/
-   [sudo] pip install strec-master/
+<pre>
+cd /home/username/
+[sudo] pip install strec-master/
+</pre>
 
 (The trailing slash is important - it tells pip that you want to install code in that directory, *not* to search the PyPI archives).
 
