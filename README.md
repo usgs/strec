@@ -95,6 +95,37 @@ To begin using STREC, you will need to first download some binary data that is n
 >  -r, --reinit  Re-initialize STREC application.
 >  -u, --update  Update gcmt data.
 
+Most users will want to download the GCMT data - this is used to populate a database used to determine the 
+earthquake's focal mechanism based on historical seismicity.
+
+>getstrec.py --help
+>usage: getstrec.py [-h] [-d DATAFILE] [-a ANGLES] [-c] [-x] [-p] [-f]
+>                   [LAT LON DEPTH MAG [DATE] [LAT LON DEPTH MAG [DATE] ...]]
+>
+>Determine most likely seismo-tectonic regime of given earthquake.
+>    STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
+>    GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
+>    GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
+>    User-defined, GCMT Historical, or GCMT Composite:%prog -d datafolder lat lon depth magnitude [date]
+>    
+>
+>positional arguments:
+>  LAT LON DEPTH MAG [DATE]
+>                        lat,lon,depth,magnitude and optionally date/time (YYYYMMDDHHMM) of earthquake
+>
+>optional arguments:
+>  -h, --help            show this help message and exit
+>  -d DATAFILE, --datafile DATAFILE
+>                        Specify the database (.db) file containing moment tensor solutions.
+>  -a ANGLES, --angles ANGLES
+>                        Specify the focal mechanism by providing "strike dip rake"
+>  -c, --csv-out         print output as csv
+>  -x, --xml-out         print output as csv
+>  -p, --pretty-out      print output as human readable text
+>  -f, --force-composite
+
+
+
 
 
 
