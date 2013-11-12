@@ -12,3 +12,44 @@ There are three tools that come with STREC:
 - strec_convert.py - Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
 - strec_init.py - Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
 
+INSTALLATION
+============
+
+STREC has the following dependencies:
+- Python 2.7+ (not 3.X!)
+- numpy 1.5+
+- scipy 0.10+
+- obspy 0.8.2+
+- pytz 2011n+
+
+Depending on your platform, there are a number of different ways to install these dependencies.  
+While it is impossible to document the process for every possible system, here are some of the 
+common ones:
+
+Windows:
+There are (at least) three possibilities for Python distributions that include most of the dependencies listed above:
+- pythonxy <a href="https://code.google.com/p/pythonxy/">https://code.google.com/p/pythonxy/</a>
+- Continuum Anaconda <a href="https://store.continuum.io/cshop/anaconda/">https://store.continuum.io/cshop/anaconda/</a>
+- Enthought Canopy <a href="https://www.enthought.com/products/canopy/">https://www.enthought.com/products/canopy/</a>
+
+pythonxy may not include pytz, but this should be easily installable using pip (see instructions below).
+
+None of these distributions include obspy, but again this should be installable with pip.
+
+Mac OSX:
+Both Anaconda and Canopy (see above) are also available for OSX.  obspy can be installed with pip.
+
+Linux:
+On Ubuntu, you should be able to follow the instructions found on the ObsPy website for 
+<a href="https://github.com/obspy/obspy/wiki/Installation-on-Linux-via-Apt-Repository">Ubuntu-based systems</a>.
+
+This <em>should</em> install numpy and scipy as well.
+
+On Red Hat Enterprise Linux (RHEL) systems, by far the easiest path is to use Anaconda or Canopy (see above).
+
+
+
+
+
+
+
