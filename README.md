@@ -87,22 +87,30 @@ To begin using STREC, you will need to first download some binary data that is n
 >   
 >Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
 >   
->optional arguments:
->  -h, --help    show this help message and exit
->  -g, --gcmt    Download all GCMT moment tensor data
->  -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)
->  -n, --noslab  Do NOT download slab data
->  -r, --reinit  Re-initialize STREC application.
+>optional arguments:  
+
+>  -h, --help    show this help message and exit  
+
+>  -g, --gcmt    Download all GCMT moment tensor data  
+
+>  -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)  
+
+>  -n, --noslab  Do NOT download slab data  
+
+>  -r, --reinit  Re-initialize STREC application.  
+
 >  -u, --update  Update gcmt data.
 
 Most users will want to download the GCMT data - this is used to populate a database used to determine the 
 earthquake's focal mechanism based on historical seismicity.
 
->getstrec.py --help
->usage: getstrec.py [-h] [-d DATAFILE] [-a ANGLES] [-c] [-x] [-p] [-f]
+>getstrec.py --help  
+
+>usage: getstrec.py [-h] [-d DATAFILE] [-a ANGLES] [-c] [-x] [-p] [-f]  
+
 >                   [LAT LON DEPTH MAG [DATE] [LAT LON DEPTH MAG [DATE] ...]]
 >
->Determine most likely seismo-tectonic regime of given earthquake.
+>Determine most likely seismo-tectonic regime of given earthquake.  
 >    STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
 >    GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
 >    GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
