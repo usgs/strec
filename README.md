@@ -160,6 +160,55 @@ Depth within intraslab depth interval: False
 Warning: 
 </pre>
 
+Users who have their own catalog of moment tensor solutions may wish to use them with STREC instead of the GCMT database.  
+To convert these data into a form suitable for STREC, use strec_convert.py:
+
+<pre>
+strec_convert.py --help
+usage: strec_convert.py [-h] [-n] [-x] [-c] [-s] [-t TYPE] infile outfile
+
+Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
+The default input format is CSV.
+CSV format columns:
+(Required)
+1) Date/time (YYYYMMDDHHMMSS or YYYYMMDDHHMM)
+2) Lat (dd)
+3) Lon (dd)
+4) Depth (km)
+5) Mag
+6) Mrr (dyne-cm)
+7) Mtt (dyne-cm)
+8) Mpp (dyne-cm)
+9) Mrt (dyne-cm)
+10) Mrp (dyne-cm)
+11) Mtp (dyne-cm)
+(Optional - if these are not supplied STREC will calculate them from moment tensor components above).
+12) T Azimuth (deg)
+13) T Plunge (deg)
+14) N Azimuth (deg)
+15) N Plunge (deg)
+16) P Azimuth (deg)
+17) P Plunge (deg)
+18) NP1 Strike (deg)
+19) NP1 Dip (deg)
+20) NP1 Rake (deg)
+21) NP2 Strike (deg)
+22) NP2 Dip (deg)
+23) NP2 Rake (deg)
+
+positional arguments:
+  infile
+  outfile
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n, --ndk             Input file is in NDK format
+  -x, --xml             Input file is in QuakeML XML format
+  -c, --csv             Input file is in CSV format (Default)
+  -s, --skipfirst       CSV file has a header row which should be skipped
+  -t TYPE, --type TYPE  Specify the moment tensor type (cmt,body wave,etc.) Defaults to 'User'.
+</pre>
+
 
 
 
