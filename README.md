@@ -129,6 +129,34 @@ optional arguments:
                         Force a composite solution, even if an exact historical moment tensor can be found.
 </pre>
 
+Sample:
+<pre>
+getstrec.py -29.97226 -71.343155 10.0 7.4
+Time: Unknown
+Lat: -29.97226
+Lon: -71.343155
+Depth: 10.0
+Magnitude: 7.4
+Earthquake Type: ACRsh
+Focal Mechanism: RS
+FE Region Name:  NEAR COAST OF CENTRAL CHILE
+FE Region Number: 135
+FE Seismotectonic Domain: SZ (generic)
+Focal Mechanism:
+	T Axis Strike and Plunge: 124.99 58.86
+	P Axis Strike and Plunge: 282.13 29.11
+	N Axis Strike and Plunge: 17.83 10.11
+	First Nodal Plane strike,dip,rake: 345.28 18.35 56.09
+	Second Nodal Plane strike,dip,rake: 200.59 74.86 100.48
+	Moment Source: composite
+Slab Parameters:
+	Strike Dip Depth: 278.74 20.90 42.20
+Focal mechanism satisfies interface conditions: True
+Depth within interface depth interval: False
+Depth within intraslab depth interval: False
+Warning: 
+</pre>
+
 
 
 
