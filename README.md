@@ -82,18 +82,18 @@ Usage
 
 To begin using STREC, you will need to first download some binary data that is not included with the source code.
 
-   strec_init.py --help
-   usage: strec_init.py [-h] [-g] [-c] [-n] [-r] [-u]
-   
-   Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
-   
-   optional arguments:
-     -h, --help    show this help message and exit
-     -g, --gcmt    Download all GCMT moment tensor data
-     -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)
-     -n, --noslab  Do NOT download slab data
-     -r, --reinit  Re-initialize STREC application.
-     -u, --update  Update gcmt data.
+>strec_init.py --help
+>usage: strec_init.py [-h] [-g] [-c] [-n] [-r] [-u]
+>   
+>Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
+>   
+>optional arguments:
+>  -h, --help    show this help message and exit
+>  -g, --gcmt    Download all GCMT moment tensor data
+>  -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)
+>  -n, --noslab  Do NOT download slab data
+>  -r, --reinit  Re-initialize STREC application.
+>  -u, --update  Update gcmt data.
 
 
 
