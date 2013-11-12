@@ -26,7 +26,8 @@ Depending on your platform, there are a number of different ways to install thes
 While it is impossible to document the process for every possible system, here are some of the 
 common ones:
 
-Windows:
+Windows
+-------
 There are (at least) three possibilities for Python distributions that include most of the dependencies listed above:
 - pythonxy <a href="https://code.google.com/p/pythonxy/">https://code.google.com/p/pythonxy/</a>
 - Continuum Anaconda <a href="https://store.continuum.io/cshop/anaconda/">https://store.continuum.io/cshop/anaconda/</a>
@@ -36,16 +37,33 @@ pythonxy may not include pytz, but this should be easily installable using pip (
 
 None of these distributions include obspy, but again this should be installable with pip.
 
-Mac OSX:
+Mac OSX
+-------
 Both Anaconda and Canopy (see above) are also available for OSX.  obspy can be installed with pip.
 
-Linux:
+Linux
+-----
 On Ubuntu, you should be able to follow the instructions found on the ObsPy website for 
 <a href="https://github.com/obspy/obspy/wiki/Installation-on-Linux-via-Apt-Repository">Ubuntu-based systems</a>.
 
 This <em>should</em> install numpy and scipy as well.
 
 On Red Hat Enterprise Linux (RHEL) systems, by far the easiest path is to use Anaconda or Canopy (see above).
+
+Final dependencies
+------------------
+Once you have a Python distribution installed (Canopy, Anaconda, etc.), you will likely still need to install 
+obspy and possibly pytz.  The best way to do this is using <b>pip</b>.  pip comes bundled with Anaconda and pythonxy, 
+but needs an extra step on Canopy.
+
+From the command line, type:
+     [sudo] easy_install pip
+
+(sudo may be necessary, depending on whether you have permissions to install software with your regular account, and how Python has been installed).
+
+To install obspy with pip:
+   [sudo] pip install obspy
+
 
 
 
