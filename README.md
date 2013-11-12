@@ -132,6 +132,9 @@ optional arguments:
 Sample:
 <pre>
 >>getstrec.py -29.97226 -71.343155 10.0 7.4
+
+Returns the following output:
+
 Time: Unknown
 Lat: -29.97226
 Lon: -71.343155
