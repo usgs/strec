@@ -57,12 +57,16 @@ obspy and possibly pytz.  The best way to do this is using <b>pip</b>.  pip come
 but needs an extra step on Canopy.
 
 From the command line, type:
-     [sudo] easy_install pip
+<pre>
+[sudo] easy_install pip
+</pre>
 
 (sudo may be necessary, depending on whether you have permissions to install software with your regular account, and how Python has been installed).
 
 To install obspy with pip:
-   [sudo] pip install obspy
+<pre>
+[sudo] pip install obspy
+</pre>
 
 Installing STREC
 ----------------
