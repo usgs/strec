@@ -23,32 +23,10 @@ STREC has the following dependencies:
 - pytz 2011n+
 
 Depending on your platform, there are a number of different ways to install these dependencies.  
-While it is impossible to document the process for every possible system, here are some of the 
-common ones:
-
-Windows
--------
-There are (at least) three possibilities for Python distributions that include most of the dependencies listed above:
-- pythonxy <a href="https://code.google.com/p/pythonxy/">https://code.google.com/p/pythonxy/</a>
-- Continuum Anaconda <a href="https://store.continuum.io/cshop/anaconda/">https://store.continuum.io/cshop/anaconda/</a>
-- Enthought Canopy <a href="https://www.enthought.com/products/canopy/">https://www.enthought.com/products/canopy/</a>
-
-pythonxy may not include pytz, but this should be easily installable using pip (see instructions below).
-
-None of these distributions include obspy, but again this should be installable with pip.
-
-Mac OSX
--------
-Both Anaconda and Canopy (see above) are also available for OSX.  obspy can be installed with pip.
-
-Linux
------
-On Ubuntu, you should be able to follow the instructions found on the ObsPy website for 
-<a href="https://github.com/obspy/obspy/wiki/Installation-on-Linux-via-Apt-Repository">Ubuntu-based systems</a>.
-
-This <em>should</em> install numpy and scipy as well.
-
-On Red Hat Enterprise Linux (RHEL) systems, by far the easiest path is to use Anaconda or Canopy (see above).
+The simplest way (by far) is to use a pre-packaged Python distribution that includes the 
+"Scipy Stack" (a collection of Python tools useful for scientific analysis).  The distributions
+that adhere to this standard are listed at 
+<a href="http://www.scipy.org/install.html">http://www.scipy.org/install.html</a>.
 
 Final dependencies
 ------------------
@@ -66,6 +44,11 @@ From the command line, type:
 To install obspy with pip:
 <pre>
 [sudo] pip install obspy
+</pre>
+
+To install pytz with pip:
+<pre>
+[sudo] pip install pytz
 </pre>
 
 Installing STREC
