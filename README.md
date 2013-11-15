@@ -28,8 +28,8 @@ The simplest way (by far) is to use a pre-packaged Python distribution that incl
 that adhere to this standard are listed at 
 <a href="http://www.scipy.org/install.html">http://www.scipy.org/install.html</a>.
 
-*NB* The Pyzo distribution installs Python 3.3, which is incompatible with the 2.x Python
-code in STREC.
+<em>NB: The Pyzo distribution installs Python 3.3, which is incompatible with the 2.x Python
+code in STREC.</em>
 
 Final dependencies
 ------------------
