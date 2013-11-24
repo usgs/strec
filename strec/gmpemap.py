@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+#stdlib imports
 import urllib2
 import urllib
 import sys
@@ -7,13 +9,31 @@ import os.path
 import re
 from math import *
 
+#local imports
 from utils import *
 
-def getFERegion(lat,lon,config,homedir):
+#third party imports
+import matplotlib.pylab as plt
+
+def plotPolygon(lat,lon,poly,regnum,plotFile):
+    fig = plt.figure(figsize=(6,6))
+    px = [pol[0] for pol in poly]
+    py = [pol[1] for pol in poly]
+    plt.plot(px,py,'b')
+    plt.hold(True)
+    plt.plot(lon,lat,'rx')
+    plt.title('%.4f,%.4f in Region %i' % (lat,lon,regnum))
+    plt.savefig(plotFile)
+    plt.close()    
+
+def getFERegion(lat,lon,config,homedir,plotFile=None):
     """
     Return FE region number describing Flinn-Engdahl region of input point.
     @param lat: Earthquake latitude.
     @param lon: Earthquake longitude.
+    @param config: config file object (Used to obtain location of FE data file).
+    @param homedir: Used with config to obtain location of FE data file
+    @keyword plotFile: If this is specified, make a plot of the FE region with the EQ point in it.
     @return: tuple of (regnum,regname) Numerical code for FE region.
     """
     fefile = os.path.join(homedir,'data',config.get('FILES','coords'))
@@ -47,10 +67,14 @@ def getFERegion(lat,lon,config,homedir):
                         continue
                     else:
                         f.close()
+                        if plotFile is not None:
+                            plotPolygon(lat,lon,poly,regnum,plotFile)
                         return regnum
                 else:
                     if inside:
                         f.close()
+                        if plotFile is not None:
+                            plotPolygon(lat,lon,poly,regnum,plotFile)
                         return regnum
                     else:
                         parts = line.split()
@@ -94,6 +118,7 @@ def getTectonicRegime(feregnum,config,homedir):
         if fegr != feregnum:
             continue
         trdict = fillDict(parts,config)
+        break
     f.close()
     return trdict
 

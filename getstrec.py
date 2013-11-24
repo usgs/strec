@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+#stdlib imports
 import argparse
 import sys
 import os.path
@@ -8,7 +9,9 @@ import getpass
 import datetime
 import math
 
+#local imports
 from strec.gmpe import GMPESelector
+from strec import gmpemap
 import strec.utils
 from strec import cmt
 
@@ -49,6 +52,9 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datafile",dest="datafile",
                       metavar="DATAFILE",
                       help="Specify the database (.db) file containing moment tensor solutions.")
+    parser.add_argument("-r", "--regionplot",dest="regionplot",
+                      metavar="PLOTFILE",
+                      help="Tell STREC to plot the EQ location inside Flinn-Engdahl polygon, and provide the output filename.")
     parser.add_argument("-a", "--angles",dest="angles",
                       metavar="ANGLES",
                       help='Specify the focal mechanism by providing "strike dip rake"')
@@ -132,6 +138,8 @@ if __name__ == '__main__':
     strecresults = gs.selectGMPE(lat,lon,depth,magnitude,date=etime,
                                  forceComposite=forceComposite,
                                  plungevals=plungevals)
+    if args.regionplot:
+        gmpemap.getFERegion(lat,lon,gs.Config,gs.homedir,plotFile=args.regionplot)
     
     if args.outputCSV:
         strecresults.renderCSV(sys.stdout)
