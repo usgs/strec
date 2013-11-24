@@ -19,6 +19,7 @@ STREC has the following dependencies:
 - Python 2.7+ (not 3.X!)
 - numpy 1.5+
 - scipy 0.10+
+- matplotlib 1.3.0+
 - obspy 0.8.2+
 - pytz 2011n+
 
@@ -94,7 +95,8 @@ mechanism based on historical seismicity.
 
 <pre>
 getstrec.py --help
-usage: getstrec.py [-h] [-d DATAFILE] [-a ANGLES] [-c] [-x] [-p] [-f]
+usage: getstrec.py [-h] [-d DATAFILE] [-r PLOTFILE] [-a ANGLES] [-c] [-x] [-p]
+                   [-f]
                    [LAT LON DEPTH MAG [DATE] [LAT LON DEPTH MAG [DATE] ...]]
 
 Determine most likely seismo-tectonic regime of given earthquake.
@@ -112,6 +114,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -d DATAFILE, --datafile DATAFILE
                         Specify the database (.db) file containing moment tensor solutions.
+  -r PLOTFILE, --regionplot PLOTFILE
+                        Tell STREC to plot the EQ location inside Flinn-Engdahl polygon, and provide the output filename.
   -a ANGLES, --angles ANGLES
                         Specify the focal mechanism by providing "strike dip rake"
   -c, --csv-out         print output as csv
