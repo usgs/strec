@@ -129,7 +129,7 @@ class StrecResults(object):
         fobj.write('<eqinfo lat="%.4f" lon="%.4f" depth="%.1f" magnitude="%.1f" time="%s"/>\n' % tpl)
         tpl = (self.rdict['SlabStrike'],self.rdict['SlabDip'],self.rdict['SlabDepth'])
         fobj.write('<slabinfo strike="%.2f" dip="%.2f" depth="%.1f"/>\n' % tpl)
-        fobj.write('\t<earthquakeType>%s</gmpe>\n' % gmpe)
+        fobj.write('\t<earthquakeType>%s</earthquakeType>\n' % gmpe)
         fobj.write('\t<focalMechanism>%s</focalMechanism>\n' % fmstring)
         fobj.write('\t<feregion>%i</feregion>\n' % regnumber)
         fobj.write('\t<fename>%s</fename>\n' % self.rdict['FERegionName'])
