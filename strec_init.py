@@ -172,7 +172,7 @@ if __name__ == '__main__':
             except Exception,msg:
                 print 'Could not make %s due to error "%s".  Stopping.' % (datafolder,msg)
                 sys.exit(1)
-        #config = ConfigParser.RawConfigParser()
+        config = ConfigParser.RawConfigParser()
         config.add_section('DATA')
         config.set('DATA','folder',datafolder)
         config.write(open(configfile,'wt'))
