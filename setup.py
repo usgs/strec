@@ -14,6 +14,5 @@ setup(name='STREC',
       url='https://github.com/usgs/strec/',
       packages=['strec'],
       scripts = ['getstrec.py','strec_init.py','strec_convert.py'],
-      data_files=[(STRECFOLDER,['strec.ini']),],
       package_data = {'strec':['data/*.csv','data/*.txt','data/*.ini']},
      )
