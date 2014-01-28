@@ -172,7 +172,6 @@ if __name__ == '__main__':
             except Exception,msg:
                 print 'Could not make %s due to error "%s".  Stopping.' % (datafolder,msg)
                 sys.exit(1)
-        config = ConfigParser.RawConfigParser()
         config.add_section('DATA')
         config.set('DATA','folder',datafolder)
         config.write(open(configfile,'wt'))
@@ -215,7 +214,7 @@ if __name__ == '__main__':
                 monthlist = getMonthList(year,rmonth)
             except Exception,msg:
                 print 'Could not find a URL (starting with %s) for year %i.  Stopping.' % (MONTHLY_GCMT_URL,year)
-                sys.exit(1)
+                sys.exit(0)
             for month in monthlist:
                 try:
                     print 'Attempting to download data from %s, %i...' % (strmonth[month-1],year)
