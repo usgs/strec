@@ -181,7 +181,7 @@ if __name__ == '__main__':
             fetchSlabs(datafolder)
             print 'Finished downloading slab data.'
     except Exception,msg:
-        print 'Error "%s" while downloading NEIC Slab data. Stopping.'
+        print 'Error "%s" while downloading NEIC Slab data. Stopping.' % msg.message
         sys.exit(1)
 
     outfile = os.path.join(datafolder,strec.utils.GCMT_OUTPUT)
