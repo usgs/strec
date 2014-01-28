@@ -29,7 +29,7 @@ def getConfig():
     if not os.path.isfile(configfile):
         #here we should create one from the default
         thispath = os.path.dirname(os.path.abspath(__file__)) #where is this file?
-        tmpfile = os.path.join(thispath,'data','strec.txt')
+        tmpfile = os.path.join(thispath,'data','strec.ini')
         config = ConfigParser.ConfigParser()
         config.readfp(open(tmpfile))
         return config,configfile
