@@ -288,7 +288,7 @@ class GMPESelector(object):
         fmstring  = self.getFocalMechanism(plungevals)
         feregnum = getFERegion(lat,lon,self.Config,self.homedir)
         trdict = getTectonicRegime(feregnum,self.Config,self.homedir)
-        regdict = {'number':feregnum,'name':trdict['feregname']}
+        regdict = {'number':feregnum,'name':trdict['feregname'].strip()}
         slabvals = {'strike':float('nan'),'dip':float('nan'),'depth':float('nan')}
         mindist = None
         distwarning = ''
