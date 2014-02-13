@@ -68,7 +68,7 @@ class StrecResults(object):
 
     def __eq__(self,other):
         impkeys = ['MomentTensorSource','FocalMechanism','EarthquakeType',
-        'RERegionNumber','RERegionName',
+        'FERegionNumber','FERegionName',
         'TAxisPlunge','TAxisAzimuth',
         'NAxisPlunge','NAxisAzimuth',
         'PAxisPlunge','PAxisAzimuth',
