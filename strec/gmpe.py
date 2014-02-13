@@ -19,9 +19,9 @@ from gmpemap import *
 from cmt import *
 
 class StrecResults(object):
-    rdict = {}
     TimeFormat = '%Y-%m-%d %H:%M:%S'
     def __init__(self,lat,lon,depth,mag,etime,eqtype,fmstring,regdict,trdict,plungevals,slabvals,eqdict,warning,mtsource):
+        self.rdict = {}
         self.rdict['Latitude'] = lat
         self.rdict['Longitude'] = lon
         self.rdict['Depth'] = depth
