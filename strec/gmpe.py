@@ -65,6 +65,21 @@ class StrecResults(object):
 
     def __setitem__(self,key,value):
         self.rdict[key] = value
+
+    def __eq__(self,other):
+        impkeys = ['MomentTensorSource','FocalMechanism','EarthquakeType',
+        'RERegionNumber','RERegionName',
+        'TAxisPlunge','TAxisAzimuth',
+        'NAxisPlunge','NAxisAzimuth',
+        'PAxisPlunge','PAxisAzimuth',
+        'NodalPlane1Strike','NodalPlane1Dip','NodalPlane1Rake',
+        'NodalPlane2Strike','NodalPlane2Dip','NodalPlane2Rake']
+        isDiff = False
+        for key in impkeys:
+            if self[key] != other[key]:
+                isDiff = True
+                break
+        return isDiff
         
     def renderCSV(self,fobj):
         fmt = '%s,%.4f,%.4f,%.1f,%.1f, %s,%s,"%s",%i, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f  ,%s,%s,%s,"%s"\n'
