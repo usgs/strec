@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+#stdlib imports
 import re
 import urllib2
 from xml.dom.minidom import parseString,parse
@@ -10,6 +12,10 @@ import sys
 import copy
 import ConfigParser
 from optparse import OptionParser
+import csv
+import StringIO
+
+#third party imports
 from scipy.io import netcdf
 import numpy
 
@@ -80,9 +86,59 @@ class StrecResults(object):
                 isDiff = True
                 break
         return isDiff
+
+    def readFromCSV(self,line,currentTime=False):
+        fobj = StringIO.StringIO(line)
+        reader = csv.reader(fobj)
+        row = reader.next()
+        if currentTime:
+            offset = 1
+            ptime = datetime.datetime.strptime(row[0],self.TimeFormat)
+        else:
+            ptime = None
+            offset = 0
+        keys = collections.OrderedDict(
+            {'Time':'time',
+             'Latitude':'float',
+             'Longitude':'float',
+             'Depth':'float',
+             'Magnitude':'float',
+             'EarthquakeType':'string',
+             'FocalMechanism':'string',
+             'FERegionName':'string',
+             'FERegionNumber':'string',
+             'TAxisPlunge':'float',
+             'TAxisAzimuth':'float',
+             'NAxisPlunge':'float',
+             'NAxisAzimuth':'float',
+             'PAxisPlunge':'float',
+             'PAxisAzimuth':'float',
+             'NodalPlane1Strike':'float',
+             'NodalPlane1Dip':'float',
+             'NodalPlane1Rake':'float',
+             'NodalPlane2Strike':'float',
+             'NodalPlane2Dip':'float',
+             'NodalPlane2Rake':'float',
+             'SlabStrike':'float',
+             'SlabDip':'float',
+             'SlabDepth':'float',
+             'Eq2':'string',
+             'Eq3a':'string',
+             'Eq3b':'string',
+             'Warning':'string'})
         
-    def renderCSV(self,fobj):
-        fmt = '%s,%.4f,%.4f,%.1f,%.1f, %s,%s,"%s",%i, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f  ,%s,%s,%s,"%s"\n'
+        for key,keytype in keys.iteritems():
+            if keytype == 'time':
+                self.rdict[key] = datetime.datetime.strptime(row[offset],self.TimeFormat)
+            elif keytype == 'float':
+                self.rdict[key] = float(row[offset])
+            else: #default is string
+                self.rdict[key] = row[offset]
+            offset += 1
+        fobj.close()
+        return ptime
+
+    def renderCSV(self,fobj,currentTime=False):
         lat = self.rdict['Latitude']
         lon = self.rdict['Longitude']
         depth = self.rdict['Depth']
@@ -116,12 +172,23 @@ class StrecResults(object):
         eq3a = self.rdict['InterfaceDepthInterval']
         eq3b = self.rdict['IntraslabDepthInterval']
         warning = self.rdict['Warning']
-        
-        tpl = (etime,lat,lon,depth,mag,
-               gmpe,fmstring,regname,regnumber,
-               ta,tp,na,np,pa,pp,
-               np1s,np1d,np1r,np2s,np2d,np2r,slabstrike,slabdip,slabdepth,eq2,eq3a,eq3b,warning)
-        fobj.write(fmt % tpl)
+
+        if not currentTime:
+            fmt = '%s,%.4f,%.4f,%.1f,%.1f, %s,%s,"%s",%i, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f  ,%s,%s,%s,"%s"\n'
+            tpl = (etime,lat,lon,depth,mag,
+                   gmpe,fmstring,regname,regnumber,
+                   ta,tp,na,np,pa,pp,
+                   np1s,np1d,np1r,np2s,np2d,np2r,slabstrike,slabdip,slabdepth,eq2,eq3a,eq3b,warning)
+            fobj.write(fmt % tpl)
+        else:
+            fmt = '%s,%s,%.4f,%.4f,%.1f,%.1f, %s,%s,"%s",%i, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f  ,%s,%s,%s,"%s"\n'
+            ptime = datetime.datetime.utcnow().strftime(self.TimeFormat)
+            tpl = (ptime,etime,lat,lon,depth,mag,
+                   gmpe,fmstring,regname,regnumber,
+                   ta,tp,na,np,pa,pp,
+                   np1s,np1d,np1r,np2s,np2d,np2r,slabstrike,slabdip,slabdepth,eq2,eq3a,eq3b,warning)
+            fobj.write(fmt % tpl)
+            
 
     def renderXML(self,fobj):
         fobj.write('<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>\n')
