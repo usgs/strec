@@ -147,7 +147,7 @@ class StrecResults(object):
 
         gmpe = self.rdict['EarthquakeType']
         fmstring = self.rdict['FocalMechanism']
-        regname = self.rdict['FeRegionName']
+        regname = self.rdict['FERegionName']
         regnumber = self.rdict['FERegionNumber']
         
         tp = self.rdict['TAxisPlunge']
