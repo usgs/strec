@@ -147,8 +147,8 @@ class StrecResults(object):
 
         gmpe = self.rdict['EarthquakeType']
         fmstring = self.rdict['FocalMechanism']
-        regname = self.rdict['TectonicRegimeName']
-        regnumber = self.rdict['TectonicRegimeCode']
+        regname = self.rdict['FeRegionName']
+        regnumber = self.rdict['FERegionNumber']
         
         tp = self.rdict['TAxisPlunge']
         ta = self.rdict['TAxisAzimuth']
