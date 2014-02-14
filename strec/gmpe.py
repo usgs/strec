@@ -14,6 +14,7 @@ import ConfigParser
 from optparse import OptionParser
 import csv
 import StringIO
+import collections
 
 #third party imports
 from scipy.io import netcdf
