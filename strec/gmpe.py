@@ -109,7 +109,7 @@ class StrecResults(object):
                     'float','float','float','float', #tplunge
                     'float','float','float','float', #pplunge
                     'float','float','float', #np1 rake
-                    'float','float','float', #np2rake
+                    'float','float','float','float', #np2rake
                     'string','string','string','string']
 
         keyfmts = ['%s','%.4f','%.4f','%.1f','%.1f', #time, etc.
