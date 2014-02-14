@@ -14,7 +14,6 @@ import ConfigParser
 from optparse import OptionParser
 import csv
 import StringIO
-import collections
 
 #third party imports
 from scipy.io import netcdf
@@ -98,43 +97,27 @@ class StrecResults(object):
         else:
             ptime = None
             offset = 0
-        keys = collections.OrderedDict(
-            {'Time':'time',
-             'Latitude':'float',
-             'Longitude':'float',
-             'Depth':'float',
-             'Magnitude':'float',
-             'EarthquakeType':'string',
-             'FocalMechanism':'string',
-             'FERegionName':'string',
-             'FERegionNumber':'string',
-             'TAxisPlunge':'float',
-             'TAxisAzimuth':'float',
-             'NAxisPlunge':'float',
-             'NAxisAzimuth':'float',
-             'PAxisPlunge':'float',
-             'PAxisAzimuth':'float',
-             'NodalPlane1Strike':'float',
-             'NodalPlane1Dip':'float',
-             'NodalPlane1Rake':'float',
-             'NodalPlane2Strike':'float',
-             'NodalPlane2Dip':'float',
-             'NodalPlane2Rake':'float',
-             'SlabStrike':'float',
-             'SlabDip':'float',
-             'SlabDepth':'float',
-             'Eq2':'string',
-             'Eq3a':'string',
-             'Eq3b':'string',
-             'Warning':'string'})
-        
-        for key,keytype in keys.iteritems():
+        keynames = ['Time','Latitude','Longitude','Depth','Magnitude',
+             'EarthquakeType','FocalMechanism','FERegionName','FERegionNumber',
+             'TAxisPlunge','TAxisAzimuth','NAxisPlunge','NAxisAzimuth',
+             'PAxisPlunge','PAxisAzimuth','NodalPlane1Strike','NodalPlane1Dip',
+             'NodalPlane1Rake','NodalPlane2Strike','NodalPlane2Dip',
+             'NodalPlane2Rake','SlabStrike','SlabDip','SlabDepth',
+             'Eq2','Eq3a','Eq3b','Warning']
+        keytypes = 'time',
+             'float','float','float','float','string','string','string',
+             'string','float','float','float','float','float','float',
+             'float','float','float','float','float','float','float',
+             'float','float','string','string','string','string']
+        for i in range(0,len(keynames)):
+            keyname = keynames[i]
+            keytype = keytypes[i]
             if keytype == 'time':
-                self.rdict[key] = datetime.datetime.strptime(row[offset],self.TimeFormat)
+                self.rdict[keyname] = datetime.datetime.strptime(row[offset],self.TimeFormat)
             elif keytype == 'float':
-                self.rdict[key] = float(row[offset])
+                self.rdict[keyname] = float(row[offset])
             else: #default is string
-                self.rdict[key] = row[offset]
+                self.rdict[keyname] = row[offset]
             offset += 1
         fobj.close()
         return ptime
