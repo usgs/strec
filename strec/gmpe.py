@@ -149,6 +149,7 @@ class StrecResults(object):
         return ptime
 
     def renderCSV(self,fobj,currentTime=False):
+        ptime = datetime.datetime.utcnow().strftime(self.TimeFormat)
         fmtlist = []
         tpllist = []
         for keyname,keytuple in self.keys.iteritems():
