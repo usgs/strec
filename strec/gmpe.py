@@ -101,10 +101,16 @@ class StrecResults(object):
              'NodalPlane1Rake','NodalPlane2Strike','NodalPlane2Dip',
              'NodalPlane2Rake','SlabStrike','SlabDip','SlabDepth',
              'InterfaceConditionsMet','InterfaceDepthInterval','IntraslabDepthInterval','Warning']
-        keytypes = ['time','float','float','float','float','string','string','string',
-        'string','float','float','float','float','float','float',
-        'float','float','float','float','float','float','float',
-        'float','float','string','string','string','string','string']
+
+        keytypes = ['time','float','float','float','float', #time, etc
+                    'string','string','string','string','int', #mtsource
+                    'string','int','string','string', #trname
+                    'string','string','string','string', #splitflag
+                    'float','float','float','float', #tplunge
+                    'float','float','float','float', #pplunge
+                    'float','float','float', #np1 rake
+                    'float','float','float', #np2rake
+                    'string','string','string','string']
 
         keyfmts = ['%s','%.4f','%.4f','%.1f','%.1f', #time, etc.
                    '%s','%s','%s','%s','%s','%i', #mtsource, etc.
