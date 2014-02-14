@@ -143,7 +143,7 @@ class StrecResults(object):
         lon = self.rdict['Longitude']
         depth = self.rdict['Depth']
         mag = self.rdict['Magnitude']
-        etime = self.rdict['Time']
+        etime = self.rdict['Time'].strftime(self.TimeFormat)
 
         gmpe = self.rdict['EarthquakeType']
         fmstring = self.rdict['FocalMechanism']
