@@ -104,11 +104,10 @@ class StrecResults(object):
              'NodalPlane1Rake','NodalPlane2Strike','NodalPlane2Dip',
              'NodalPlane2Rake','SlabStrike','SlabDip','SlabDepth',
              'Eq2','Eq3a','Eq3b','Warning']
-        keytypes = 'time',
-             'float','float','float','float','string','string','string',
-             'string','float','float','float','float','float','float',
-             'float','float','float','float','float','float','float',
-             'float','float','string','string','string','string']
+        keytypes = ['time','float','float','float','float','string','string','string',
+        'string','float','float','float','float','float','float',
+        'float','float','float','float','float','float','float',
+        'float','float','string','string','string','string']
         for i in range(0,len(keynames)):
             keyname = keynames[i]
             keytype = keytypes[i]
