@@ -14,6 +14,7 @@ import ConfigParser
 from optparse import OptionParser
 import csv
 import StringIO
+import collections
 
 #third party imports
 from scipy.io import netcdf
@@ -28,11 +29,12 @@ class StrecResults(object):
     TimeFormat = '%Y-%m-%d %H:%M:%S'
     def __init__(self,lat,lon,depth,mag,etime,eqtype,fmstring,regdict,trdict,plungevals,slabvals,eqdict,warning,mtsource):
         self.rdict = {}
+        self.rdict['Time'] = etime
         self.rdict['Latitude'] = lat
         self.rdict['Longitude'] = lon
         self.rdict['Depth'] = depth
         self.rdict['Magnitude'] = mag
-        self.rdict['Time'] = etime
+        self.rdict['MomentTensorSource'] = mtsource
         self.rdict['EarthquakeType'] = eqtype
         self.rdict['FocalMechanism'] = fmstring
         self.rdict['FERegionName'] = regdict['name']
@@ -64,7 +66,8 @@ class StrecResults(object):
         self.rdict['InterfaceDepthInterval'] = eqdict['eq3a']
         self.rdict['IntraslabDepthInterval'] = eqdict['eq3b']
         self.rdict['Warning'] = warning
-        self.rdict['MomentTensorSource'] = mtsource
+
+        self.setKeyTypes()
 
     def __getitem__(self,key):
         return self.rdict[key]
@@ -87,6 +90,36 @@ class StrecResults(object):
                 break
         return isDiff
 
+    def setKeyTypes(self):
+        #establish the order and format of all of the keys for reading/writing CSV
+        keynames = ['Time','Latitude','Longitude','Depth','Magnitude',
+             'MomentTensorSource','EarthquakeType','FocalMechanism','FERegionName','FERegionNumber',
+             'TectonicRegimeName','TectonicRegimeCode','TectonicRegimeSlabFlag','TectonicRegimeSCRFlag',
+             'TectonicRegimeSplitFlag','TectonicRegimeDepths','TectonicRegimeRegimes','TectonicRegimeWarning',
+             'TAxisPlunge','TAxisAzimuth','NAxisPlunge','NAxisAzimuth',
+             'PAxisPlunge','PAxisAzimuth','NodalPlane1Strike','NodalPlane1Dip',
+             'NodalPlane1Rake','NodalPlane2Strike','NodalPlane2Dip',
+             'NodalPlane2Rake','SlabStrike','SlabDip','SlabDepth',
+             'InterfaceConditionsMet','InterfaceDepthInterval','IntraslabDepthInterval','Warning']
+        keytypes = ['time','float','float','float','float','string','string','string',
+        'string','float','float','float','float','float','float',
+        'float','float','float','float','float','float','float',
+        'float','float','string','string','string','string','string']
+
+        keyfmts = ['%s','%.4f','%.4f','%.1f','%.1f', #time, etc.
+                   '%s','%s','%s','%s','%s','%i', #mtsource, etc.
+                   '%s','%i','%s','%s',           #tectonic regime name, etc
+                   '%s','"%s"','"%s"','%s',       #trsplitflag, etc
+                   '%.1f','%.1f','%.1f','%.1f',   #tplunge, etc.
+                   '%.1f','%.1f','%.1f','%.1f',   #pplunge, etc.
+                   '%.1f','%.1f','%.1f',          #np1 values
+                   '%.1f','%.1f','%.1f',          #np2 values
+                   '%s','%s','%s','%s']           #equations and warning
+
+        self.keys = collections.OrderedDict()
+        for i in range(0,len(keynames)):
+            self.keys[keynames[i]] = (keytypes[i],keyfmts[i])
+            
     def readFromCSV(self,line,currentTime=False):
         fobj = StringIO.StringIO(line)
         reader = csv.reader(fobj)
@@ -97,20 +130,8 @@ class StrecResults(object):
         else:
             ptime = None
             offset = 0
-        keynames = ['Time','Latitude','Longitude','Depth','Magnitude',
-             'EarthquakeType','FocalMechanism','FERegionName','FERegionNumber',
-             'TAxisPlunge','TAxisAzimuth','NAxisPlunge','NAxisAzimuth',
-             'PAxisPlunge','PAxisAzimuth','NodalPlane1Strike','NodalPlane1Dip',
-             'NodalPlane1Rake','NodalPlane2Strike','NodalPlane2Dip',
-             'NodalPlane2Rake','SlabStrike','SlabDip','SlabDepth',
-             'Eq2','Eq3a','Eq3b','Warning']
-        keytypes = ['time','float','float','float','float','string','string','string',
-        'string','float','float','float','float','float','float',
-        'float','float','float','float','float','float','float',
-        'float','float','string','string','string','string']
-        for i in range(0,len(keynames)):
-            keyname = keynames[i]
-            keytype = keytypes[i]
+        for keyname,keytuple in self.keys.iteritems():
+            keytype = keytuple[0]
             if keytype == 'time':
                 self.rdict[keyname] = datetime.datetime.strptime(row[offset],self.TimeFormat)
             elif keytype == 'float':
@@ -122,55 +143,20 @@ class StrecResults(object):
         return ptime
 
     def renderCSV(self,fobj,currentTime=False):
-        lat = self.rdict['Latitude']
-        lon = self.rdict['Longitude']
-        depth = self.rdict['Depth']
-        mag = self.rdict['Magnitude']
-        etime = self.rdict['Time'].strftime(self.TimeFormat)
+        fmtlist = []
+        tpllist = []
+        for keyname,keytuple in self.keys.iteritems():
+            fmtlist.append(keytuple[1])
+            value = self.rdict[keyname]
+            tpllist.append(value)
+        fmt = ','.join(fmtlist)
 
-        gmpe = self.rdict['EarthquakeType']
-        fmstring = self.rdict['FocalMechanism']
-        regname = self.rdict['FERegionName']
-        regnumber = self.rdict['FERegionNumber']
-        
-        tp = self.rdict['TAxisPlunge']
-        ta = self.rdict['TAxisAzimuth']
-        np = self.rdict['NAxisPlunge']
-        na = self.rdict['NAxisAzimuth']
-        pp = self.rdict['PAxisPlunge']
-        pa = self.rdict['PAxisAzimuth']
-        np1s = self.rdict['NodalPlane1Strike']
-        np1d = self.rdict['NodalPlane1Dip']
-        np1r = self.rdict['NodalPlane1Rake']
+        if currentTime:
+            fmt = '%s,'+fmt
+            tpllist = [ptime]+tpllist
 
-        np2s = self.rdict['NodalPlane2Strike']
-        np2d = self.rdict['NodalPlane2Dip']
-        np2r = self.rdict['NodalPlane2Rake']
-
-        slabstrike = self.rdict['SlabStrike']
-        slabdip = self.rdict['SlabDip']
-        slabdepth = self.rdict['SlabDepth']
-
-        eq2 = self.rdict['InterfaceConditionsMet']
-        eq3a = self.rdict['InterfaceDepthInterval']
-        eq3b = self.rdict['IntraslabDepthInterval']
-        warning = self.rdict['Warning']
-
-        if not currentTime:
-            fmt = '%s,%.4f,%.4f,%.1f,%.1f, %s,%s,"%s",%i, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f  ,%s,%s,%s,"%s"\n'
-            tpl = (etime,lat,lon,depth,mag,
-                   gmpe,fmstring,regname,regnumber,
-                   ta,tp,na,np,pa,pp,
-                   np1s,np1d,np1r,np2s,np2d,np2r,slabstrike,slabdip,slabdepth,eq2,eq3a,eq3b,warning)
-            fobj.write(fmt % tpl)
-        else:
-            fmt = '%s,%s,%.4f,%.4f,%.1f,%.1f, %s,%s,"%s",%i, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f,%.1f,%.1f,%.1f, %.1f,%.1f,%.1f  ,%s,%s,%s,"%s"\n'
-            ptime = datetime.datetime.utcnow().strftime(self.TimeFormat)
-            tpl = (ptime,etime,lat,lon,depth,mag,
-                   gmpe,fmstring,regname,regnumber,
-                   ta,tp,na,np,pa,pp,
-                   np1s,np1d,np1r,np2s,np2d,np2r,slabstrike,slabdip,slabdepth,eq2,eq3a,eq3b,warning)
-            fobj.write(fmt % tpl)
+        tpl = tuple(tpllist)
+        fobj.write(fmt % tpl)
             
 
     def renderXML(self,fobj):
