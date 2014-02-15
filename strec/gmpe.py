@@ -96,7 +96,7 @@ class StrecResults(object):
                     ('Longitude','float','%.4f'),
                     ('Depth','float','%.1f'),
                     ('Magnitude','float','%.1f'),
-                    ('MomentTensorSource','string','%s')
+                    ('MomentTensorSource','string','%s'),
                     ('EarthquakeType','string','%s'),
                     ('FocalMechanism','string','%s'),
                     ('FERegionName','string','%s'),
