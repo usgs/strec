@@ -168,7 +168,7 @@ class StrecResults(object):
             value = self.rdict[keyname]
             if isinstance(value,datetime.datetime):
                 value = value.strftime(self.TimeFormat)
-            if instance(value,list):
+            if isinstance(value,list):
                 value = '[' + ','.join(value) + ']'
             tpllist.append(value)
         fmt = ','.join(fmtlist)
