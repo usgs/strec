@@ -14,7 +14,6 @@ import ConfigParser
 from optparse import OptionParser
 import csv
 import StringIO
-import collections
 
 #third party imports
 from scipy.io import netcdf
@@ -92,39 +91,43 @@ class StrecResults(object):
 
     def setKeyTypes(self):
         #establish the order and format of all of the keys for reading/writing CSV
-        keynames = ['Time','Latitude','Longitude','Depth','Magnitude',
-             'MomentTensorSource','EarthquakeType','FocalMechanism','FERegionName','FERegionNumber',
-             'TectonicRegimeName','TectonicRegimeCode','TectonicRegimeSlabFlag','TectonicRegimeSCRFlag',
-             'TectonicRegimeSplitFlag','TectonicRegimeDepths','TectonicRegimeRegimes','TectonicRegimeWarning',
-             'TAxisPlunge','TAxisAzimuth','NAxisPlunge','NAxisAzimuth',
-             'PAxisPlunge','PAxisAzimuth','NodalPlane1Strike','NodalPlane1Dip',
-             'NodalPlane1Rake','NodalPlane2Strike','NodalPlane2Dip',
-             'NodalPlane2Rake','SlabStrike','SlabDip','SlabDepth',
-             'InterfaceConditionsMet','InterfaceDepthInterval','IntraslabDepthInterval','Warning']
-
-        keytypes = ['time','float','float','float','float', #time, etc
-                    'string','string','string','string','int', #mtsource
-                    'string','int','string','int', #trname
-                    'int','string','string','string', #splitflag
-                    'float','float','float','float', #tplunge
-                    'float','float','float','float', #pplunge
-                    'float','float','float', #np1 rake
-                    'float','float','float','float', #np2rake
-                    'string','string','string','string']
-
-        keyfmts = ['%s','%.4f','%.4f','%.1f','%.1f', #time, etc.
-                   '%s','%s','%s','%s','%i', #mtsource, etc.
-                   '%s','%i','%s','%i',           #tectonic regime name, etc
-                   '%i','"%s"','"%s"','%s',       #trsplitflag, etc
-                   '%.1f','%.1f','%.1f','%.1f',   #tplunge, etc.
-                   '%.1f','%.1f','%.1f','%.1f',   #pplunge, etc.
-                   '%.1f','%.1f','%.1f',          #np1 values
-                   '%.1f','%.1f','%.1f',          #np2 values
-                   '%s','%s','%s','%s']           #equations and warning
-
-        self.keys = collections.OrderedDict()
-        for i in range(0,len(keynames)):
-            self.keys[keynames[i]] = (keytypes[i],keyfmts[i])
+        self.keys = [('Time','time','%s'),
+                    ('Latitude','float','%.4f'),
+                    ('Longitude','float','%.4f'),
+                    ('Depth','float','%.1f'),
+                    ('Magnitude','float','%.1f'),
+                    ('MomentTensorSource','string','%s')
+                    ('EarthquakeType','string','%s'),
+                    ('FocalMechanism','string','%s'),
+                    ('FERegionName','string','%s'),
+                    ('FERegionNumber','int','%i'),
+                    ('TectonicRegimeName','string','%s'),
+                    ('TectonicRegimeCode','int','%i'),
+                    ('TectonicRegimeSlabFlag','string','%s'),
+                    ('TectonicRegimeSCRFlag','int','%i'),
+                    ('TectonicRegimeSplitFlag','int','%i'),
+                    ('TectonicRegimeDepths','string','%s'),
+                    ('TectonicRegimeRegimes','string','%s'),
+                    ('TectonicRegimeWarning','string','%s'),
+                    ('TAxisPlunge','float','%.1f'),
+                    ('TAxisAzimuth','float','%.1f'),
+                    ('NAxisPlunge','float','%.1f'),
+                    ('NAxisAzimuth','float','%.1f'),
+                    ('PAxisPlunge','float','%.1f'),
+                    ('PAxisAzimuth','float','%.1f'),
+                    ('NodalPlane1Strike','float','%.1f'),
+                    ('NodalPlane1Dip','float','%.1f'),
+                    ('NodalPlane1Rake','float','%.1f'),
+                    ('NodalPlane2Strike','float','%.1f'),
+                    ('NodalPlane2Dip','float','%.1f'),
+                    ('NodalPlane2Rake','float','%.1f'),
+                    ('SlabStrike','float','%.1f'),
+                    ('SlabDip','float','%.1f'),
+                    ('SlabDepth','float','%.1f'),
+                    ('InterfaceConditionsMet','string','%s'),
+                    ('InterfaceDepthInterval','string','%s'),
+                    ('IntraslabDepthInterval','string','%s'),
+                    ('Warning','string','%s')]
             
     def readFromCSV(self,line,currentTime=False):
         fobj = StringIO.StringIO(line)
@@ -136,8 +139,9 @@ class StrecResults(object):
         else:
             ptime = None
             offset = 0
-        for keyname,keytuple in self.keys.iteritems():
-            keytype = keytuple[0]
+        for keytuple in self.keys:
+            keyname = keytuple[0]
+            keytype = keytuple[1]
             if keytype == 'time':
                 self.rdict[keyname] = datetime.datetime.strptime(row[offset],self.TimeFormat)
             elif keytype == 'float':
@@ -157,8 +161,10 @@ class StrecResults(object):
         ptime = datetime.datetime.utcnow().strftime(self.TimeFormat)
         fmtlist = []
         tpllist = []
-        for keyname,keytuple in self.keys.iteritems():
-            fmtlist.append(keytuple[1])
+        for keytuple in self.keys:
+            keyname = keytuple[0]
+            keyfmt = keytuple[2]
+            fmtlist.append(keyfmt)
             value = self.rdict[keyname]
             if isinstance(value,datetime.datetime):
                 value = value.strftime(self.TimeFormat)
