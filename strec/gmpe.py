@@ -104,8 +104,8 @@ class StrecResults(object):
 
         keytypes = ['time','float','float','float','float', #time, etc
                     'string','string','string','string','int', #mtsource
-                    'string','int','string','string', #trname
-                    'string','string','string','string', #splitflag
+                    'string','int','string','int', #trname
+                    'int','string','string','string', #splitflag
                     'float','float','float','float', #tplunge
                     'float','float','float','float', #pplunge
                     'float','float','float', #np1 rake
@@ -113,9 +113,9 @@ class StrecResults(object):
                     'string','string','string','string']
 
         keyfmts = ['%s','%.4f','%.4f','%.1f','%.1f', #time, etc.
-                   '%s','%s','%s','%s','%s','%i', #mtsource, etc.
-                   '%s','%i','%s','%s',           #tectonic regime name, etc
-                   '%s','"%s"','"%s"','%s',       #trsplitflag, etc
+                   '%s','%s','%s','%s','%i', #mtsource, etc.
+                   '%s','%i','%s','%i',           #tectonic regime name, etc
+                   '%i','"%s"','"%s"','%s',       #trsplitflag, etc
                    '%.1f','%.1f','%.1f','%.1f',   #tplunge, etc.
                    '%.1f','%.1f','%.1f','%.1f',   #pplunge, etc.
                    '%.1f','%.1f','%.1f',          #np1 values
@@ -142,8 +142,13 @@ class StrecResults(object):
                 self.rdict[keyname] = datetime.datetime.strptime(row[offset],self.TimeFormat)
             elif keytype == 'float':
                 self.rdict[keyname] = float(row[offset])
+            elif keytype == 'int':
+                self.rdict[keyname] = int(row[offset])
             else: #default is string
-                self.rdict[keyname] = row[offset]
+                value = row[offset]
+                if value.startswith('[') and value.endswith(']'):
+                    value = value[1:-1].split(',')
+                self.rdict[keyname] = value
             offset += 1
         fobj.close()
         return ptime
@@ -155,6 +160,10 @@ class StrecResults(object):
         for keyname,keytuple in self.keys.iteritems():
             fmtlist.append(keytuple[1])
             value = self.rdict[keyname]
+            if isinstance(value,datetime.datetime):
+                value = value.strftime(self.TimeFormat)
+            if instance(value,list):
+                value = '[' + ','.join(value) + ']'
             tpllist.append(value)
         fmt = ','.join(fmtlist)
 
