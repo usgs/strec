@@ -171,7 +171,7 @@ class StrecResults(object):
             if isinstance(value,list):
                 value = '[' + ','.join(value) + ']'
             tpllist.append(value)
-        fmt = ','.join(fmtlist)
+        fmt = ','.join(fmtlist)+'\n'
 
         if currentTime:
             fmt = '%s,'+fmt
