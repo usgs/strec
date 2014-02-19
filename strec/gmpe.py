@@ -127,7 +127,7 @@ class StrecResults(object):
                     ('InterfaceConditionsMet','string','%s'),
                     ('InterfaceDepthInterval','string','%s'),
                     ('IntraslabDepthInterval','string','%s'),
-                    ('Warning','string','%s')]
+                    ('Warning','string','"%s"')]
             
     def readFromCSV(self,line,currentTime=False):
         fobj = StringIO.StringIO(line)
