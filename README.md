@@ -1,7 +1,10 @@
-STREC
+<center>SeismoTectonic Regime Earthquake Calculator (STREC)</center>
 =====
 
- STREC stands for SeismoTectonic Regime Earthquake Calculator. It’s purpose is to determine automatically the earthquake type (subduction zone interface, active crustal shallow, stable continental region, etc.) and the earthquake focal mechanism.
+ This library and set of tools was created to provide functionality to
+ determine automatically type of an earthquake (subduction zone
+ interface, active crustal shallow, stable continental region, etc.),
+ as well as the focal mechanism.
 
 TOOLS
 =====
