@@ -218,7 +218,7 @@ optional arguments:
   -t TYPE, --type TYPE  Specify the moment tensor type (cmt,body wave,etc.) Defaults to 'User'.
 </pre>
 
-<a id="tips">Useful Tips Section</a>Background</a>
+<a id="tips">Background</a>
 ===================================================
 This is the background section.
 
