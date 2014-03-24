@@ -18,7 +18,7 @@ import re
 from strec.mtreader import createDataFile,appendDataFile
 import strec.utils
 
-SLABURL = 'http://earthquake.usgs.gov/data/slab/models/allslabs.tgz''
+SLABURL = 'http://earthquake.usgs.gov/data/slab/models/allslabs.tgz'
 HIST_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/jan76_dec10.ndk.gz'
 MONTHLY_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_MONTHLY/'
 
