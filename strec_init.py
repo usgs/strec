@@ -168,10 +168,13 @@ if __name__ == '__main__':
                 print 'Stopping.'
                 sys.exit(0)
             try:
+                datafolder = os.path.normpath(os.path.expanduser((datafolder)))
                 os.makedirs(datafolder)
             except Exception,msg:
                 print 'Could not make %s due to error "%s".  Stopping.' % (datafolder,msg)
                 sys.exit(1)
+        else:
+            datafolder = os.path.normpath(os.path.expanduser((datafolder)))
         config.add_section('DATA')
         config.set('DATA','folder',datafolder)
         config.write(open(configfile,'wt'))
