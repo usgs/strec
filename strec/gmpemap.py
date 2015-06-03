@@ -150,7 +150,7 @@ def fillDict(parts,config):
     splitflag = int(parts[5])
     depths = [parts[6],parts[8],parts[10]]
     gmpes = [parts[7],parts[9],parts[11]]
-    warning = parts[12][0:-1]
+    warning = parts[12].strip()
     trdict = {}
     trdict['name'] = name.replace('"','')
     trdict['feregname'] = feregname.replace('"','')
