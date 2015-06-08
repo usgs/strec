@@ -622,7 +622,7 @@ class GMPESelector(object):
         z = f.variables['z'].data
         iy = numpy.abs(lat - y).argmin()
         ix = numpy.abs(lon - x).argmin()
-        zvalue = z[iy][ix]
+        zvalue = z[iy][ix].copy()
         f.close()
         return zvalue
 
