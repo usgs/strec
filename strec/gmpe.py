@@ -623,6 +623,7 @@ class GMPESelector(object):
         iy = numpy.abs(lat - y).argmin()
         ix = numpy.abs(lon - x).argmin()
         zvalue = z[iy][ix].copy()
+        del x,y,z,iy,ix
         f.close()
         return zvalue
 
