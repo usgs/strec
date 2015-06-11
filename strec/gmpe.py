@@ -190,9 +190,24 @@ class StrecResults(object):
         properties['mag'] = self.rdict['Magnitude']
         epochtime = int((self.rdict['Time'] - datetime.datetime(1970,1,1)).total_seconds())
         properties['time'] = epochtime*1000
-        properties['slab-strike'] = int(self.rdict['SlabStrike'])
-        properties['slab-dip'] = int(self.rdict['SlabDip'])
-        properties['slab-depth'] = int(self.rdict['SlabDepth'])
+        strike = self.rdict['SlabStrike']
+        dip = self.rdict['SlabDip']
+        depth = self.rdict['SlabDepth']
+        if strike == float('nan'):
+            strike = 'nan'
+        else:
+            strike = int(strike)
+        if dip == float('nan'):
+            dip = 'nan'
+        else:
+            dip = int(dip)
+        if depth == float('nan'):
+            depth = 'nan'
+        else:
+            depth = int(depth)
+        properties['slab-strike'] = strike
+        properties['slab-dip'] = dip
+        properties['slab-depth'] = depth
         properties['tectonic-regime'] = self.rdict['EarthquakeType']
         properties['focal-mechanism'] = self.rdict['FocalMechanism']
         properties['flinn-engdahl-region-name'] = self.rdict['FERegionName']
