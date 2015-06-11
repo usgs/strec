@@ -16,6 +16,7 @@ import ConfigParser
 from optparse import OptionParser
 import csv
 import StringIO
+import math
 
 #third party imports
 from scipy.io import netcdf
@@ -193,15 +194,15 @@ class StrecResults(object):
         strike = self.rdict['SlabStrike']
         dip = self.rdict['SlabDip']
         depth = self.rdict['SlabDepth']
-        if strike == float('nan'):
+        if math.isnan(strike):
             strike = 'nan'
         else:
             strike = int(strike)
-        if dip == float('nan'):
+        if math.isnan(dip):
             dip = 'nan'
         else:
             dip = int(dip)
-        if depth == float('nan'):
+        if math.isnan(depth):
             depth = 'nan'
         else:
             depth = int(depth)
