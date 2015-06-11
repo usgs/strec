@@ -4,6 +4,8 @@
 import re
 import urllib2
 from xml.dom.minidom import parseString,parse
+from collections import OrderedDict
+import json
 import datetime
 import urllib
 import time
@@ -179,7 +181,31 @@ class StrecResults(object):
 
         tpl = tuple(tpllist)
         fobj.write(fmt % tpl)
-            
+
+    def renderGeoJSON(self,fobj):
+        geojson = OrderedDict()
+        geojson['type'] = 'Feature'
+        geojson['geometry'] = {'type':'Point','coordinates':[self.rdict['Longitude'],self.rdict['Latitude'],self.rdict['Depth']]}
+        properties = {}
+        properties['mag'] = self.rdict['Magnitude']
+        epochtime = int((self.rdict['Time'] - datetime.datetime(1970,1,1)).total_seconds())
+        properties['time'] = epochtime*1000
+        properties['slab-strike'] = int(self.rdict['SlabStrike'])
+        properties['slab-dip'] = int(self.rdict['SlabDip'])
+        properties['slab-depth'] = int(self.rdict['SlabDepth'])
+        properties['tectonic-regime'] = self.rdict['EarthquakeType']
+        properties['focal-mechanism'] = self.rdict['FocalMechanism']
+        properties['flinn-engdahl-region-name'] = self.rdict['FERegionName']
+        properties['flinn-engdahl-region-number'] = self.rdict['FERegionNumber']
+        properties['tectonic-domain'] = self.rdict['TectonicRegimeName']
+        properties['moment-tensor-source'] = self.rdict['MomentTensorSource']
+        properties['interface-conditions-met'] = self.rdict['InterfaceConditionsMet']
+        properties['within-interface-depth-interval'] = self.rdict['InterfaceDepthInterval']
+        properties['within-intraslab-depth-interval'] = self.rdict['IntraslabDepthInterval']
+        geojson['properties'] = properties
+        jsonstr = json.dumps(geojson)
+        fobj.write(jsonstr)
+        
 
     def renderXML(self,fobj):
         fobj.write('<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>\n')
