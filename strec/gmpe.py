@@ -788,7 +788,7 @@ class GMPESelector(object):
                         gmpe = 'SZinter'
                     else:
                         if eq3b:
-                            gmpe = 'SZintra'
+                            gmpe = 'SZIntra'
                         else:
                             if depth > acrdepth:
                                 gmpe = 'ACRde'
@@ -796,7 +796,7 @@ class GMPESelector(object):
                                 gmpe = 'ACRsh'
                 else:
                     if eq3b:
-                        gmpe = 'SZintra'
+                        gmpe = 'SZIntra'
                     else:
                         if depth > acrdepth:
                             gmpe = 'ACRde'
@@ -809,7 +809,7 @@ class GMPESelector(object):
                         warning = 'No focal mechanism available'
                     else:
                         if eq3b:
-                            gmpe = 'SZintra'
+                            gmpe = 'SZIntra'
                         else:
                             if depth > acrdepth:
                                 gmpe = 'ACRde'
@@ -817,7 +817,7 @@ class GMPESelector(object):
                                 gmpe = 'ACRsh'
                 else:
                     if eq3b:
-                        gmpe = 'SZintra'
+                        gmpe = 'SZIntra'
                     else:
                         if depth > acrdepth:
                             gmpe = 'ACRde'
@@ -825,10 +825,10 @@ class GMPESelector(object):
                             gmpe = 'ACRsh'
         elif depthzone == 'deep':
             if eq3b:
-                gmpe = 'SZintra'
+                gmpe = 'SZIntra'
             else:
                 warning = 'Event above interface'
-                gmpe = 'SZintra'
+                gmpe = 'SZIntra'
 
         return gmpe,warning
 
