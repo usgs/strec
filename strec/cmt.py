@@ -19,9 +19,9 @@ def compToAxes(mrr,mtt,mpp,mrt,mrp,mtp):
     NP2: strike, dip, and rake
     """
     mt = myMomentTensor(mtt,mtp,mrt,mpp,mrp,mrr)
-    axes = obspy.imaging.beachball.MT2Axes(mt) #T, N and P
-    plane1 = obspy.imaging.beachball.MT2Plane(mt)
-    plane2 = obspy.imaging.beachball.AuxPlane(plane1.strike,plane1.dip,plane1.rake)
+    axes = obspy.imaging.beachball.mt2axes(mt) #T, N and P
+    plane1 = obspy.imaging.beachball.mt2plane(mt)
+    plane2 = obspy.imaging.beachball.aux_plane(plane1.strike,plane1.dip,plane1.rake)
     T = {'azimuth':axes[0].strike,'plunge':axes[0].dip}
     N = {'azimuth':axes[1].strike,'plunge':axes[1].dip}
     P = {'azimuth':axes[2].strike,'plunge':axes[2].dip}
@@ -117,9 +117,9 @@ def getComposite(rows): #rows are: mrr,mtt,mpp,mrt,mrp,mtp
     forbenius = m11*m11 + m12*m12 + m13*m13 + m22*m22 + m23*m23
     similarity = math.sqrt(varforbenius)/forbenius
     mt = myMomentTensor(m11,-m12,m13,m22,-m23,m33)
-    axes = obspy.imaging.beachball.MT2Axes(mt) #T, N and P
-    plane1 = obspy.imaging.beachball.MT2Plane(mt)
-    plane2 = obspy.imaging.beachball.AuxPlane(plane1.strike,plane1.dip,plane1.rake)
+    axes = obspy.imaging.beachball.mt2axes(mt) #T, N and P
+    plane1 = obspy.imaging.beachball.mt2plane(mt)
+    plane2 = obspy.imaging.beachball.aux_plane(plane1.strike,plane1.dip,plane1.rake)
     compkeys = ['mrr','mtt','mpp','mrt','mtp','mrp']
     axkeys = ['value','plunge','azimuth']
     npkeys = ['strike','dip','rake']
