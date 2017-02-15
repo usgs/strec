@@ -9,11 +9,19 @@ import getpass
 import datetime
 import math
 
+#matplotlib workaround
+import matplotlib
+
+#this allows us to have a non-interactive backend - essential on systems without a display
+matplotlib.use('Agg')
+
 #local imports
 from strec.gmpe import GMPESelector
 from strec import gmpemap
 import strec.utils
 from strec import cmt
+
+
 
 def getPlungeValues(strike,dip,rake,mag):
     mom = 10**((mag*1.5)+16.1)
