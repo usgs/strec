@@ -40,25 +40,25 @@ def getCartDist(angle1,angle2):
     return math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
     
 def printEvent(edict):
-    print '%-7s\t%-5s %-7s' % ('T Axis','Plunge','Azimuth')
-    print '%-7s\t%-5.1f %-7.1f' % ('',edict['T']['plunge'],edict['T']['azimuth'])
-    print '%-7s\t%-5s %-7s' % ('N Axis','Plunge','Azimuth')
-    print '%-7s\t%-5.1f %-7.1f' % ('',edict['N']['plunge'],edict['N']['azimuth'])
-    print '%-7s\t%-5s %-7s' % ('P Axis','Plunge','Azimuth')
-    print '%-7s\t%-5.1f %-7.1f' % ('',edict['P']['plunge'],edict['P']['azimuth'])
-    print
-    print '%-7s\t%-6s %-7s %-7s' % ('NP 1','Strike','Dip','Rake')
-    print '%-7s\t%-6.1f %-7.1f %-7.1f' % ('',edict['NP1']['strike'],edict['NP1']['dip'],edict['NP1']['rake'])
-    print '%-7s\t%-6s %-7s %-7s' % ('NP 2','Strike','Dip','Rake')
-    print '%-7s\t%-6.1f %-7.1f %-7.1f' % ('',edict['NP2']['strike'],edict['NP2']['dip'],edict['NP2']['rake'])
-    print
-    print 'Components:'
-    print '\tMtt %g' % edict['Components']['mrr']
-    print '\tMpp %g' % edict['Components']['mpp']
-    print '\tMrr %g' % edict['Components']['mrr']
-    print '\tMtp %g' % edict['Components']['mtp']
-    print '\tMrt %g' % edict['Components']['mrt']
-    print '\tMrp %g' % edict['Components']['mrp']
+    print('%-7s\t%-5s %-7s' % ('T Axis','Plunge','Azimuth'))
+    print('%-7s\t%-5.1f %-7.1f' % ('',edict['T']['plunge'],edict['T']['azimuth']))
+    print('%-7s\t%-5s %-7s' % ('N Axis','Plunge','Azimuth'))
+    print('%-7s\t%-5.1f %-7.1f' % ('',edict['N']['plunge'],edict['N']['azimuth']))
+    print('%-7s\t%-5s %-7s' % ('P Axis','Plunge','Azimuth'))
+    print('%-7s\t%-5.1f %-7.1f' % ('',edict['P']['plunge'],edict['P']['azimuth']))
+    print()
+    print('%-7s\t%-6s %-7s %-7s' % ('NP 1','Strike','Dip','Rake'))
+    print('%-7s\t%-6.1f %-7.1f %-7.1f' % ('',edict['NP1']['strike'],edict['NP1']['dip'],edict['NP1']['rake']))
+    print('%-7s\t%-6s %-7s %-7s' % ('NP 2','Strike','Dip','Rake'))
+    print('%-7s\t%-6.1f %-7.1f %-7.1f' % ('',edict['NP2']['strike'],edict['NP2']['dip'],edict['NP2']['rake']))
+    print()
+    print('Components:')
+    print('\tMtt %g' % edict['Components']['mrr'])
+    print('\tMpp %g' % edict['Components']['mpp'])
+    print('\tMrr %g' % edict['Components']['mrr'])
+    print('\tMtp %g' % edict['Components']['mtp'])
+    print('\tMrt %g' % edict['Components']['mrt'])
+    print('\tMrp %g' % edict['Components']['mrp'])
 
 def getComposite(rows): #rows are: mrr,mtt,mpp,mrt,mrp,mtp
     m11 = 0.0
@@ -123,14 +123,14 @@ def getComposite(rows): #rows are: mrr,mtt,mpp,mrt,mrp,mtp
     compkeys = ['mrr','mtt','mpp','mrt','mtp','mrp']
     axkeys = ['value','plunge','azimuth']
     npkeys = ['strike','dip','rake']
-    edict = dict(zip(compkeys,(m33,m11,m22,m13,-m23,-m12)))
-    t = dict(zip(axkeys,(axes[0].val,axes[0].dip,axes[0].strike)))
-    n = dict(zip(axkeys,(axes[1].val,axes[1].dip,axes[1].strike)))
-    p = dict(zip(axkeys,(axes[2].val,axes[2].dip,axes[2].strike)))
-    np1 = dict(zip(npkeys,(plane1.strike,plane1.dip,plane1.rake)))
-    np2 = dict(zip(npkeys,(plane2[0],plane2[1],plane2[2])))
-    edict.update(dict(zip(['T','N','P'],(t,n,p))))
-    edict.update(dict(zip(['NP1','NP2'],(np1,np2))))
+    edict = dict(list(zip(compkeys,(m33,m11,m22,m13,-m23,-m12))))
+    t = dict(list(zip(axkeys,(axes[0].val,axes[0].dip,axes[0].strike))))
+    n = dict(list(zip(axkeys,(axes[1].val,axes[1].dip,axes[1].strike))))
+    p = dict(list(zip(axkeys,(axes[2].val,axes[2].dip,axes[2].strike))))
+    np1 = dict(list(zip(npkeys,(plane1.strike,plane1.dip,plane1.rake))))
+    np2 = dict(list(zip(npkeys,(plane2[0],plane2[1],plane2[2]))))
+    edict.update(dict(list(zip(['T','N','P'],(t,n,p)))))
+    edict.update(dict(list(zip(['NP1','NP2'],(np1,np2)))))
     return (edict,similarity,len(rows))
 
 def getCompositeCMT(lat,lon,depth,dbfile,box=0.1,depthbox=10,nmin=3,maxbox=1.0,dbox=0.09):
@@ -218,15 +218,15 @@ def mapRow(row):
     pkeys = ['strike','dip','rake']
     pl1keys = ['np1strike','np1dip','np1slip']
     pl2keys = ['np2strike','np2dip','np2slip']
-    edict = dict(zip(compkeys,row[5:11]))
-    T = dict(zip(axiskeys,row[11:13]))
-    N = dict(zip(axiskeys,row[13:15]))
-    P = dict(zip(axiskeys,row[15:17]))
+    edict = dict(list(zip(compkeys,row[5:11])))
+    T = dict(list(zip(axiskeys,row[11:13])))
+    N = dict(list(zip(axiskeys,row[13:15])))
+    P = dict(list(zip(axiskeys,row[15:17])))
     edict['T'] = T
     edict['N'] = N
     edict['P'] = P
-    NP1 = dict(zip(pkeys,row[17:20]))
-    NP2 = dict(zip(pkeys,row[20:23]))
+    NP1 = dict(list(zip(pkeys,row[17:20])))
+    NP2 = dict(list(zip(pkeys,row[20:23])))
     edict['NP1'] = NP1
     edict['NP2'] = NP2
     return edict
@@ -263,26 +263,26 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
     if (options.doHistorical and options.doComposite) or (not options.doHistorical and not options.doComposite):
-        print 'You must select one of the modes "historical" or "composite".'
+        print('You must select one of the modes "historical" or "composite".')
         parser.print_help()
         sys.exit(1)
 
     if options.doComposite:
         if options.time is not None:
-            print 'Date/time not required for composite search.  Ignoring.'
+            print('Date/time not required for composite search.  Ignoring.')
         if options.epicenter is None:
-            print 'Epicenter is required for composite search.'
+            print('Epicenter is required for composite search.')
             parser.print_help()
             sys.exit(1)
 
     if options.doHistorical:
         if options.time is None or options.epicenter is None:
-            print 'Epicenter and time are required for a historical search.'
+            print('Epicenter and time are required for a historical search.')
             parser.print_help()
             sys.exit(1)
 
     if options.file is None:
-        print 'SQLite filename must be specified.'
+        print('SQLite filename must be specified.')
         parser.print_help()
         sys.exit(1)
 
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         lon = float(lon)
         depth = float(depth)
     except:
-        print 'Could not parse lat,lon, depth from input: "%s"' % options.epicenter
+        print('Could not parse lat,lon, depth from input: "%s"' % options.epicenter)
         parser.print_help()
         sys.exit(1)
 
@@ -308,14 +308,14 @@ if __name__ == '__main__':
         try:
             time = datetime.datetime.strptime(options.time,'%Y-%m-%dT%H:%M:%S')
         except:
-            print 'Could not parse time from input: "%s"' % options.time
+            print('Could not parse time from input: "%s"' % options.time)
             parser.print_help()
             sys.exit(1)
 
     if options.doHistorical:
         edict = getHistoricalCMT(time,dbfile,twindow=options.twindow)
         if edict is not None:
-            print 'Historical GCMT parameters:'
+            print('Historical GCMT parameters:')
             printEvent(edict)
 
     if options.doComposite:
@@ -323,7 +323,7 @@ if __name__ == '__main__':
                                                 box=options.searchmin,depthbox=options.depthrange,
                                                 maxbox=options.searchmax,dbox=options.searchint)
         if edict is not None:
-            print 'Composite similarity is %f from %i events.' % (similar,nevents)
-            print 'Composite GCMT parameters:'
+            print('Composite similarity is %f from %i events.' % (similar,nevents))
+            print('Composite GCMT parameters:')
             printEvent(edict)
             
