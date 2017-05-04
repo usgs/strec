@@ -1,6 +1,6 @@
 from math import cos,sin,pi
 import os.path
-import ConfigParser
+import configparser
 import shutil
 
 STRECINI = 'strec.ini'
@@ -21,7 +21,7 @@ def getConfig():
     homedir = os.path.expanduser('~') #where is the user's home directory
     if homedir == '~':
         msg = 'Could not establish home directory for %s.  Exiting.' % getpass.getuser()
-        raise Exception,msg
+        raise Exception(msg)
     configfolder = os.path.join(homedir,'.strec')
     if not os.path.isdir(configfolder):
         os.mkdir(configfolder)
@@ -30,10 +30,10 @@ def getConfig():
         #here we should create one from the default
         thispath = os.path.dirname(os.path.abspath(__file__)) #where is this file?
         tmpfile = os.path.join(thispath,'data','strec.ini')
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.readfp(open(tmpfile))
         return config,configfile
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.readfp(open(configfile))
     return (config,configfile)
 

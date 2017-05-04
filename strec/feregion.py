@@ -2,18 +2,82 @@
 
 #stdlib imports
 import os.path
+from collections import OrderedDict
 
 #third party imports
 import fiona
 from shapely.geometry import shape as tshape
 from shapely.geometry.point import Point
 import pandas as pd
+import numpy as np
 
 #local imports
 from .subduction import SubductionZone
 from .slab import SlabCollection
 from .cmt import getCompositeCMT
 from .proj import geo_to_utm
+
+def compile_results(reginfo,lat,lon,depth,
+                    tensor_params,slab_params,fmstring,regime_warning,distance_warning,
+                    interface_dict):
+    d = OrderedDict()
+    d['Lat'] = lat
+    d['Lon'] = lon
+    d['Depth'] = depth
+    d['SourceRegime'] = reginfo['regime']
+    d['TectonicDomain'] = reginfo['REGIME_TYPE']
+    d['FocalMechanismType'] = fmstring
+    d['FERegionName'] = reginfo['NAME']
+    d['FERegionNumber'] = reginfo['FEGR']
+
+    #fill in moment tensor stuff
+    if tensor_params is not None:
+        tstrike,tplunge = (tensor_params['T']['azimuth'],tensor_params['T']['plunge'])
+        pstrike,pplunge = (tensor_params['P']['azimuth'],tensor_params['P']['plunge'])
+        nstrike,nplunge = (tensor_params['N']['azimuth'],tensor_params['N']['plunge'])
+        fmech = OrderedDict()
+        taxis = OrderedDict([('Strike',tstrike),('Plunge',tplunge)])
+        paxis = OrderedDict([('Strike',pstrike),('Plunge',pplunge)])
+        naxis = OrderedDict([('Strike',nstrike),('Plunge',nplunge)])
+        fmech['TAxis'] = taxis
+        fmech['PAxis'] = paxis
+        fmech['NAxis'] = naxis
+    else:
+        fmech = OrderedDict()
+        taxis = OrderedDict([('Strike',np.nan),('Plunge',np.nan)])
+        paxis = OrderedDict([('Strike',np.nan),('Plunge',np.nan)])
+        naxis = OrderedDict([('Strike',np.nan),('Plunge',np.nan)])
+        fmech['TAxis'] = taxis
+        fmech['PAxis'] = paxis
+        fmech['NAxis'] = naxis
+
+    d['FocalMechanismParameters'] = fmech
+    #slab info
+    if not len(slab_params):
+        d['SlabParameters'] = OrderedDict([('Strike',np.nan),
+                                           ('Dip',np.nan),
+                                           ('Depth',np.nan),
+                                           ('Outside',False),
+                                           ('Source','NA')])
+    else:
+        slabstrike = slab_params['strike']
+        slabdip = slab_params['dip']
+        slabdepth = slab_params['depth']
+        slaboutside = slab_params['outside']
+        slabsource = slab_params['slabtype']
+        d['SlabParameters'] = OrderedDict([('Strike',slabstrike),
+                                           ('Dip',slabdip),
+                                           ('Depth',slabdepth),
+                                           ('Outside',slaboutside),
+                                           ('Source',slabsource)])
+    
+    d['IsInterfaceLike'] = interface_dict['is_interface_like']
+    d['WithinInterfaceDepthInterval'] = interface_dict['is_near_interface']
+    d['WithinIntraslabDepthInterval'] = interface_dict['is_in_slab']
+    d['Warning'] = regime_warning + distance_warning
+
+    return d
+    
 
 def get_focal_mechanism(tensor_params,config):
     """
@@ -95,7 +159,7 @@ class FERegions(object):
 
     
         
-    def getRegion(self,lat,lon,depth,magnitude):
+    def getRegion(self,lat,lon,depth):
         polygons = fiona.open(self._fepolygons,'r')
         regioncode = None
         for polygon in polygons:
@@ -129,32 +193,31 @@ class FERegions(object):
         
         return rowdict
 
-    def getRegimeInfo(self,lat,lon,depth,magnitude,config,tensor_params=None):
+    def getRegimeInfo(self,lat,lon,depth,config,tensor_params=None):
         data_folder = config['data']['folder']
         dip = config['constants']['default_szdip']
         slab_collection = SlabCollection(data_folder,dip)
         slab_params = slab_collection.getSlabInfo(lat,lon)
         if tensor_params is None:
             dbfile = os.path.join(data_folder,'gcmt.db')
-        minboxcomp = config['constants']['minradial_distcomp']
-        maxboxcomp = config['constants']['maxradial_distcomp']
-        dboxcomp = config['constants']['step_distcomp']
-        depthboxcomp = config['constants']['depth_rangecomp']
+            minboxcomp = config['constants']['minradial_distcomp']
+            maxboxcomp = config['constants']['maxradial_distcomp']
+            dboxcomp = config['constants']['step_distcomp']
+            depthboxcomp = config['constants']['depth_rangecomp']
 
-        #Minimum number of events required to get composite mechanism
-        nmin = config['constants']['minno_comp']
-        tensor_params,tensor_warning = getCompositeCMT(lat,lon,depth,dbfile,
-                                                       box=minboxcomp,
-                                                       depthbox=depthboxcomp,
-                                                       maxbox=maxboxcomp,
-                                                       dbox=dboxcomp,nmin=nmin)
-        regime,regime_warning = self.getRegime(lat,lon,depth,magnitude,
-                                               tensor_params,slab_params,config)
-        return (regime,regime_warning)
+            #Minimum number of events required to get composite mechanism
+            nmin = config['constants']['minno_comp']
+            tensor_params,tensor_warning = getCompositeCMT(lat,lon,depth,dbfile,
+                                                           box=minboxcomp,
+                                                           depthbox=depthboxcomp,
+                                                           maxbox=maxboxcomp,
+                                                           dbox=dboxcomp,nmin=nmin)
+        results = self.getRegime(lat,lon,depth,tensor_params,slab_params,config)
+        return results
 
     def modify_reginfo(self,reginfo,regtype=None):
         if regtype is None:
-            regtype = reginfo['REGIME_TYPE']
+            regtype = reginfo['TYPE']
         #get the depth/regime info for this type
         df_regimes = pd.read_excel(self._fecodes,index_col=None,sheetname='regimes')
         row = df_regimes[df_regimes.TYPE == regtype].iloc[0]
@@ -162,26 +225,14 @@ class FERegions(object):
         reginfo.update(row.to_dict())
         return reginfo
 
-    def _get_regime_by_depth(self,reginfo):
-        if depth >= 0 and depth < reginfo['H1']:
-            regime = reginfo['REGIME1']
-            warning = ''
-        elif depth >= reginfo['H1'] and depth < reginfo['H2']:
-            regime = reginfo['REGIME2']
-            warning = ''
-        elif depth >= reginfo['H2'] and depth < reginfo['H3']:
-            regime = reginfo['REGIME3']
-            warning = ''
-        else:
-            regime = reginfo['REGIME_WARNING']
-            warning = ''
-        reginfo['regime'] = regime
-        return reginfo
-    
-    def getRegime(self,lat,lon,depth,magnitude,tensor_params,slab_params,config):
+    def getRegime(self,lat,lon,depth,tensor_params,slab_params,config):
         scr_dist = config['constants']['scr_dist']
-        reginfo = self.getRegion(lat,lon,depth,magnitude)
-        warning = ''
+        reginfo = self.getRegion(lat,lon,depth)
+        regime_warning = ''
+        distance_warning = ''
+        interface_dict = {'is_interface_like':False,
+                          'is_near_interface':False,
+                          'is_in_slab':False}
         if reginfo['SCRFLAG']:
             in_stable,region_name,region_code,mindist = inside_stable_region(lat,lon)
             #if we're technically in a stable region, but really close to the edge, then
@@ -189,41 +240,95 @@ class FERegions(object):
             if in_stable:
                 if mindist < scr_dist:
                     in_stable = False
-                    distwarning = 'WARNING: Event is less than %.1f kilometers from the edge of a stable polygon' % scr_dist
+                    distance_warning = 'WARNING: Event is less than %.1f kilometers from the edge of a stable polygon' % scr_dist
             if in_stable:
                 if reginfo['scrflag']:
                     reginfo = self.modify_reginfo(reginfo,'SCR (generic)')
-                    reginfo['regime'] = self._get_regime_by_depth(reginfo)
+                    reginfo['regime'],regime_warning = self.getNonSubdictionRegime(reginfo,depth)
                 else:
                     reginfo = self.modify_reginfo(reginfo,'SCR (above slab)')
-                    reginfo['regime'] = self._get_regime_by_depth(reginfo)
-            return reginfo
-        
-        if not reginfo['REGIME_TYPE'].startswith('SZ'): #not subduction zone
-            reginfo = self.modify_reginfo(reginfo)
-            return reginfo
-        else: #we are in a subduction zone
-            if reginfo['REGIME_TYPE'] == 'SZ (generic)':
-                if slab_params['outside']:
-                    reginfo = self.modify_reginfo(reginfo,'SZ (outer-trench)')
-                else:
-                    if np.isnan(slab_params['depth']): #although in a SZ, not inside the slab we have.
-                        if reginfo['SLABFLAG'] == 'a': #there is a back-arc region inside this FE
-                            reginfo = self.modify_reginfo(reginfo,'SZ (inland/back-arc)')
-                        else: #no backarc present, do normal subduction zone stuff
-                            pass
+                    reginfo['regime'],regime_warning = self.getNonSubdictionRegime(reginfo,depth)
+            
+
+        #don't have to check the split flag, as that's already taken care of in getRegion
+        else:
+            if not reginfo['REGIME_TYPE'].startswith('SZ'): #not subduction zone
+                reginfo = self.modify_reginfo(reginfo)
+                reginfo['regime'],regime_warning = self.getNonSubdictionRegime(reginfo,depth)
+            else: #we are in a subduction zone
                 if depth <= reginfo['H1']:
                     depthzone =  "shallow"
                 elif depth > reginfo['H1'] and depth <= reginfo['H2']:
                     depthzone = "medium"
                 else:
                     depthzone = "deep"
-                reginfo,warning = self.getSubductionRegime(lat,lon,depth,magnitude,
-                                                  tensor_params,slab_params,
-                                                  reginfo,depthzone,config)
-        return (reginfo,warning)
+                if reginfo['REGIME_TYPE'] == 'SZ (generic)':
+                    if 'outside' in slab_params and slab_params['outside']:
+                        reginfo = self.modify_reginfo(reginfo,'SZ (outer-trench)')
+                        reginfo['regime'],regime_warning,interface_dict = self.getNonSubdictionRegime(reginfo,depth)
+                    else:
+                        if not len(slab_params) or np.isnan(slab_params['depth']): #although in a SZ, not inside the slab we have.
+                            if reginfo['SLABFLAG'] == 'a': #there is a back-arc region inside this FE
+                                reginfo = self.modify_reginfo(reginfo,34)
+                                reginfo['regime'],regime_warning = self.getNonSubdictionRegime(reginfo,depth)
+                            else: #no backarc present, do normal subduction zone stuff
+                                reginfo['regime'],regime_warning,interface_dict = self.getSubductionRegime(lat,lon,depth,
+                                                                                            tensor_params,slab_params,
+                                                                                            reginfo,depthzone,config)
+                        else: #inside the subduction zone, check it...
+                            reginfo['regime'],regime_warning,interface_dict = self.getSubductionRegime(lat,lon,depth,
+                                                                                        tensor_params,slab_params,
+                                                                                        reginfo,depthzone,config)
 
-    def getSubductionRegime(self,lat,lon,depth,magnitude,
+                elif reginfo['REGIME_TYPE'] == 'SZ (on-shore)':
+                    if reginfo['SLABFLAG'] == 'a': #there is a back-arc region inside this FE
+                        reginfo = self.modify_reginfo(reginfo,34)
+                        reginfo['regime'],regime_warning = self.getNonSubdictionRegime(reginfo,depth)
+                    else: #no backarc present, do normal subduction zone stuff
+                        reginfo['regime'],regime_warning,interface_dict = self.getSubductionRegime(lat,lon,depth,
+                                                                                    tensor_params,slab_params,
+                                                                                    reginfo,depthzone,config)
+                else: #these other "subduction zone" domains aren't really subduction zones
+                    reginfo['regime'],regime_warning = self.getNonSubdictionRegime(reginfo,depth)
+        fmstring = get_focal_mechanism(tensor_params,config)
+        results = compile_results(reginfo,lat,lon,depth,
+                                      tensor_params,slab_params,
+                                      fmstring,regime_warning,distance_warning,
+                                      interface_dict)
+        return results
+
+    def getNonSubdictionRegime(self,reginfo,depth):
+        H1 = reginfo['H1']
+        H2 = reginfo['H2']
+        H3 = reginfo['H3']
+
+        #we need to check the depths to see which ones are valid
+        h2_depth_valid = True
+        h3_depth_valid = True
+        if H2 == '-':
+            h2_depth_valid = False
+        if H3 == '-':
+            h3_depth_valid = False
+        
+        reg1 = reginfo['REGIME1']
+        reg2 = reginfo['REGIME2']
+        reg3 = reginfo['REGIME3']
+        regwarn = reginfo['REGIME_WARNING']
+        if depth >= 0 and depth < H1:
+            return (reg1,'')
+        if h2_depth_valid:
+            if depth >= reginfo['H1'] and depth < reginfo['H2']:
+                return (reginfo['REGIME2'],'')
+
+        if h2_depth_valid and h3_depth_valid:
+            if depth >= reginfo['H1'] and depth < reginfo['H2']:
+                return (reginfo['REGIME3'],'')
+        else:
+            if regwarn != '-':
+                return (regwarn,'WARNING')
+        return (None,'WARNING')
+
+    def getSubductionRegime(self,lat,lon,depth,
                             tensor_params,slab_params,reginfo,
                             depthzone,config):
         fmstring = get_focal_mechanism(tensor_params,config)
@@ -242,7 +347,7 @@ class FERegions(object):
             if fmstring == 'RS':
                 if is_interface_like: #eq. 2
                     if is_near_interface:
-                        regime = 'SZinter'
+                        regime = 'SZInter'
                     else:
                         if is_in_slab:
                             regime = 'ACRsh'
@@ -256,9 +361,9 @@ class FERegions(object):
                     else:
                         regime = 'ACRsh'
             else: #fmstring is 'SS' or 'NM' or 'ALL'
-                if fmstring == 'ALL' and plungevals is None:
+                if fmstring == 'ALL' and tensor_params is None:
                     if is_near_interface:
-                        regime = 'SZinter'
+                        regime = 'SZInter'
                         warning = 'No focal mechanism available'
                     else:
                         if is_in_slab:
@@ -276,7 +381,7 @@ class FERegions(object):
             if fmstring == 'RS':
                 if is_interface_like:
                     if is_near_interface:
-                        regime = 'SZinter'
+                        regime = 'SZInter'
                     else:
                         if is_in_slab:
                             regime = 'SZIntra'
@@ -294,9 +399,9 @@ class FERegions(object):
                         else:
                             regime = 'ACRsh'
             else:
-                if fmstring == 'ALL' and plungevals is None:
+                if fmstring == 'ALL' and tensor_params is None:
                     if is_near_interface:
-                        regime = 'SZinter'
+                        regime = 'SZInter'
                         warning = 'No focal mechanism available'
                     else:
                         if is_in_slab:
@@ -321,5 +426,7 @@ class FERegions(object):
                 warning = 'Event above interface'
                 regime = 'SZIntra'
 
-        reginfo['regime'] = regime
-        return reginfo,warning
+        interface_dict = {'is_interface_like':is_interface_like,
+                          'is_near_interface':is_near_interface,
+                          'is_in_slab':is_in_slab}
+        return (regime,warning,interface_dict)

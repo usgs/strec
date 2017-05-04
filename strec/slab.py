@@ -98,8 +98,11 @@ class GridSlab(Slab):
         depth = -1 * depth_grid.getValue(lat,lon) #slab grids are negative depth
         dip_grid = GMTGrid.load(self._dip_file)
         strike_grid = GMTGrid.load(self._strike_file)
-        dip = dip_grid.getValue(lat,lon)
+        dip = dip_grid.getValue(lat,lon) * -1
         strike = strike_grid.getValue(lat,lon)
+        strike = strike - 90
+        if strike < 0:
+            strike += 360
         slabinfo = {'region':region,
                     'strike':strike,
                     'dip':dip,

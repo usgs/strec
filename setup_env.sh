@@ -3,7 +3,7 @@
 VENV=strecenv
 PYVER=3.5
 
-DEPARRAY=(numpy scipy matplotlib jupyter rasterio fiona xlrd xlwt pandas shapely h5py pytest pytest-cov pytables pytest-mpl obspy pyproj)
+DEPARRAY=(numpy scipy matplotlib jupyter rasterio fiona xlrd xlwt pandas shapely h5py pytest pytest-cov pytables pytest-mpl obspy pyproj obspy)
 
 #if we're already in an environment called pager, switch out of it so we can remove it
 source activate root

@@ -7,6 +7,32 @@ import obspy.imaging.beachball
 import math
 from optparse import OptionParser 
 
+def get_tensor_params_from_nodal(strike,dip,rake,mag):
+    mom = 10**((mag*1.5)+16.1)
+    d2r = math.pi/180.0
+    
+    mrr=mom*math.sin(2*dip*d2r)*math.sin(rake*d2r)
+    mtt=-mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.sin(2*strike*d2r))+(math.sin(2*dip*d2r)*math.sin(rake*d2r)*(math.sin(strike*d2r)*math.sin(strike*d2r))))
+    mpp=mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.sin(2*strike*d2r))-(math.sin(2*dip*d2r)*math.sin(rake*d2r)*(math.cos(strike*d2r)*math.cos(strike*d2r))))
+    mrt=-mom*((math.cos(dip*d2r)*math.cos(rake*d2r)*math.cos(strike*d2r))+(math.cos(2*dip*d2r)*math.sin(rake*d2r)*math.sin(strike*d2r)))
+    mrp=mom*((math.cos(dip*d2r)*math.cos(rake*d2r)*math.sin(strike*d2r))-(math.cos(2*dip*d2r)*math.sin(rake*d2r)*math.cos(strike*d2r)))
+    mtp=-mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.cos(2*strike*d2r))+(0.5*math.sin(2*dip*d2r)*math.sin(rake*d2r)*math.sin(2*strike*d2r)))
+
+    plungetuple = cmt.compToAxes(mrr,mtt,mpp,mrt,mrp,mtp)
+    tensor_params = {}
+    tensor_params['mrr'] = mrr
+    tensor_params['mtt'] = mtt
+    tensor_params['mpp'] = mpp
+    tensor_params['mrt'] = mrt
+    tensor_params['mrp'] = mrp
+    tensor_params['mtp'] = mtp
+    tensor_params['T'] = plungetuple[0].copy()
+    tensor_params['N'] = plungetuple[1].copy()
+    tensor_params['P'] = plungetuple[2].copy()
+    tensor_params['NP1'] = plungetuple[3].copy()
+    tensor_params['NP2'] = plungetuple[4].copy()
+    return tensor_params
+
 def compToAxes(mrr,mtt,mpp,mrt,mrp,mtp):
     """
     Calculate Principal Axes and Nodal Planes from Moment Tensor components.

@@ -8,7 +8,7 @@ import configparser
 #hack the path so that I can debug these functions if I need to
 homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
 repodir = os.path.abspath(os.path.join(homedir,'..','..'))
-datadir = os.path.join(homedir,'..','..','strec','data') #repository data files are here
+datadir = os.path.join(homedir,'..','data') #test data files are here
 sys.path.insert(0,repodir) #put this at the front of the system path, ignoring any installed version of the repo
 
 #local imports
@@ -17,6 +17,7 @@ from strec.feregion import FERegions,get_focal_mechanism,inside_stable_region
 #third party imports
 import numpy as np
 import fiona
+import pandas as pd
 from shapely.geometry import shape as tshape
 
 CONFIG = {'constants':{'tplunge_rs':50,
@@ -28,6 +29,7 @@ CONFIG = {'constants':{'tplunge_rs':50,
                        'ddip_interf':30,
                        'dlambda':60,
                        'ddepth_interf':20,
+                       'scr_dist':40,
                        'ddepth_intra':10,
                        'default_szdip':17,
                        'minradial_distcomp':0.5,
@@ -161,6 +163,7 @@ def test_regimes():
                            'dlambda':60,
                            'ddepth_interf':20,
                            'ddepth_intra':10,
+                           'scr_dist': 40,
                            'minradial_distcomp':0.5,
                            'maxradial_distcomp':1.0,
                            'step_distcomp':0.1,
@@ -171,6 +174,8 @@ def test_regimes():
     lat,lon,depth,magnitude = (11.004219,124.678345,15.0,6.5)
     fereg = FERegions()
     reginfo = fereg.getRegimeInfo(lat,lon,depth,magnitude,config)
+    
+
     
 def test_focal_mechanism():
     config = {'constants':{'tplunge_rs':50,
@@ -208,13 +213,6 @@ def test_focal_mechanism():
 
     #TODO:  Get other moment parameters for SS, NM, and ALL
 
-def test_all_regimes():
-    fereg = FERegions()
-    points = [((57.180692,-170.304565,15.0,6.5),'ACRsh','ACR shallow (above slab)')]
-    for point in points:
-        params,regime,domain = point
-        lat,lon,depth,mag = params
-        reginfo = fereg.getRegimeInfo(lat,lon,depth,mag,CONFIG)
     
 def test_stable_regions():
     points = [((22.174688,45.878906),'ARA'),
@@ -238,13 +236,36 @@ def test_stable_regions():
         inside,rname,region_code,mindist = inside_stable_region(lat,lon)
         print('%s == %s' % (rcode,region_code))
         assert rcode == region_code
+
+def test_all_regimes():
+    homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
+    regime_file = os.path.join(homedir,'..','data','test_regimes.xlsx') #ends 2016-10-31
+    df = pd.read_excel(regime_file)
+    fereg = FERegions()
+    for idx,row in df.iterrows():
+        domain = row['Domain Name']
+        lat = row['Lat']
+        lon = row['Lon']
+        depth = row['Depth']
+        magnitude = row['Magnitude']
+        regime = row['Tectonic Regime']
+        try:
+            results = fereg.getRegimeInfo(lat,lon,depth,CONFIG)
+            print('Comparing domain %s and regime %s...' % (domain,regime))
+            assert results['TectonicRegime'] == regime
+            print('Passed.')
+        except:
+            print('Failed on domain %s, regime %s' % (domain,regime))
+        
+
     
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        grid_dir = sys.argv[1]
-        test_all_regimes(grid_dir)
-    #test_get_region()
-    test_polygons()
-    test_focal_mechanism()
-    test_regimes()
-    test_stable_regions()
+    test_all_regimes()
+    # if len(sys.argv) > 1:
+    #     grid_dir = sys.argv[1]
+    #     test_all_regimes(grid_dir)
+    # #test_get_region()
+    # test_polygons()
+    # test_focal_mechanism()
+    # test_regimes()
+    # test_stable_regions()

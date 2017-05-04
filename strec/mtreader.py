@@ -8,13 +8,13 @@ import math
 from xml.dom.minidom import parse
 import os.path
 import sqlite3
-import urllib,urllib2
+import urllib.request, urllib.parse, urllib.error,urllib.request,urllib.error,urllib.parse
 import json
 import sys
 import copy
 
 #local imports
-from cmt import compToAxes
+from .cmt import compToAxes
 
 
 class ReaderError(Exception):
@@ -99,16 +99,16 @@ class ComCatReader(MTReader):
         pass
 
     def getEvents(self,pdict):
-        params = urllib.urlencode(pdict)
+        params = urllib.parse.urlencode(pdict)
         searchurl = self.URLBASE % params
         datadict = None
         try:
-            fh = urllib2.urlopen(searchurl)
+            fh = urllib.request.urlopen(searchurl)
             data = fh.read()
             data2 = data[len(pdict['callback'])+1:-2]
             datadict = json.loads(data2)
             fh.close()
-        except Exception,errorobj:
+        except Exception as errorobj:
             raise errorobj
         return datadict['features']
             
@@ -158,11 +158,11 @@ class ComCatReader(MTReader):
         datadict = {}
         url = event['properties']['url'] + '.json'
         try:
-            fh = urllib2.urlopen(url)
+            fh = urllib.request.urlopen(url)
             data = fh.read()
             datadict = json.loads(data)
             fh.close()
-        except Exception,errorobj:
+        except Exception as errorobj:
             raise errorobj
         eqtime = datadict['summary']['time']
         eqid = str(datetime.datetime.utcfromtimestamp(int(eqtime)/1000))
@@ -203,7 +203,7 @@ class ComCatReader(MTReader):
                 np2rake = float(mt['properties']['nodal-plane-2-slip'])
             try:
                 T,N,P,NP1,NP2 = compToAxes(mrr,mtt,mpp,mrt,mrp,mtp)
-            except Exception,exc:
+            except Exception as exc:
                 pass
             tplunge = T['plunge']
             tazimuth = T['azimuth']
@@ -239,8 +239,8 @@ class CSVReader(MTReader):
                         yield self.readline(line)
                 else:
                     yield self.readline(line)
-            except Exception,msg:
-                raise ReaderError,'Error reading data from line:\n"%s".\nIs this a header row?' % line.strip()
+            except Exception as msg:
+                raise ReaderError('Error reading data from line:\n"%s".\nIs this a header row?' % line.strip())
 
         self.fh.close()
 
@@ -297,8 +297,8 @@ class CSVReader(MTReader):
                 record['np2strike'] = NP2['strike']
                 record['np2dip'] = NP2['dip']
                 record['np2rake'] = NP2['rake']
-        except Exception,msg:
-            raise Exception,msg
+        except Exception as msg:
+            raise Exception(msg)
         return record
 
 class NDKReader(MTReader):
@@ -555,19 +555,19 @@ if __name__ == '__main__':
     d2 = datetime.datetime.now()
     nc = 0
     for record in comreader.generateRecords(startdate=d1,enddate=d2):
-        print '%s,%.1f,%s' % (record['id'],record['mag'],record['type'])
+        print('%s,%.1f,%s' % (record['id'],record['mag'],record['type']))
         sys.stdout.flush()
         nc += 1
-    print 'There are %i moment tensor records in ComCat' % nc
+    print('There are %i moment tensor records in ComCat' % nc)
     sys.exit(0)
     xreader = QuakeMLReader('xmlsample.xml',type='GCMT')
     for record in xreader.generateRecords():
-        print '%s,%.1f,%s' % (record['id'],record['mag'],record['type'])
+        print('%s,%.1f,%s' % (record['id'],record['mag'],record['type']))
         
     creader = CSVReader('csvtest.csv','User')
     for record in creader.generateRecords():
-        print record['id'],record['mag'],record['type']
+        print(record['id'],record['mag'],record['type'])
 
     nreader = NDKReader('aug10.ndk','GCMT')
     for record in nreader.generateRecords():
-        print record['id'],record['mag'],record['type']
+        print(record['id'],record['mag'],record['type'])
