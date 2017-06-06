@@ -9,11 +9,26 @@ repodir = os.path.abspath(os.path.join(homedir,'..','..'))
 sys.path.insert(0,repodir) #put this at the front of the system path, ignoring any installed version of the repo
 
 #local imports
-from strec.cmt import getCompositeCMT
+from strec.cmt import getCompositeCMT,get_tensor_params_from_nodal
 
 #third party imports
 import numpy as np
+import pandas as pd
 
+def test_nodal_conversion():
+    homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
+    excelfile = os.path.join(homedir,'..','data','large_events.xlsx')
+    df = pd.read_excel(excelfile)
+    for idx,row in df.iterrows():
+        strike = row['Strike']
+        dip = row['Dip']
+        rake = row['Rake']
+        mag = row['Magnitude']
+        if np.isnan(strike):
+            continue
+        
+        tensor_params = get_tensor_params_from_nodal(strike,dip,rake,mag)
+        
 
 def test_composite():
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
@@ -47,3 +62,4 @@ def test_composite():
     
 if __name__ == '__main__':
     test_composite()
+    test_nodal_conversion()

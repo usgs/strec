@@ -24,11 +24,11 @@ class SubductionZone(object):
           DDEPTH_INTERF - Acceptable depth range around interface depth for interface event.
           DDEPTH_INTRA - intra-slab depth range.
         """
-        self._dstrike = config['constants']['dstrike_interf']
-        self._ddip = config['constants']['ddip_interf']
-        self._dlambda = config['constants']['dlambda']
-        self._ddepth_interface = config['constants']['ddepth_interf']
-        self._ddepth_intraslab = config['constants']['ddepth_intra']
+        self._dstrike = float(config['CONSTANTS']['dstrike_interf'])
+        self._ddip = float(config['CONSTANTS']['ddip_interf'])
+        self._dlambda = float(config['CONSTANTS']['dlambda'])
+        self._ddepth_interface = float(config['CONSTANTS']['ddepth_interf'])
+        self._ddepth_intraslab = float(config['CONSTANTS']['ddepth_intra'])
         self._slab_params = slab_params.copy()
         self._tensor_params = tensor_params.copy()
         self._depth = depth

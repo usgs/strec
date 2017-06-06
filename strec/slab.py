@@ -12,7 +12,7 @@ from shapely.ops import transform
 from shapely.geometry import shape as tshape
 from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
-from openquake.hazardlib.geo.geodetic import geodetic_distance,azimuth
+from obspy.geodetics import gps2dist_azimuth
 
 #local imports
 from .proj import geo_to_utm,utm_to_geo
@@ -115,7 +115,7 @@ class TrenchSlab(Slab):
     def __init__(self,trenchfile,dip=DEFAULT_SZ_DIP):
         jdict = json.load(open(trenchfile,'rt'))
         self._shape = tshape(jdict['geometry'])
-        self._strike = jdict['properties']['strike']
+        self._strike = [float(s) for s in jdict['properties']['strikes'].split(',')]
         self._dip = dip
         self._region = jdict['properties']['name']
 
@@ -159,13 +159,15 @@ class TrenchSlab(Slab):
         for i in range(0,len(self._shape.coords)):
             slon,slat = self._shape.coords[i]
             strike = self._strike[i]
-            dist = geodetic_distance(lat,lon,slat,slon)
+            dist,az1,az2 = gps2dist_azimuth(lat,lon,slat,slon)
+            dist /= 1000
             if dist < mindist:
                 mindist = dist
                 minlat = slat
                 minlon = slon
                 minstrike = strike
-        lineaz = azimuth(minlat,minlon,lat,lon)
+        d1,lineaz,taz = gps2dist_azimuth(minlat,minlon,lat,lon)
+        d1 /= 1000.0
         dstrike = minstrike - lineaz
         region = self._region
         depth = mindist * np.tan(np.radians(self._dip))
@@ -198,7 +200,9 @@ class SlabCollection(object):
           Default value of dip for slabs represented as trench lines.
         """
         self._depth_files = glob.glob(os.path.join(datafolder,'*_clip.grd'))
-        self._trench_files = glob.glob(os.path.join(datafolder,'*.json'))
+        homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
+        trenchfolder = os.path.join(homedir,'data')
+        self._trench_files = glob.glob(os.path.join(trenchfolder,'*_trench.geojson'))
         self._default_sz_zip = default_sz_dip
         
     def getSlabInfo(self,lat,lon):
@@ -228,16 +232,23 @@ class SlabCollection(object):
             if not len(slabinfo):
                 continue
             else:
-                return slabinfo
+                if not np.isnan(slabinfo['depth']):
+                    return slabinfo
 
-        if not len(slabinfo):
+        if len(slabinfo) and np.isnan(slabinfo['depth']):
+            gslabinfo = slabinfo.copy()
+        if not len(slabinfo) or np.isnan(slabinfo['depth']):
             for trench_file in self._trench_files:
+                #print(trench_file)
                 tslab = TrenchSlab(trench_file)
                 slabinfo = tslab.getSlabInfo(lat,lon)
                 if not len(slabinfo):
                     continue
                 else:
-                    return slabinfo
+                    if not np.isnan(slabinfo['depth']):
+                        return slabinfo
+                    else:
+                        return gslabinfo
         
 
         return slabinfo

@@ -18,7 +18,7 @@ def get_tensor_params_from_nodal(strike,dip,rake,mag):
     mrp=mom*((math.cos(dip*d2r)*math.cos(rake*d2r)*math.sin(strike*d2r))-(math.cos(2*dip*d2r)*math.sin(rake*d2r)*math.cos(strike*d2r)))
     mtp=-mom*((math.sin(dip*d2r)*math.cos(rake*d2r)*math.cos(2*strike*d2r))+(0.5*math.sin(2*dip*d2r)*math.sin(rake*d2r)*math.sin(2*strike*d2r)))
 
-    plungetuple = cmt.compToAxes(mrr,mtt,mpp,mrt,mrp,mtp)
+    plungetuple = compToAxes(mrr,mtt,mpp,mrt,mrp,mtp)
     tensor_params = {}
     tensor_params['mrr'] = mrr
     tensor_params['mtt'] = mtt

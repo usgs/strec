@@ -10,7 +10,7 @@ def get_utm_proj(lat,lon):
     hemi = 'north'
     if lat < 0:
         hemi='south'
-    starts = np.arange(-180,180,6)
+    starts = np.arange(-180,186,6)
     zone = np.where((lon > starts) < 1)[0].min()
     projstr = '+proj=utm +zone=%i +%s +ellps=WGS84 +datum=WGS84 +units=m +no_defs' % (zone,hemi)
     return projstr
