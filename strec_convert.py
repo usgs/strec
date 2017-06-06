@@ -61,7 +61,7 @@ if not args.infile or not args.outfile:
     parser.print_help()
     sys.exit(0)
 
-suminput = sum([options.usecsv,options.usexml,options.usendk])
+suminput = sum([args.usecsv,args.usexml,args.usendk])
     
 if suminput > 1:
     print 'You must provide ONLY one of -n, -c, or -x options.'
