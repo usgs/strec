@@ -904,7 +904,7 @@ class GMPESelector(object):
             b2 = (normAngle((slabvals['strike']-90))+DSTRIKE)
             b3 = (normAngle((slabvals['strike']+90))-DSTRIKE)
             b4 = (normAngle((slabvals['strike']+90))+DSTRIKE)
-	else:
+        else:
             b1 = (normAngle((slabvals['strike']))-DSTRIKE)
             b2 = (normAngle((slabvals['strike']))+DSTRIKE)
             b3 = (normAngle((slabvals['strike']))-DSTRIKE)
