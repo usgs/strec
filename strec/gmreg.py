@@ -49,6 +49,7 @@ GEOGRAPHIC_FIELD = 'REG_NAME'
 def _get_nearest_point(point,shape,inside=False):
     """Return distance from point to nearest vertex of a polygon.
 
+    
     """
     latlong = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees')
     azim = pyproj.Proj('+proj=aeqd +lat_0=%.6f +lon_0=%.6f' % (point.y,point.x))
@@ -109,6 +110,8 @@ def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
 
 class Regionalizer(object):
     def __init__(self,datafolder):
+        """Determine tectonic region information given epicenter and depth.
+        """
         self._datafolder = datafolder
         self._regions = OrderedDict()
         for layer,fname in REGIONS.items():
@@ -119,20 +122,22 @@ class Regionalizer(object):
         self._oceanic = os.path.join(datafolder,OCEANIC)
         if not os.path.isfile(self._oceanic):
             raise OSError('File %s not found' % self._oceanic)
-        # self._induced = os.path.join(datafolder,INDUCED)
-        # if not os.path.isfile(self._induced):
-        #     raise OSError('File %s not found' % self._induced)
-        # self._geographic = os.path.join(datafolder,GEOGRAPHIC)
-        # if not os.path.isfile(self._geographic):
-        #     raise OSError('File %s not found' % self._geographic)
 
     @classmethod
     def load(cls):
+        """Load regionalizer data from data in the repository.
+        
+        """
         homedir = os.path.dirname(os.path.abspath(__file__))
         datadir = os.path.join(homedir,'data')
         return cls(datadir)
 
     def getDomainInfo(self,domain):
+        """Return domain information from repository spreadsheet.
+        
+        :param domain:
+          Seismo-tectonic domain ("SZ (generic)",
+        """
         regimefile = os.path.join(self._datafolder,'regimes.xlsx')
         df = pd.read_excel(regimefile)
         try:
@@ -143,6 +148,9 @@ class Regionalizer(object):
         
     
     def getSubType(self,domain,depth):
+        """Get 
+
+        """
         reginfo = self.getDomainInfo(domain)
         
         H1 = reginfo['H1']

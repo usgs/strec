@@ -2,6 +2,7 @@
 #stdlib imports
 import os.path
 import sys
+import pprint
 
 #hack the path so that I can debug these functions if I need to
 homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
@@ -9,57 +10,52 @@ repodir = os.path.abspath(os.path.join(homedir,'..','..'))
 sys.path.insert(0,repodir) #put this at the front of the system path, ignoring any installed version of the repo
 
 #local imports
-from strec.cmt import getCompositeCMT,get_tensor_params_from_nodal
+from strec.cmt import getCompositeCMT
 
 #third party imports
 import numpy as np
 import pandas as pd
 
-def test_nodal_conversion():
-    homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
-    excelfile = os.path.join(homedir,'..','data','large_events.xlsx')
-    df = pd.read_excel(excelfile)
-    for idx,row in df.iterrows():
-        strike = row['Strike']
-        dip = row['Dip']
-        rake = row['Rake']
-        mag = row['Magnitude']
-        if np.isnan(strike):
-            continue
-        
-        tensor_params = get_tensor_params_from_nodal(strike,dip,rake,mag)
-        
-
 def test_composite():
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     dbfile = os.path.join(homedir,'..','data','gcmt.db') #ends 2016-10-31
     lat,lon,depth,magnitude = 3.295,95.982, 30.0, 9.1 #sumatra
-    tensor_params,warning = getCompositeCMT(lat,lon,depth,dbfile,box=0.5,depthbox=10.0,nmin=3.0,maxbox=1.0,dbox=0.1)
-    testout = {'mrt': 0.6240629689002251, 
-               'mrr': 0.4512905515294056,
-               'mpp': -0.05681854135935799,
-               'mtt': -0.39450158699121396,
-               'mtp': -0.7037801896771995, 
-               'mrp': 0.35043108787496347,
-               'N': {'plunge': 10.054848444412581, 
-                     'value': 0.11535119529116966, 
-                     'azimuth': 314.80481530618238}, 
-               'P': {'plunge': 30.184620055622009, 
-                     'value': -1.1434359674210017, 
-                     'azimuth': 218.8850532017122}, 
-               'T': {'plunge': 57.843183531128417, 
-                     'value': 1.0280551953086663, 
-                     'azimuth': 61.186893050145962}, 
-               'NP2': {'strike': 280.3843393831188, 
-                       'dip': 17.41586211850997, 
-                       'rake': 54.315541625718268},  
-               'NP1': {'strike': 137.35186280187526, 
-                       'dip': 75.929950446208395, 
-                       'rake': 100.36921815024265}}
-    print('Testing that CMT composite tensor is consistent with past results...')
-    assert tensor_params == testout
-    print('Passed.')
+    tensor_params1,similarity,N = getCompositeCMT(lat,lon,depth,dbfile,
+                                                  box=0.5,depthbox=10.0,
+                                                  nmin=3.0,maxbox=1.0,
+                                                  dbox=0.1)
+
+    testout = {'source': 'unknown',
+               'type': 'unknown',
+               'NP1': {'rake': 100.52031312632604,
+                       'dip': 73.243863248921315,
+                       'strike': 135.03777341669905},
+               'N': {'plunge': 10.068862832927204,
+                     'azimuth': 311.97315442577172,
+                     'value': 0.20904334788748433},
+               'P': {'plunge': 27.506142553692584,
+                     'azimuth': 216.66804033346173,
+                     'value': -1.0801008480073353},
+               'T': {'plunge': 60.407527752218563,
+                     'azimuth': 60.193317264512899,
+                     'value': 0.87104304622891504},
+               
+               'NP2': {'rake': 58.766321558510747,
+                       'dip': 19.704433206482097,
+                       'strike': 282.25043227746141},
+               'mrr': 0.43463005982006192,
+               'mtt': -0.40356317511779966,
+               'mpp': -0.031081338593198435,
+               'mrt': 0.56488318905497803,
+               'mrp': -0.56202286423261294,
+               'mtp': 0.41615798822834177}
     
+    print('Testing that CMT composite tensor is consistent with past results...')
+    assert tensor_params1 == testout
+    assert similarity == 1.1662121199618094
+    assert N == 47
+    print('Passed.')
+
 if __name__ == '__main__':
     test_composite()
     test_nodal_conversion()

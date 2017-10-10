@@ -1,75 +1,46 @@
-from math import cos,sin,pi
 import os.path
 import configparser
-import shutil
 
 STRECINI = 'strec.ini'
 GCMT_OUTPUT = 'gcmt.db'
 
-def deleteConfig():
-    homedir = os.path.expanduser('~') #where is the user's home directory
-    if homedir == '~':
-        return
-    configfolder = os.path.join(homedir,'.strec')
-    try:
-        shutil.rmtree(configfolder)
-    except:
-        return
-    return
+CONSTANTS = {'minradial_disthist' : 0.01,
+             'maxradial_disthist' : 1.0,
+             'minradial_distcomp' : 0.5,
+             'maxradial_distcomp' : 1.0,
+             'step_distcomp' : 0.1,
+             'depth_rangecomp' : 10,
+             'minno_comp' : 3,
+             'default_szdip' : 17,
+             'dstrike_interf' : 30,
+             'ddip_interf' : 30,
+             'dlambda' : 60,
+             'ddepth_interf' : 20,
+             'ddepth_intra' : 10}
 
-def getConfig():
+def get_config(datafolder=None):
     homedir = os.path.expanduser('~') #where is the user's home directory
     if homedir == '~':
         msg = 'Could not establish home directory for %s.  Exiting.' % getpass.getuser()
-        raise Exception(msg)
+        raise(Exception(msg))
     configfolder = os.path.join(homedir,'.strec')
     if not os.path.isdir(configfolder):
         os.mkdir(configfolder)
     configfile = os.path.join(configfolder,STRECINI)
     if not os.path.isfile(configfile):
-        #here we should create one from the default
-        thispath = os.path.dirname(os.path.abspath(__file__)) #where is this file?
-        tmpfile = os.path.join(thispath,'data','strec.ini')
+        if datafolder is None:
+            return (None,None)
+        #here we should create one from the default data above and input datafolder
         config = configparser.ConfigParser()
-        config.readfp(open(tmpfile))
-        return config,configfile
+        config['CONSTANTS'] = CONSTANTS
+        config['DATA'] = {'folder':datafolder,
+                          'dbfile':'moment_tensors.db'}
+
+        with open(configfile, 'w') as f:
+            config.write(f)
+        return (config,configfile)
+    
     config = configparser.ConfigParser()
     config.readfp(open(configfile))
     return (config,configfile)
 
-def isNaN(x):
-    return str(x) == str(1e400*0)
-
-def splitWithCommas(line):
-    if line.find('"') == -1:
-        return line.split(',')
-    nquotes = line.count('"')
-    idx1 = 0
-    linelist = list(line)
-    for i in range(0,nquotes/2):
-        idx1 = linelist.index('"',idx1)
-        idx2 = linelist.index('"',idx1+1)
-        lineseg = linelist[idx1:idx2+1]
-        if lineseg.count(','):
-            lineseg = list(''.join(lineseg).replace(',','|'))
-            linelist[idx1:idx2+1] = lineseg
-        idx1 = idx2+1
-    line = ''.join(linelist)
-    parts = line.split(',')
-    newparts = []
-    for p in parts:
-        p = p.replace('"','')
-        newparts.append(p.replace('|',','))
-    return newparts
-
-def cosd(input):
-    """
-    Returns cosine of angle given in degrees.
-    """
-    return cos(input * pi/180)
-
-def sind(input):
-    """
-    Returns sine of angle given in degrees.
-    """
-    return sin(input * pi/180)

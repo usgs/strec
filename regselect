@@ -7,10 +7,11 @@ import re
 
 #third party imports
 import pandas as pd
+from libcomcat.search import get_event_by_id
 
 #local imports
 from strec.gmreg import Regionalizer
-from strec.comcat import ComCat
+
 
 def read_input_file(input_file):
     df = None
@@ -68,9 +69,9 @@ def main(args,pparser):
         sys.exit(1)
 
     if args.event_id:
-        comcat = ComCat()
         try:
-            lat,lon,depth,tensor_params = comcat.getEventProperties(args.event_id)
+            detail = get_event_by_id(args.event_id)
+            lat,lon,depth = (detail.latitude,detail.longitude,detail.depth)
         except Exception as e:
             msg = 'Could not get event information on event ID %s due to error "%s".'
             tpl = (args.event_id,str(e))
@@ -133,7 +134,6 @@ Tectonic Region
   - Active Volcanic : is this point in an active volcanic zone? (True/False)
 
 Oceanic - is this point in an oceanic region? (True/False)
-Induced - is this point in an induced seismicity region? (True/False)
 
 Each tectonic region will have a subordinate "Tectonic Domain", consisting of one of the following:
 
@@ -153,10 +153,10 @@ Each tectonic region will have a subordinate "Tectonic Domain", consisting of on
  - SCR (above slab)
  - SCR (generic)
 
-There will also be a list of not necessarily mutually exclusive geographic regions, which are provided
-mostly to aid in choosing Ground Motion Prediction Equations (GMPEs) or Intensity Prediction Equations 
-(IPEs).  These will grow over time as the maintainers find new regions that need to be delineated for this
-purpose.
+Usage:
+
+%(prog)s -e 3.295 95.982 30.0
+%(prog)s -d official20041226005853450_30
 
 
 """

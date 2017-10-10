@@ -20,54 +20,6 @@ from .proj import geo_to_utm,utm_to_geo
 DEFAULT_SZ_DIP = 17.0 #default dip angle of subduction zone
 MAX_INTERFACE_DEPTH = 70 #depth beyond which any tectonic regime has to be intraslab
 
-class SlabInfo(object):
-    def __init__(self,strike,dip,depth,region,slabtype,outside):
-        """Container object for slab information.
-
-        :param strike:
-          Strike angle of the interface.
-        :param dip:
-          Dip angle of the interface.
-        :param depth:
-          Depth to slab at a given input latitude/longitude.
-        :param region:
-          Name of slab or trench from which slab info was derived.
-        :param slabtype:
-          'grid' (USGS gridded Slab model) or 'trench' (line of strike angles and assumed constant dip).
-        :param outside:
-          Boolean indicating whether the input coordinate is on the dipping side of the interface line.
-        """
-        self._strike = strike
-        self._dip = dip
-        self._depth = depth
-        self._region = region
-        self._slabtype = slabtype
-        self._outside = outside
-
-    @property
-    def strike(self):
-        return self._strike
-
-    @property
-    def dip(self):
-        return self._dip
-
-    @property
-    def depth(self):
-        return self._depth
-
-    @property
-    def region(self):
-        return self._region
-
-    @property
-    def slabtype(self):
-        return self._slabtype
-
-    @property
-    def outside(self):
-        return self._outside
-
 class Slab(object):
     def contains(self,lat,lon):
         pass
@@ -100,7 +52,7 @@ class GridSlab(Slab):
         strike_grid = GMTGrid.load(self._strike_file)
         dip = dip_grid.getValue(lat,lon) * -1
         strike = strike_grid.getValue(lat,lon)
-        strike = strike - 90
+        strike = strike
         if strike < 0:
             strike += 360
         slabinfo = {'region':region,

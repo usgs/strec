@@ -35,14 +35,15 @@ class SubductionZone(object):
 
     def checkRupturePlane(self):
         """Implement equation two from the paper.
-        :return:
-           
+        :returns:
+          
         """
+        strike = self._slab_params['strike'] - 90
         a = self._tensor_params['P']['azimuth']
-        b1 = (normAngle((self._slab_params['strike']))-self._dstrike)
-        b2 = (normAngle((self._slab_params['strike']))+self._dstrike)
-        b3 = (normAngle((self._slab_params['strike']))-self._dstrike)
-        b4 = (normAngle((self._slab_params['strike']))+self._dstrike)
+        b1 = (normAngle(strike)-self._dstrike)
+        b2 = (normAngle(strike)+self._dstrike)
+        b3 = (normAngle(strike)-self._dstrike)
+        b4 = (normAngle(strike)+self._dstrike)
 
         if a > 270 and b1 < 90:
             b1 = b1 + 360
