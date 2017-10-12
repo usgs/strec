@@ -11,6 +11,7 @@ sys.path.insert(0,repodir) #put this at the front of the system path, ignoring a
 
 #local imports
 from strec.cmt import getCompositeCMT
+from strec.subtype import get_focal_mechanism
 
 #third party imports
 import numpy as np
@@ -18,44 +19,47 @@ import pandas as pd
 
 def test_composite():
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
-    dbfile = os.path.join(homedir,'..','data','gcmt.db') #ends 2016-10-31
+    dbfile = os.path.join(homedir,'..','data','strec.db') #ends 2016-10-31
     lat,lon,depth,magnitude = 3.295,95.982, 30.0, 9.1 #sumatra
     tensor_params1,similarity,N = getCompositeCMT(lat,lon,depth,dbfile,
                                                   box=0.5,depthbox=10.0,
                                                   nmin=3.0,maxbox=1.0,
                                                   dbox=0.1)
 
-    testout = {'source': 'unknown',
+    testout = {'T': {'value': 0.90040807112868482,
+                     'azimuth': 59.257592723523928,
+                     'plunge': 60.956153671192382},
                'type': 'unknown',
-               'NP1': {'rake': 100.52031312632604,
-                       'dip': 73.243863248921315,
-                       'strike': 135.03777341669905},
-               'N': {'plunge': 10.068862832927204,
-                     'azimuth': 311.97315442577172,
-                     'value': 0.20904334788748433},
-               'P': {'plunge': 27.506142553692584,
-                     'azimuth': 216.66804033346173,
-                     'value': -1.0801008480073353},
-               'T': {'plunge': 60.407527752218563,
-                     'azimuth': 60.193317264512899,
-                     'value': 0.87104304622891504},
-               
-               'NP2': {'rake': 58.766321558510747,
-                       'dip': 19.704433206482097,
-                       'strike': 282.25043227746141},
-               'mrr': 0.43463005982006192,
-               'mtt': -0.40356317511779966,
-               'mpp': -0.031081338593198435,
-               'mrt': 0.56488318905497803,
-               'mrp': -0.56202286423261294,
-               'mtp': 0.41615798822834177}
+               'NP1': {'rake': 99.706221357007934,
+                       'dip': 72.880835583169542,
+                       'strike': 135.04248070294602},
+               'source': 'unknown',
+               'N': {'value': 0.19843836648633859,
+                     'azimuth': 312.16014237459842,
+                     'plunge': 9.2722987641241801},
+               'P': {'value': -1.0987962433960725,
+                     'azimuth': 217.33561087867673,
+                     'plunge': 27.25558260027913},
+               'mrt': 0.5722075571696541,
+               'mtp': 0.42166052289847422,
+               'mpp': -0.056425346237488162,
+               'mrr': 0.46289484505771517,
+               'mtt': -0.40641930460127595,
+               'NP2': {'rake': 61.304600053275323,
+                       'dip': 19.607420050830289,
+                       'strike': 284.8827314746506},
+               'mrp': -0.57636593662837132}
+
+    mechanism = get_focal_mechanism(tensor_params1)
+    
     
     print('Testing that CMT composite tensor is consistent with past results...')
+    assert mechanism == 'RS'
     assert tensor_params1 == testout
-    assert similarity == 1.1662121199618094
-    assert N == 47
+    assert similarity == 1.1036343285450121
+    assert N == 50
     print('Passed.')
 
 if __name__ == '__main__':
     test_composite()
-    test_nodal_conversion()
+

@@ -286,6 +286,7 @@ format automatically) and MUST include the following columns (case doesn't matte
 
 Lat Numeric latitude of input earthquake.
 Lon Numeric longitude of input earthquake.
+Depth Numeric depth of earthquake (km).
 
 Any other columns present in the input will be copied to the output.
 '''

@@ -304,7 +304,7 @@ class SubductionSelector(object):
         reginfo = self._regionalizer.getRegions(lat,lon,depth)
         reginfo['TensorType'] = tensor_type
         reginfo['TensorSource'] = tensor_source
-        reginfo['CompositeVariablity'] = similarity
+        reginfo['CompositeVariability'] = similarity
         reginfo['NComposite'] = nevents
         if len(slab_params):
             if np.isnan(slab_params['depth']) or tensor_params is None:

@@ -5,6 +5,22 @@ from strec.subtype import SubductionSelector,get_focal_mechanism
 import pandas as pd
 import numpy as np
 
+def cmp_dicts(dict1,dict2):
+    missing1 = set(dict1.keys()) - set(dict2.keys())
+    missing2 = set(dict2.keys()) - set(dict1.keys())
+    if len(missing1) or len(missing2):
+        return False,str(missing)
+    #keys are identical, so look at values
+    mismatched_keys = []
+    for key,value in dict1.items():
+        if isinstance(value,float) and np.isnan(value) and np.isnan(dict2[key]):
+            continue
+        if value != dict2[key]:
+            mismatched_keys.append(key)
+    if len(mismatched_keys):
+        return False,str(mismatched_keys)
+    return True,''
+
 def test_get_focal_mechanism():
     constants = {'tplunge_rs':50,
                  'bplunge_ds':30,
@@ -31,7 +47,7 @@ def test_get_focal_mechanism():
                        'dip':81,
                        'rake':164}}
 
-    focal_ss = get_focal_mechanism(izmit_ss,config)
+    focal_ss = get_focal_mechanism(izmit_ss)
     assert focal_ss == 'SS'
 
     mexico_nm = {'T':{'azimuth':49,
@@ -46,7 +62,7 @@ def test_get_focal_mechanism():
                 'NP2':{'strike':315,
                        'dip':73,
                        'rake':-96}}
-    focal_nm = get_focal_mechanism(mexico_nm,config)
+    focal_nm = get_focal_mechanism(mexico_nm)
     assert focal_nm == 'NM'
 
     northridge_rs = {'T':{'azimuth':107,
@@ -61,7 +77,7 @@ def test_get_focal_mechanism():
                      'NP2':{'strike':122,
                             'dip':47,
                             'rake':103}}
-    focal_rs = get_focal_mechanism(northridge_rs,config)
+    focal_rs = get_focal_mechanism(northridge_rs)
     assert focal_rs == 'RS'
 
     bogus_all =   {'T':{'azimuth':151,
@@ -76,7 +92,7 @@ def test_get_focal_mechanism():
                      'NP2':{'strike':198,
                             'dip':64,
                             'rake':119}}
-    focal_all = get_focal_mechanism(bogus_all,config)
+    focal_all = get_focal_mechanism(bogus_all)
     assert focal_all == 'ALL'
 
 def test_get_online_tensor():
@@ -87,7 +103,57 @@ def test_get_online_tensor():
     lat1,lon1,depth1,tensor1 = selector.getOnlineTensor(eventid_with_tensor)
     lat2,lon2,depth2,tensor2 = selector.getOnlineTensor(eventid_without_tensor)
     lat3,lon3,depth3,tensor3 = selector.getOnlineTensor(eventid_with_local_tensor)
-    x = 1
+    tensor1_cmp = {'T': {'value': 5.6e+22,
+                         'plunge': 53.0,
+                         'azimuth': 296.0},
+                   'mtt': -1.509e+21,
+                   'mpp': -1.523e+22,
+                   'mrp': 4.837e+22,
+                   'N': {'value': 1.2e+20,
+                         'plunge': 1.0,
+                         'azimuth': 204.0},
+                   'mrr': 1.674e+22,
+                   'mtp': -5.286e+21,
+                   'P': {'value': -5.6e+22,
+                         'plunge': 36.0,
+                         'azimuth': 113.0},
+                   'NP2': {'dip': 81.0,
+                           'rake': 91.0,
+                           'strike': 24.0},
+                   'mrt': 2.243e+22,
+                   'source': 'duputel_201103110546a',
+                   'type': 'Mww',
+                   'NP1': {'dip': 8.0,
+                           'rake': 78.0,
+                           'strike': 192.0}}
+    tensor3_cmp = {'T': {'value': 8163000000000000.0,
+                         'plunge': 8.605,
+                         'azimuth': 77.715},
+                   'mtt': -9703000000000000.0,
+                   'mpp': 7235000000000000.0,
+                   'mrp': -685500000000000.0,
+                   'N': {'value': 2383000000000000.0,
+                         'plunge': 80.784,
+                         'azimuth': 278.857},
+                   'mrr': 2468000000000000.0,
+                   'mtp': -3748000000000000.0,
+                   'P': {'value': -1.053e+16,
+                         'plunge': 3.274,
+                         'azimuth': 168.211},
+                   'NP2': {'dip': 81.586203170542277,
+                           'rake': 3.7979038011027644,
+                           'strike': 213.24771227177959},
+                   'mrt': 903300000000000.0,
+                   'source': 'nc_72852946',
+                   'type': 'Mw',
+                   'NP1': {'dip': 86.243031559360034,
+                           'rake': 171.5679508376947,
+                           'strike': 122.69120043887619}}
+
+    assert tensor1 == tensor1_cmp
+    assert tensor2 is None
+    assert tensor3 == tensor3_cmp
+    
 
     
 def test_subtype():
@@ -121,7 +187,7 @@ def test_subtype():
     results1 = selector.getSubductionType(lat,lon,depth)
 
     cmp_results1 = {'SlabModelStrike': 307.0806884765625,
-                    'KaganAngle': 11.701047977452799,
+                    'KaganAngle': 10.896732671836423,
                     'TectonicDomain': 'SZ (generic)',
                     'TensorSource': 'composite',
                     'DomainDepthBand1': 15,
@@ -129,7 +195,7 @@ def test_subtype():
                     'DomainDepthBand3Subtype': 'SZIntra',
                     'SlabModelOutside': False,
                     'DistanceToContinental': 0.0,
-                    'CompositeVariability': np.nan,
+                    'CompositeVariability': 1.1036343285450119,
                     'DistanceToOceanic': 573.60696079140143,
                     'DomainDepthBand1Subtype': 'ACR',
                     'SlabModelDepth': 38.658607482910156,
@@ -150,7 +216,7 @@ def test_subtype():
                     'DistanceToActive': 448.98577711531317,
                     'DomainDepthBand2': 70,
                     'IsNearInterface': True,
-                    'NComposite': 48,
+                    'NComposite': 50,
                     'DistanceToStable': 465.37340568412117}
     
     assert cmp_results1 == results1.to_dict()
@@ -190,7 +256,8 @@ def test_subtype():
                     'DomainDepthBand2': 70,
                     'DomainDepthBand3Subtype': 'SZIntra'}
 
-    assert cmp_results2 == results2.to_dict()
+    res,msg = cmp_dicts(results2.to_dict(),cmp_results2)
+    assert res
     results3 = selector.getSubductionType(lat,lon,depth,tensor_params=tensor_params)
 
     cmp_results3 = {'DistanceToStable': 465.37340568412117,
@@ -225,12 +292,49 @@ def test_subtype():
                     'IsNearInterface': True,
                     'DomainDepthBand1': 15,
                     'DistanceToSubduction': 0.0}
-    assert cmp_results3 == results3.to_dict()
+
+    res,msg = cmp_dicts(results3.to_dict(),cmp_results3)
+    assert res
 
     #test a region NOT in a subduction zone
     lat,lon,depth = 39.053318,-104.765625,10.0
     results4 = selector.getSubductionType(lat,lon,depth)
-    x = 1
+
+    cmp_results4 = {'SlabModelRegion': '',
+                    'FocalMechanism': 'ALL',
+                    'TensorType': 'composite',
+                    'SlabModelOutside': False,
+                    'KaganAngle': np.nan,
+                    'DomainDepthBand3Subtype': 'SCR',
+                    'TectonicRegion': 'Stable',
+                    'TectonicSubtype': 'SCR',
+                    'CompositeVariability': np.nan,
+                    'DomainDepthBand1Subtype': 'SCR',
+                    'SlabModelDip': np.nan,
+                    'DistanceToOceanic': 1080.7850646123761,
+                    'TectonicDomain': 'SCR (generic)',
+                    'DistanceToStable': 0.0,
+                    'NComposite': 0,
+                    'SlabModelType': '',
+                    'DistanceToActive': 52.3302278884006,
+                    'DistanceToSubduction': 1085.9412247332527,
+                    'IsNearInterface': False,
+                    'IsInSlab': False,
+                    'TensorSource': 'composite',
+                    'DomainDepthBand1': 50,
+                    'DomainDepthBand2Subtype': 'SCR',
+                    'SlabModelDepth': np.nan,
+                    'IsLikeInterface': False,
+                    'DomainDepthBand2': 999,
+                    'DistanceToContinental': 0.0,
+                    'SlabModelStrike': np.nan,
+                    'DistanceToVolcanic': 653.03283204758668,
+                    'RegionContainsBackArc': False,
+                    'DomainDepthBand3': 1000,
+                    'Oceanic': False}
+    
+    res,msg = cmp_dicts(results4.to_dict(),cmp_results4)
+    assert res
     
 
 def test_get_subduction_by_id():

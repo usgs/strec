@@ -88,9 +88,9 @@ def getCompositeCMT(lat,lon,depth,dbfile,box=0.1,depthbox=10,nmin=3,maxbox=1.0,d
     if len(rows) == 0:
         if len(rows) > 0:
             edict,similarity,nrows = getComposite(rows)
-            return (edict,similarity,nrows % len(rows))
+            return (edict,similarity,nrows)
         else:
-            return (None,'No historical events found for composite focal mechanism!')
+            return (None,np.nan,0)
 
     edict,similarity,nrows = getComposite(rows)
     
