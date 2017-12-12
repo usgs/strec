@@ -11,53 +11,7 @@ from libcomcat.search import get_event_by_id
 
 #local imports
 from strec.gmreg import Regionalizer
-
-
-def read_input_file(input_file):
-    df = None
-    try:
-        df = pd.read_csv(input_file)
-    except:
-        try:
-            df = pd.read_excel(input_file)
-        except:
-            pass
-    row_ok,msg = check_row(df.columns)
-    if not row_ok:
-        df = None
-    return (df,msg)
-        
-def check_row(row):
-    #row is a pandas series object
-    if not row.str.contains('^lat',case=False).any():
-        return False,'Missing "lat" column in input.'
-    if not row.str.contains('^lon',case=False).any():
-        return False,'Missing "lon" column in input.'
-    if not row.str.contains('^depth',case=False).any():
-        return False,'Missing "depth" column in input.'
-    return (True,'')
-
-def get_input_columns(row):
-    #row is a pandas series object
-    lat = row[row.index.str.contains('^lat',case=False)][0]
-    lon = row[row.index.str.contains('^lon',case=False)][0]
-    depth = row[row.index.str.contains('^depth',case=False)][0]
-
-    return (lat,lon,depth)
-
-def render_row(row,format,lat,lon,depth):
-    if format == 'pretty':
-        print('For event located at %.4f,%.4f,%.1f:' % (lat,lon,depth))
-        for idx,value in row.iteritems():
-            if re.match('^lat|^lon|^depth',idx,re.IGNORECASE):
-                continue
-            print('\t%s : %s' % (idx,str(value)))
-        print()
-    elif format == 'json':
-        print(row.to_json())
-    elif format == 'csv':
-        values = [str(v) for v in row.values]
-        print(','.join(values))
+from strec.utils import read_input_file,get_input_columns,render_row
 
 def main(args,pparser):
     #check input arguments
@@ -103,13 +57,6 @@ def main(args,pparser):
         dtypes = {'Oceanic':bool}
         row = row.append(result)
             
-        # #because I cannot figure out how to change the data type of an index in a series,
-        # #I'll convert the row to a one-row dataframe, change the datatypes of the columns,
-        # #then get back the row.  Stupid.
-        # df = pd.DataFrame(columns=row.index)
-        # df = df.append(row)
-        # df = df.astype(dtypes)
-        # row = df.iloc[0]
         if args.output_file:
             results.append(row)
         else:
@@ -161,12 +108,10 @@ Usage:
 
 """
     input_file_help = '''Input files can be CSV or Excel format (%(prog)s  will attempt to determine
-format automatically) and MUST include the following columns (case doesn't matter):
-
-Lat Numeric latitude of input earthquake.
-Lon Numeric longitude of input earthquake.
-
-Any other columns present in the input will be copied to the output.
+format automatically) and MUST include columns conforming to a regular expression match of
+"lat","lon", and "depth", ignoring case.  A regular expression match in this case means that columns
+named "lat","Lat","latitude",or "Latitude" would all work. Any other columns present in the input 
+will be copied to the output.
 '''
 
     output_format_help = '''The output format must be one of the following:

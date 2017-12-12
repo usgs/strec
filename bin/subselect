@@ -16,40 +16,7 @@ from libcomcat.search import get_event_by_id
 #local imports
 from strec.subtype import SubductionSelector
 from strec.tensor import fill_tensor_from_angles,fill_tensor_from_components
-
-def read_input_file(input_file):
-    df = None
-    try:
-        df = pd.read_csv(input_file)
-    except:
-        try:
-            df = pd.read_excel(input_file)
-        except:
-            pass
-    row_ok,msg = check_row(df.columns)
-    if not row_ok:
-        df = None
-
-    #convert any long integer moment component columns to floating point, because
-    #otherwise pandas will complain later when re-writing row to a dataframe.  Doesn't make
-    #sense, but seems necessary.
-    for column in df:
-        comps = ['mrr','mtt','mpp','mrt','mrp','mtp']
-        for comp in comps:
-            if column.lower().find(comp) > -1:
-                df[column] += 0.0000000001
-            
-    return (df,msg)
-        
-def check_row(row):
-    #row is a pandas series object
-    if not row.str.contains('^lat',case=False).any():
-        return False,'Missing "lat" column in input.'
-    if not row.str.contains('^lon',case=False).any():
-        return False,'Missing "lon" column in input.'
-    if not row.str.contains('^depth',case=False).any():
-        return False,'Missing "depth" column in input.'
-    return (True,'')
+from strec.utils import read_input_file,get_input_columns,render_row
 
 def check_moment_row(row):
     #row is a pandas series object
@@ -78,14 +45,6 @@ def check_moment_row(row):
         
         
     return hasAngles or hasComponents
-
-def get_input_columns(row):
-    #row is a pandas series object
-    lat = row[row.index.str.contains('^lat',case=False)][0]
-    lon = row[row.index.str.contains('^lon',case=False)][0]
-    depth = row[row.index.str.contains('^depth',case=False)][0]
-
-    return (lat,lon,depth)
 
 def get_moment_columns(row):
     #row is a pandas series object
@@ -143,20 +102,6 @@ def get_moment_columns(row):
         return tensor_params
         
     return None
-
-def render_row(row,format,lat,lon,depth):
-    if format == 'pretty':
-        print('For event located at %.4f,%.4f,%.1f:' % (lat,lon,depth))
-        for idx,value in row.iteritems():
-            if re.match('^lat|^lon|^depth',idx,re.IGNORECASE):
-                continue
-            print('\t%s : %s' % (idx,str(value)))
-        print()
-    elif format == 'json':
-        print(row.to_json())
-    elif format == 'csv':
-        values = [str(v) for v in row.values]
-        print(','.join(values))
 
 def main(args,pparser):
     #check input arguments

@@ -13,27 +13,16 @@ def get_kagan_angle(strike1, dip1, rake1, strike2, dip2, rake2):
     Kagan, Y. "Simplified algorithms for calculating double-couple rotation", 
     Geophysical Journal, Volume 171, Issue 1, pp. 411-418.
 
-    :param strike1:
-      strike of slab or moment tensor
-    :param dip1:
-      dip of slab or moment tensor
-    :param rake1:
-      rake of slab or moment tensor
-    :param strike2:
-      strike of slab or moment tensor
-    :param dip2:
-      dip of slab or moment tensor
-    :param rake2:
-      rake of slab or moment tensor
-    :returns:
-      Kagan angle between two moment tensors
+    Args:
+        strike1 (float): strike of slab or moment tensor
+        dip1 (float): dip of slab or moment tensor
+        rake1 (float): rake of slab or moment tensor
+        strike2 (float): strike of slab or moment tensor
+        dip2 (float): dip of slab or moment tensor
+        rake2 (float): rake of slab or moment tensor
+    Returns:
+        float: Kagan angle between two moment tensors
     """
-    ''' Arguments:  sEQ, dEQ, rEQ - strike, dip, and rake of event
-                    sSL, dSL, rSL - strike, dip, and rake of slab
-    
-        Returns:    mtEQ, mtSL - calculated moment tensors of the event and slab
-                    kagan - kagan angle between the eq and slab moment tensors '''
-    
     # convert from strike, dip , rake to moment tensor
     tensor1 = plane_to_tensor(strike1, dip1, rake1)
     tensor2 = plane_to_tensor(strike2, dip2, rake2)
@@ -45,12 +34,11 @@ def get_kagan_angle(strike1, dip1, rake1, strike2, dip2, rake2):
 def calc_theta(vm1,vm2):
     """Calculate angle between two moment tensor matrices.
 
-    :param vm1:
-      Moment Tensor matrix (see plane_to_tensor).
-    :param vm2:
-      Moment Tensor matrix (see plane_to_tensor).
-    :returns:
-      Kagan angle (degrees) between input moment tensors.
+    Args:
+        vm1 (ndarray): Moment Tensor matrix (see plane_to_tensor).
+        vm2 (ndarray): Moment Tensor matrix (see plane_to_tensor).
+    Returns:
+        float: Kagan angle (degrees) between input moment tensors.
     """
     # calculate the eigenvectors of either moment tensor
     V1 = calc_eigenvec(vm1)
@@ -71,12 +59,15 @@ def calc_theta(vm1,vm2):
     return th*180./np.pi
 
 def calc_eigenvec(TM):
+    """  Calculate eigenvector of moment tensor matrix.
 
-    ''' Arguments:  TM - moment tensor:
-                    [[mrr, mrt, mrp]
-                     [mrt, mtt, mtp]
-                     [mrp, mtp, mpp]]
-        Returns:    S - eigenvector representation of TM '''
+    
+    Args:  
+        ndarray: moment tensor matrix (see plane_to_tensor)
+
+    Returns:    
+        ndarray: eigenvector representation of input moment tensor.
+    """
     
     # calculate eigenvector
     V,S    = np.linalg.eigh(TM)
@@ -87,10 +78,14 @@ def calc_eigenvec(TM):
 
 
 def ang_from_R1R2(R1,R2):
-    
-    ''' Arguments:  R1 - eigenvector of first moment tensor
-                    R2 - eigenvector of second moment tensor
-        Returns:    angle between eigenvectors '''
+    """Calculate angle between two eigenvectors.
+
+    Args:  
+        R1 (ndarray): eigenvector of first moment tensor
+        R2 (ndarray): eigenvector of second moment tensor
+    Returns:    
+        float: angle between eigenvectors 
+    """
     
     return np.arccos((np.trace(np.dot(R1,R2.transpose()))-1.)/2.)
 

@@ -1,4 +1,11 @@
-def normAngle(angle):
+def norm_angle(angle):
+    """Normalize input angle to be between 0-360 degrees.
+
+    Args:
+        angle (float): Angle in degrees.
+    Returns:
+        float: Input angle normalized to between 0-360 degrees.
+    """
     if angle > 360:
         angle = angle-360
     if angle < 0:
@@ -9,20 +16,19 @@ def normAngle(angle):
 class SubductionZone(object):
     def __init__(self,slab_params,tensor_params,depth,config):
         """Check where in the subduction zone this event is (crust, interface, slab).
-
-        :param slab_params:
-          Dictionary containing depth, strike and dip of the slab interface at a given location.
-        :param tensor_params:
-          Dictionary containing the moment tensor parameters (six components, and nodal plane values.)
-        :param depth:
-          Event depth.
-        :param config:
-          dict containing keys:
-          DSTRIKE_INTERF - ??
-          DDIP_INTERF - ??
-          DLAMBDA - ??
-          DDEPTH_INTERF - Acceptable depth range around interface depth for interface event.
-          DDEPTH_INTRA - intra-slab depth range.
+        
+        Args:
+        slab_params (dict): Dictionary containing depth, strike and dip of 
+            the slab interface at a given location.
+        tensor_params (dict): Dictionary containing the moment tensor 
+            parameters (six components, and nodal plane values.)
+        depth (float): Event depth.
+        config (dict): dict containing keys:
+            DSTRIKE_INTERF - Threshold strike angle difference.
+            DDIP_INTERF - Threshold dip angle difference.
+            DLAMBDA - Threshold rake angle difference.
+            DDEPTH_INTERF - Acceptable depth range around interface depth for interface event.
+            DDEPTH_INTRA - intra-slab depth range.
         """
         self._dstrike = float(config['CONSTANTS']['dstrike_interf'])
         self._ddip = float(config['CONSTANTS']['ddip_interf'])
@@ -34,16 +40,18 @@ class SubductionZone(object):
         self._depth = depth
 
     def checkRupturePlane(self):
-        """Implement equation two from the paper.
-        :returns:
-          
+        """Compare moment tensor angles to slab angles, return True if similar.
+
+        
+        Returns:
+            bool: Boolean value indicating if moment tensor is similar to slab.
         """
         strike = self._slab_params['strike'] - 90
         a = self._tensor_params['P']['azimuth']
-        b1 = (normAngle(strike)-self._dstrike)
-        b2 = (normAngle(strike)+self._dstrike)
-        b3 = (normAngle(strike)-self._dstrike)
-        b4 = (normAngle(strike)+self._dstrike)
+        b1 = (norm_angle(strike)-self._dstrike)
+        b2 = (norm_angle(strike)+self._dstrike)
+        b3 = (norm_angle(strike)-self._dstrike)
+        b4 = (norm_angle(strike)+self._dstrike)
 
         if a > 270 and b1 < 90:
             b1 = b1 + 360
@@ -81,7 +89,11 @@ class SubductionZone(object):
             return False
 
     def checkInterfaceDepth(self):
-        #Check to see if the focal depth is within range of the slab depth
+        """Check to see if the focal depth is within range of the slab depth.
+        
+        Returns:
+            bool: True if event is close to slab interface depth, False otherwise.
+        """
         c1 = self._depth >= self._slab_params['depth']-self._ddepth_interface
         c2 = self._depth < self._slab_params['depth']+self._ddepth_interface
         if (c1 and c2):
@@ -90,10 +102,10 @@ class SubductionZone(object):
             return False
 
     def checkSlabDepth(self,intraslabdepth):
-        """
-        Check to see if the depth is deeper than the slab.
+        """Check to see if the depth is deeper than the interface.
 
-        :param slabdepth:
+        Args:
+            intraslabdepth (float): Upper limit of intraslab events.
           
         @return: True if depth is deeper than the slab, False if not.
         """

@@ -17,29 +17,56 @@ from obspy.geodetics import gps2dist_azimuth
 #local imports
 from .proj import geo_to_utm,utm_to_geo
 
-DEFAULT_SZ_DIP = 17.0 #default dip angle of subduction zone
 MAX_INTERFACE_DEPTH = 70 #depth beyond which any tectonic regime has to be intraslab
 
-class Slab(object):
-    def contains(self,lat,lon):
-        pass
+#Slab 1.0 does not have depth uncertainty, so we make this a constant
+DEFAULT_DEPTH_ERROR = 10
 
-    def getSlabInfo(self,lat,lon):
-        pass
+class GridSlab(object):
+    """Represents USGS Slab model grids for a given subduction zone.
+    """
+    def __init__(self,depth_file,dip_file,strike_file,error_file):
+        """Construct GridSlab object from input files.
 
-class GridSlab(Slab):
-    def __init__(self,depth_file,dip_file,strike_file):
+        Args:
+            depth_file (str): Path to Slab depth grid file.
+            dip_file (str): Path to Slab dip grid file.
+            strike_file (str): Path to Slab strike grid file.
+            error_file (str): Path to Slab depth error grid file (can be None).
+        """
         self._depth_file = depth_file
         self._dip_file = dip_file
         self._strike_file = strike_file
+        self._error_file = error_file #can be None for Slab 1.0
 
     def contains(self,lat,lon):
+        """Check to see if input coordinates are contained inside Slab model.
+
+        Args:
+            lat (float):  Hypocentral latitude in decimal degrees.
+            lon (float):  Hypocentral longitude in decimal degrees.
+        Returns:
+            bool: True if point falls inside minimum bounding box of slab model.
+        """
         gdict,tmp = GMTGrid.getFileGeoDict(self._depth_file)
         if lat >= gdict.ymin and lat <= gdict.ymax and lon >= gdict.xmin and lon <= gdict.xmax:
             return True
         return False
 
     def getSlabInfo(self,lat,lon):
+        """Return a dictionary with depth,dip,strike, and depth uncertainty.
+
+        Args:
+            lat (float):  Hypocentral latitude in decimal degrees.
+            lon (float):  Hypocentral longitude in decimal degrees.
+        Returns:
+            dict: Dictionary containing keys:
+                - region Three letter Slab model region code.
+                - strike Slab model strike angle.
+                - dip Slab model dip angle.
+                - depth Slab model depth (km).
+                - depth_uncertainty Slab model depth uncertainty.
+        """
         slabinfo = {}
         if not self.contains(lat,lon):
             return slabinfo
@@ -50,158 +77,72 @@ class GridSlab(Slab):
         depth = -1 * depth_grid.getValue(lat,lon) #slab grids are negative depth
         dip_grid = GMTGrid.load(self._dip_file)
         strike_grid = GMTGrid.load(self._strike_file)
+        if self._error_file is not None:
+            error_grid = GMTGrid.load(self._error_file)
+            error = error_grid.getValue(lat,lon)
+        else:
+            error = DEFAULT_DEPTH_ERROR
         dip = dip_grid.getValue(lat,lon) * -1
         strike = strike_grid.getValue(lat,lon)
         strike = strike
         if strike < 0:
             strike += 360
+        
         slabinfo = {'region':region,
                     'strike':strike,
                     'dip':dip,
                     'depth':depth,
-                    'outside':np.isnan(depth),
-                    'slabtype':'grid'}
-        return slabinfo
-
-class TrenchSlab(Slab):
-    def __init__(self,trenchfile,dip=DEFAULT_SZ_DIP):
-        jdict = json.load(open(trenchfile,'rt'))
-        self._shape = tshape(jdict['geometry'])
-        self._strike = [float(s) for s in jdict['properties']['strikes'].split(',')]
-        self._dip = dip
-        self._region = jdict['properties']['name']
-
-    def _getUTMProj(self,lat,lon):
-        hemi = 'north'
-        if lat < 0:
-            hemi='south'
-        starts = np.arange(-180,180,6)
-        zone = np.where((lon > starts) < 1)[0].min()
-        projstr = '+proj=utm +zone=%i +%s +ellps=WGS84 +datum=WGS84 +units=m +no_defs' % (zone,hemi)
-        return projstr
-        
-    def contains(self,lat,lon):
-        shape = self._shape
-        xmin,ymin,xmax,ymax = shape.bounds
-            
-        rect = Polygon([(xmin,ymin),(xmin,ymax),(xmax,ymax),(xmax,ymin),(xmin,ymin)])
-        if rect.contains(Point(lon,lat)):
-            return True
-
-        #now we need to look landward 21 km from interface to see if we're inside that polygon
-        #let's use shapely to buffer the feature outwards in all directions the required distance
-        #first we'll need to project this feature to UTM
-        pshape,utmstr = geo_to_utm(shape)
-        #set the buffer distance based on the maximum depth for an interface EVER       
-        buffer_distance = MAX_INTERFACE_DEPTH / np.tan(np.radians(self._dip))
-        pshape_buffer = pshape.buffer(buffer_distance)
-        shape_buffer = utm_to_geo(pshape_buffer,utmstr)
-        if shape_buffer.contains(Point(lon,lat)):
-            return True
-        return False
-
-    def getSlabInfo(self,lat,lon):
-        slabinfo = {}
-        if not self.contains(lat,lon):
-            return slabinfo
-        mindist = 9999999999
-        minlat = 999
-        minlon = 999
-        minstrike = 999
-        for i in range(0,len(self._shape.coords)):
-            slon,slat = self._shape.coords[i]
-            strike = self._strike[i]
-            dist,az1,az2 = gps2dist_azimuth(lat,lon,slat,slon)
-            dist /= 1000
-            if dist < mindist:
-                mindist = dist
-                minlat = slat
-                minlon = slon
-                minstrike = strike
-        d1,lineaz,taz = gps2dist_azimuth(minlat,minlon,lat,lon)
-        d1 /= 1000.0
-        dstrike = minstrike - lineaz
-        region = self._region
-        depth = mindist * np.tan(np.radians(self._dip))
-        if dstrike >= 360:
-            dstrike = dstrike - 360
-        if dstrike < 0:
-            dstrike = dstrike + 360
-        if dstrike > 0 and dstrike < 180:
-            outside = True
-        else:
-            outside = False
-        slabinfo = {'region':region,
-                    'strike':minstrike,
-                    'dip':self._dip,
-                    'depth':depth,
-                    'outside':outside,
-                    'slabtype':'trench'}
+                    'depth_uncertainty':error}
         return slabinfo
     
 class SlabCollection(object):
-    def __init__(self,datafolder,default_sz_dip=DEFAULT_SZ_DIP):
-        """Object representing a collection of SlabX.Y grids and a trench file in GeoJSON format.
+    def __init__(self,datafolder):
+        """Object representing a collection of SlabX.Y grids.
 
         This object can be queried with a latitude/longitude to see if that point is within a subduction
         slab - if so, the slab information is returned.
 
-        :param datafolder:
-          String path where grid files and GeoJSON file reside.
-        :param default_sz_dip:
-          Default value of dip for slabs represented as trench lines.
+        Args:
+            datafolder (str): String path where grid files and GeoJSON file reside.
         """
-        self._depth_files = glob.glob(os.path.join(datafolder,'*_clip.grd'))
+        self._depth_files = glob.glob(os.path.join(datafolder,'*_dep*.grd'))
         homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
-        trenchfolder = os.path.join(homedir,'data')
-        self._trench_files = glob.glob(os.path.join(trenchfolder,'*_trench.geojson'))
-        self._default_sz_zip = default_sz_dip
         
-    def getSlabInfo(self,lat,lon):
+    def getSlabInfo(self,lat,lon,depth):
         """Query the entire set of slab models and return a SlabInfo object, or None.
-
-        :param lat:
-          Input latitude.
-        :param lon:
-          Input longitude.
-        :returns:
-          A SlabInfo object, in the cases where:
-            1) The coordinate is inside a slab grid, landward of the interface.
-            2) The coordinate is inside a slab grid, oceanward of the interface.
-            3) The coordinate is inside (??) a trench line, landward of the interface.
-            4) The coordinate is inside (??) a trench line, oceanward of the interface.
-
-            When the coordinate is not dip-ward of the interface, SlabInfo properties will be set to NaN.
-        None, when the coordinate is not inside any of the slab grids or the trenches.
-        """
         
+        Args:
+            lat (float):  Hypocentral latitude in decimal degrees.
+            lon (float):  Hypocentral longitude in decimal degrees.
+            depth (float): Hypocentral depth in km.
+
+        Returns:
+            dict: Dictionary containing keys:
+                - region Three letter Slab model region code.
+                - strike Slab model strike angle.
+                - dip Slab model dip angle.
+                - depth Slab model depth (km).
+                - depth_uncertainty Slab model depth uncertainty.
+        """
+
+        deep_depth = 99999999999
         slabinfo = {}
+        # loop over all slab regions, return keep all slabs found
         for depth_file in self._depth_files:
-            dip_file = depth_file.replace('clip','dipclip')
-            strike_file = depth_file.replace('clip','strclip')
-            gslab = GridSlab(depth_file,dip_file,strike_file)
-            slabinfo = gslab.getSlabInfo(lat,lon)
-            if not len(slabinfo):
+            dip_file = depth_file.replace('dep','dip')
+            strike_file = depth_file.replace('dep','str')
+            error_file = depth_file.replace('dep','unc')
+            if not os.path.isfile(error_file):
+                error_file = None
+            gslab = GridSlab(depth_file,dip_file,strike_file,error_file)
+            tslabinfo = gslab.getSlabInfo(lat,lon)
+            if not len(tslabinfo):
                 continue
             else:
-                if not np.isnan(slabinfo['depth']):
-                    return slabinfo
-
-        if len(slabinfo) and np.isnan(slabinfo['depth']):
-            gslabinfo = slabinfo.copy()
-        if not len(slabinfo) or np.isnan(slabinfo['depth']):
-            for trench_file in self._trench_files:
-                #print(trench_file)
-                tslab = TrenchSlab(trench_file)
-                slabinfo = tslab.getSlabInfo(lat,lon)
-                if not len(slabinfo):
-                    continue
-                else:
-                    if not np.isnan(slabinfo['depth']):
-                        return slabinfo
-                    else:
-                        return gslabinfo
-        
-
+                depth = tslabinfo['depth']
+                if depth < deep_depth:
+                    slabinfo = tslabinfo.copy()
+                    deep_depth = depth
+            
         return slabinfo
     

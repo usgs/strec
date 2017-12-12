@@ -19,19 +19,19 @@ MONTHLY_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_
 def fetch_gcmt():
     """Fetch all GCMT data from gcmt web site, return into pandas DataFrame.
 
-    returns:
-      pandas DataFrame containing columns:
-        - time (YYYY-MM-DD HH:MM:SS for CSV)
-        - lat (decimal degrees)
-        - lon (decimal degrees)
-        - depth (km)
-        - mag Magnitude
-        - mrr Mrr moment tensor component
-        - mtt Mtt moment tensor component
-        - mpp Mpp moment tensor component
-        - mrt Mrt moment tensor component
-        - mrp Mrp moment tensor component
-        - mtp Mtp moment tensor component
+    Returns:
+        pandas DataFrame containing columns:
+            - time (YYYY-MM-DD HH:MM:SS for CSV)
+            - lat (decimal degrees)
+            - lon (decimal degrees)
+            - depth (km)
+            - mag Magnitude
+            - mrr Mrr moment tensor component
+            - mtt Mtt moment tensor component
+            - mpp Mpp moment tensor component
+            - mrt Mrt moment tensor component
+            - mrp Mrp moment tensor component
+            - mtp Mtp moment tensor component
     """
     t1 = str(datetime.utcnow())
     print('%s - Fetching historical GCMT data...' % t1)
@@ -65,8 +65,8 @@ def get_historical_gcmt():
     
     http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/allorder.ndk_explained
 
-    :returns:
-      StringIO object containing the NDK file for the 1976-2010 period.
+    Returns:
+        io.StringIO: StringIO object containing the NDK file for the 1976-2010 period.
     """
     zipfile = None
     try:
@@ -91,12 +91,11 @@ def get_historical_gcmt():
 def get_monthly_gcmt(year,month):
     """Download one month's worth of GCMT data into a StringIO object.
 
-    :param year:
-      Integer year.
-    :param month:
-      Integer month (1-12).
-    :returns:
-      StringIO object containing NDK file for given month/year.
+    Args:
+        year (int): Integer year.
+        month (int): Integer month (1-12).
+    Returns:
+        io.StringIO: StringIO object containing NDK file for given month/year.
     """
     strmonth = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][month-1]
     stryear = str(year)
@@ -113,21 +112,22 @@ def get_monthly_gcmt(year,month):
 def ndk_to_dataframe(ndkfile):
     """Turn an ndk file-like object or filename into a pandas dataframe.
     
-    :param ndkfile:
-      String file name or file-like object containing NDK-formatted earthquake data.
-    :returns:
-      pandas DataFrame containing columns:
-        - time (YYYY-MM-DD HH:MM:SS for CSV)
-        - lat (decimal degrees)
-        - lon (decimal degrees)
-        - depth (km)
-        - mag Magnitude
-        - mrr Mrr moment tensor component
-        - mtt Mtt moment tensor component
-        - mpp Mpp moment tensor component
-        - mrt Mrt moment tensor component
-        - mrp Mrp moment tensor component
-        - mtp Mtp moment tensor component
+    Args:
+        ndkfile (str or file-like object): String file name or file-like object 
+            containing NDK-formatted earthquake data.
+    Returns:
+        pandas DataFrame containing columns:
+            - time (YYYY-MM-DD HH:MM:SS for CSV)
+            - lat (decimal degrees)
+            - lon (decimal degrees)
+            - depth (km)
+            - mag Magnitude
+            - mrr Mrr moment tensor component
+            - mtt Mtt moment tensor component
+            - mpp Mpp moment tensor component
+            - mrt Mrt moment tensor component
+            - mrp Mrp moment tensor component
+            - mtp Mtp moment tensor component
     """
     if not hasattr(ndkfile,'read'):
         ndkfile = open(ndkfile,'r')
@@ -163,6 +163,9 @@ def ndk_to_dataframe(ndkfile):
     return df
     
 def _parse_line1(line,tdict):
+    """Parse the first line of an NDK file.
+
+    """
     dstr = line[5:26]
     year = int(dstr[0:4])
     month = int(dstr[5:7])
@@ -184,6 +187,9 @@ def _parse_line1(line,tdict):
     tdict['depth'] = float(line[42:47])
 
 def _parse_line4(line,tdict):
+    """Parse the fourth line of an NDK file.
+
+    """
     tdict['exponent'] = float(line[0:2])
     tdict['mrr'] = float(line[2:9])*np.power(10.0,tdict['exponent'])
     tdict['mtt'] = float(line[15:22])*np.power(10.0,tdict['exponent'])
@@ -194,5 +200,8 @@ def _parse_line4(line,tdict):
 
 
 def _parse_line5(line,tdict):
+    """Parse the fifth line of an NDK file.
+
+    """    
     scalar_moment = float(line[49:56].strip())*np.power(10.0,tdict['exponent'])
     tdict['mag'] = ((2.0/3.0) * np.log10(scalar_moment)) - 10.7

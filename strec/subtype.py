@@ -16,30 +16,47 @@ import numpy as np
 from libcomcat.search import get_event_by_id
 
 #local imports
-from .subduction import SubductionZone
-from .slab import SlabCollection
-from .cmt import getCompositeCMT
-from .proj import geo_to_utm
-from .gmreg import Regionalizer
-from .kagan import get_kagan_angle
-from .tensor import fill_tensor_from_components
+from strec.subduction import SubductionZone
+from strec.slab import SlabCollection
+from strec.cmt import getCompositeCMT
+from strec.proj import geo_to_utm
+from strec.gmreg import Regionalizer
+from strec.kagan import get_kagan_angle
+from strec.tensor import fill_tensor_from_components
+from strec.utils import get_config
 
 EVENT_URL = 'https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=EVENTID&format=geojson'
 SLAB_RAKE = 90 # presumed rake angle of slabs
 
 SLAB_REGIONS = {'alu':'Alaska-Aleutians',
-                'mex':'Central America',
+                'cal':'Calabria',
+                'cam':'Central America',
+                'car':'Caribbean',
                 'cas':'Cascadia',
+                'cot':'Cotabato',
+                'hal':'Halmahera',
+                'hel':'Helanic',
+                'him':'Himalaya',
+                'hin':'Hindu Kush',
                 'izu':'Izu-Bonin',
                 'ker':'Kermadec-Tonga',
                 'kur':'Kamchatka/Kurils/Japan',
+                'mak':'Makran',
+                'man':'Manila',
+                'mex':'Central America',
+                'mue':'Muertos',
+                'pam':'Pamir',
+                'pan':'Panama',
                 'phi':'Philippines',
+                'png':'New Guinea',
+                'puy':'Puysegur',
                 'ryu':'Ryukyu',
-                'van':'Santa Cruz Islands/Vanuatu/Loyalty Islands',
+                'sam':'South America',
                 'sco':'Scotia',
                 'sol':'Solomon Islands',
-                'sam':'South America',
-                'sum':'Sumatra-Java'}
+                'sul':'Sulawesi',
+                'sum':'Sumatra-Java',
+                'van':'Santa Cruz Islands/Vanuatu/Loyalty Islands'}
 
 CONSTANTS = {'tplunge_rs' : 50,
              'bplunge_ds' : 30,
@@ -48,54 +65,51 @@ CONSTANTS = {'tplunge_rs' : 50,
              'delplunge_ss' : 20}
     
 class SubductionSelector(object):
+    """For events that are inside a subduction zone, determine subduction zone properties.
+    
+    """
     def __init__(self):
-        """For events that are inside a subduction zone, determine subduction zone properties.
+        """Construct a SubductionSelector object.
 
         """
         self._regionalizer = Regionalizer.load()
-        configfile = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
-        if not os.path.isfile(configfile):
-            raise Exception('Strec config file missing: supposed to be %s.' % configfile)
-        self._config = configparser.ConfigParser()
-        self._config.read(configfile)
+        self._config = get_config()
 
     def getSubductionTypeByID(self,eventid):
         """Given an event ID, determine the subduction zone information.
-
-        :param eventid:
-          ComCat EventID (Sumatra is official20041226005853450_30).
-        :returns:
-          Pandas Series object with indices:
-            - TectonicRegion : (Subduction,Active,Stable,Volcanic)
-            - TectonicDomain : SZ (generic)
-            - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
-            - TensorType : (actual, composite)
-            - KaganAngle : Angle between moment tensor and slab interface.
-            - DistanceToStable : Distance in km from the nearest stable polygon.
-            - DistanceToActive : Distance in km from the nearest active polygon.
-            - DistanceToSubduction : Distance in km from the nearest subduction polygon.
-            - DistanceToVolcanic : Distance in km from the nearest volcanic polygon.
-            - Oceanic : Boolean indicating whether we are in an oceanic region.
-            - DistanceToOceanic : Distance in km to nearest oceanic polygon.
-            - DistanceToContinental : Distance in km to nearest continental polygon.
-            - TectonicSubtype : (SZInter,ACR,SZIntra)
-            - RegionContainsBackArc : Boolean indicating whether event is in a back-arc subduction region.
-            - DomainDepthBand1 : Bottom of generic depth level for shallowest subduction type.
-            - DomainDepthBand1Subtype : Shallowest subduction type.
-            - DomainDepthBand2 : Bottom of generic depth level for middle subduction type.
-            - DomainDepthBand2Subtype : Middle subduction type.
-            - DomainDepthBand3 : Bottom of generic depth level for deepest subduction type.
-            - DomainDepthBand3Subtype : Deepest subduction type
-            - SlabModelRegion : Subduction region.
-            - SlabModelType : (grid,trench)
-            - SlabModelOutside : Boolean indicating whether the location is 
-                                 in the undefined region of the slab.
-            - SlabModelDepth : Depth to slab interface at epicenter.
-            - SlabModelDip : Dip of slab at epicenter.
-            - SlabModelStrike : Strike of slab at epicenter.
-            - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
-            - IsNearInterface : Boolean indicating whether depth is close to interface.
-            - IsInSlab : Boolean indicating whether depth is within the slab.
+        
+        Args:
+            eventid (str): ComCat EventID (Sumatra is official20041226005853450_30).
+        Returns:
+            Pandas Series object with indices:
+                - TectonicRegion : (Subduction,Active,Stable,Volcanic)
+                - TectonicDomain : SZ (generic)
+                - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
+                - TensorType : (actual, composite)
+                - KaganAngle : Angle between moment tensor and slab interface.
+                - DistanceToStable : Distance in km from the nearest stable polygon.
+                - DistanceToActive : Distance in km from the nearest active polygon.
+                - DistanceToSubduction : Distance in km from the nearest subduction polygon.
+                - DistanceToVolcanic : Distance in km from the nearest volcanic polygon.
+                - Oceanic : Boolean indicating whether we are in an oceanic region.
+                - DistanceToOceanic : Distance in km to nearest oceanic polygon.
+                - DistanceToContinental : Distance in km to nearest continental polygon.
+                - TectonicSubtype : (SZInter,ACR,SZIntra)
+                - RegionContainsBackArc : Boolean indicating whether event is in a back-arc subduction region.
+                - DomainDepthBand1 : Bottom of generic depth level for shallowest subduction type.
+                - DomainDepthBand1Subtype : Shallowest subduction type.
+                - DomainDepthBand2 : Bottom of generic depth level for middle subduction type.
+                - DomainDepthBand2Subtype : Middle subduction type.
+                - DomainDepthBand3 : Bottom of generic depth level for deepest subduction type.
+                - DomainDepthBand3Subtype : Deepest subduction type
+                - SlabModelRegion : Subduction region.
+                - SlabModelType : (grid,trench)
+                - SlabModelDepth : Depth to slab interface at epicenter.
+                - SlabModelDip : Dip of slab at epicenter.
+                - SlabModelStrike : Strike of slab at epicenter.
+                - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
+                - IsNearInterface : Boolean indicating whether depth is close to interface.
+                - IsInSlab : Boolean indicating whether depth is within the slab.
 
         """
         lat,lon,depth,tensor_params = self.getOnlineTensor(eventid)
@@ -105,30 +119,30 @@ class SubductionSelector(object):
     def getOnlineTensor(self,eventid):
         """Get tensor parameters from preferred ComCat moment tensor.
         
-        :param eventid:
-          ComCat EventID (Sumatra is official20041226005853450_30).
-        :returns:
-          Moment tensor parameters dictionary:
-            - source Moment Tensor source
-            - type usually mww,mwc,mwb,mwr,TMTS or "unknown".
-            - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
-            - T T-axis values:
-              - azimuth
-              - plunge
-            - N N-axis values:
-              - azimuth
-              - plunge
-            - P P-axis values:
-              - azimuth
-              - plunge
-            - NP1 First nodal plane values:
-              - strike
-              - dip
-              - rake
-            - NP2 Second nodal plane values:
-              - strike
-              - dip
-              - rake
+        Args:
+            eventid (str): ComCat EventID (Sumatra is official20041226005853450_30).
+        Returns:
+            Moment tensor parameters dictionary:
+                - source Moment Tensor source
+                - type usually mww,mwc,mwb,mwr,TMTS or "unknown".
+                - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
+                - T T-axis values:
+                  - azimuth
+                  - plunge
+                - N N-axis values:
+                  - azimuth
+                  - plunge
+                - P P-axis values:
+                  - azimuth
+                  - plunge
+                - NP1 First nodal plane values:
+                  - strike
+                  - dip
+                  - rake
+                - NP2 Second nodal plane values:
+                  - strike
+                  - dip
+                  - rake
         """
         detail = get_event_by_id(eventid)
         lat = detail.latitude
@@ -207,70 +221,63 @@ class SubductionSelector(object):
     def getSubductionType(self,lat,lon,depth,eventid=None,tensor_params=None):
         """Given an event ID, determine the subduction zone information.
 
-        :param lat:
-          Epicentral latitude.
-        :param lon:
-          Epicentral longitude.
-        :param depth:
-          Epicentral depth.
-        :param eventid:
-          ComCat EventID (Sumatra is official20041226005853450_30).
-        :param tensor_params:
-          Dictionary containing moment tensor parameters:
-            - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
-            - T T-axis values:
-              - azimuth
-              - plunge
-            - N N-axis values:
-              - azimuth
-              - plunge
-            - P P-axis values:
-              - azimuth
-              - plunge
-            - NP1 First nodal plane values:
-              - strike
-              - dip
-              - rake
-            - NP2 Second nodal plane values:
-              - strike
-              - dip
-              - rake
-        :returns:
-          Pandas Series object with indices:
-            - TectonicRegion : (Subduction,Active,Stable,Volcanic)
-            - TectonicDomain : SZ (generic)
-            - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
-            - TensorType : (Mww,Mwb,Mwc,etc., or "composite")
-            - TensorSource: Network and event ID or 'composite'.
-            - KaganAngle : Angle between moment tensor and slab interface.
-            - DistanceToStable : Distance in km from the nearest stable polygon.
-            - DistanceToActive : Distance in km from the nearest active polygon.
-            - DistanceToSubduction : Distance in km from the nearest subduction polygon.
-            - DistanceToVolcanic : Distance in km from the nearest volcanic polygon.
-            - Oceanic : Boolean indicating whether we are in an oceanic region.
-            - DistanceToOceanic : Distance in km to nearest oceanic polygon.
-            - DistanceToContinental : Distance in km to nearest continental polygon.
-            - TectonicSubtype : (SZInter,ACR,SZIntra)
-            - RegionContainsBackArc : Boolean indicating whether event is in a back-arc subduction region.
-            - DomainDepthBand1 : Bottom of generic depth level for shallowest subduction type.
-            - DomainDepthBand1Subtype : Shallowest subduction type.
-            - DomainDepthBand2 : Bottom of generic depth level for middle subduction type.
-            - DomainDepthBand2Subtype : Middle subduction type.
-            - DomainDepthBand3 : Bottom of generic depth level for deepest subduction type.
-            - DomainDepthBand3Subtype : Deepest subduction type
-            - SlabModelRegion : Subduction region.
-            - SlabModelType : (grid,trench)
-            - SlabModelOutside : Boolean indicating whether the location is 
-                                 in the undefined region of the slab.
-            - SlabModelDepth : Depth to slab interface at epicenter.
-            - SlabModelDip : Dip of slab at epicenter.
-            - SlabModelStrike : Strike of slab at epicenter.
-            - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
-            - IsNearInterface : Boolean indicating whether depth is close to interface.
-            - IsInSlab : Boolean indicating whether depth is within the slab.
+        Args:
+            lat (float): Epicentral latitude.
+            lon (float): Epicentral longitude.
+            depth (float): Epicentral depth.
+            eventid (float): ComCat EventID (Sumatra is official20041226005853450_30).
+            tensor_params (dict): Dictionary containing moment tensor parameters:
+                - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
+                - T T-axis values:
+                  - azimuth
+                  - plunge
+                - N N-axis values:
+                  - azimuth
+                  - plunge
+                - P P-axis values:
+                  - azimuth
+                  - plunge
+                - NP1 First nodal plane values:
+                  - strike
+                  - dip
+                  - rake
+                - NP2 Second nodal plane values:
+                  - strike
+                  - dip
+                  - rake
+        Returns:
+            Pandas Series object with indices:
+                - TectonicRegion : (Subduction,Active,Stable,Volcanic)
+                - TectonicDomain : SZ (generic)
+                - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
+                - TensorType : (actual, composite)
+                - KaganAngle : Angle between moment tensor and slab interface.
+                - DistanceToStable : Distance in km from the nearest stable polygon.
+                - DistanceToActive : Distance in km from the nearest active polygon.
+                - DistanceToSubduction : Distance in km from the nearest subduction polygon.
+                - DistanceToVolcanic : Distance in km from the nearest volcanic polygon.
+                - Oceanic : Boolean indicating whether we are in an oceanic region.
+                - DistanceToOceanic : Distance in km to nearest oceanic polygon.
+                - DistanceToContinental : Distance in km to nearest continental polygon.
+                - TectonicSubtype : (SZInter,ACR,SZIntra)
+                - RegionContainsBackArc : Boolean indicating whether event is in a back-arc subduction region.
+                - DomainDepthBand1 : Bottom of generic depth level for shallowest subduction type.
+                - DomainDepthBand1Subtype : Shallowest subduction type.
+                - DomainDepthBand2 : Bottom of generic depth level for middle subduction type.
+                - DomainDepthBand2Subtype : Middle subduction type.
+                - DomainDepthBand3 : Bottom of generic depth level for deepest subduction type.
+                - DomainDepthBand3Subtype : Deepest subduction type
+                - SlabModelRegion : Subduction region.
+                - SlabModelType : (grid,trench)
+                - SlabModelDepth : Depth to slab interface at epicenter.
+                - SlabModelDip : Dip of slab at epicenter.
+                - SlabModelStrike : Strike of slab at epicenter.
+                - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
+                - IsNearInterface : Boolean indicating whether depth is close to interface.
+                - IsInSlab : Boolean indicating whether depth is within the slab.
         """
         config = self._config
-        data_folder = config['DATA']['folder']
+        slab_data_folder = config['DATA']['slabfolder']
         tensor_type = None
         tensor_source = None
         similarity = np.nan
@@ -278,8 +285,11 @@ class SubductionSelector(object):
         if tensor_params is None:
             if eventid is not None:
                 tlat,tlon,tdep,tensor_params = self.getOnlineTensor(eventid)
-                tensor_type = tensor_params['type']
-                tensor_source = tensor_params['source']
+                # TODO: Figure out what to do if online event has no moment tensor
+                # For now, just ignore it
+                if tensor_params is not None:
+                    tensor_type = tensor_params['type']
+                    tensor_source = tensor_params['source']
             else:
                 dbfile = os.path.join(config['DATA']['folder'],config['DATA']['dbfile'])
                 minboxcomp = float(config['CONSTANTS']['minradial_distcomp'])
@@ -296,10 +306,12 @@ class SubductionSelector(object):
                                                                dbox=dboxcomp,nmin=nmin)
                 tensor_type = 'composite'
                 tensor_source = 'composite'
+        else:
+            tensor_type = tensor_params['type']
+            tensor_source = tensor_params['source']
 
-        dip = config['CONSTANTS']['default_szdip']
-        slab_collection = SlabCollection(data_folder,dip)
-        slab_params = slab_collection.getSlabInfo(lat,lon)
+        slab_collection = SlabCollection(slab_data_folder)
+        slab_params = slab_collection.getSlabInfo(lat,lon,depth)
 
         reginfo = self._regionalizer.getRegions(lat,lon,depth)
         reginfo['TensorType'] = tensor_type
@@ -308,10 +320,10 @@ class SubductionSelector(object):
         reginfo['NComposite'] = nevents
         if len(slab_params):
             if np.isnan(slab_params['depth']) or tensor_params is None:
-                if slab_params['outside'] and reginfo['RegionContainsBackArc']:
+                if reginfo['RegionContainsBackArc']:
                     #reclassify this as SZ back arc
                     reginfo['Domain'] = 'SZ (inland/back-arc)'
-                    reginfo['TectonicSubtype'],regimeinfo = self._regionalizer.getSubType(reginfo['Domain'],depth)
+                    reginfo['TectonicSubtype'],regimeinfo = self._regionalizer.getSubDomain(reginfo['Domain'],depth)
                     reginfo['DomainDepthBand1Subtype'] = regimeinfo[0][0]
                     reginfo['DomainDepthBand1'] = regimeinfo[0][1]
                     reginfo['DomainDepthBand2Subtype'] = regimeinfo[1][0]
@@ -324,9 +336,8 @@ class SubductionSelector(object):
             else:
                 results = self._get_subduction_type(lat,lon,depth,tensor_params,slab_params,reginfo,config)
                 results['SlabModelRegion'] = SLAB_REGIONS[slab_params['region']]
-                results['SlabModelType'] = slab_params['slabtype']
-                results['SlabModelOutside'] = slab_params['outside']
                 results['SlabModelDepth'] = slab_params['depth']
+                results['SlabModelDepthUncertainty'] = slab_params['depth_uncertainty']
                 results['SlabModelDip'] = slab_params['dip']
                 results['SlabModelStrike'] = slab_params['strike']
                 np1 = tensor_params['NP1']
@@ -337,9 +348,8 @@ class SubductionSelector(object):
             results = reginfo.copy()
             results['FocalMechanism'] = get_focal_mechanism(tensor_params)
             results['SlabModelRegion'] = ''
-            results['SlabModelType'] = ''
-            results['SlabModelOutside'] = False
             results['SlabModelDepth'] = np.nan
+            results['SlabModelDepthUncertainty'] = np.nan
             results['SlabModelDip'] = np.nan
             results['SlabModelStrike'] = np.nan
             results['IsLikeInterface'] = False
@@ -357,8 +367,9 @@ class SubductionSelector(object):
                                          'DomainDepthBand1','DomainDepthBand1Subtype',
                                          'DomainDepthBand2','DomainDepthBand2Subtype',
                                          'DomainDepthBand3','DomainDepthBand3Subtype',
-                                         'SlabModelRegion','SlabModelType',
-                                         'SlabModelOutside','SlabModelDepth',
+                                         'SlabModelRegion',
+                                         'SlabModelDepth',
+                                         'SlabModelDepthUncertainty',
                                          'SlabModelDip','SlabModelStrike',
                                          'IsLikeInterface','IsNearInterface','IsInSlab' ])
             
@@ -367,6 +378,24 @@ class SubductionSelector(object):
     def _get_subduction_type(self,lat,lon,depth,
                             tensor_params,slab_params,reginfo,
                             config):
+        """Append subduction zone information to Regionalizer output.
+        
+        Args:
+            lat (float): Epicentral latitude.
+            lon (float): Epicentral longitude.
+            depth (float): Epicentral depth.
+            tensor_params (dict): Dictionary containing moment tensor parameters.
+            slab_params (dict): Dictionary containing slab model parameters.
+            reginfo (Series): Output from Regionalizer.getRegions().
+            config (dict): Dictionary containing configuration information.
+        Returns:
+            Series: Indices appended to reginfo:
+                - FocalMechanism 
+                - IsLikeInterface
+                - IsNearInterface
+                - IsInSlab
+                - TectonicSubtype
+        """
         
         results = reginfo.copy()
         if depth <= reginfo['DomainDepthBand1']:
@@ -481,24 +510,24 @@ class SubductionSelector(object):
 
 
 def get_focal_mechanism(tensor_params):
-    """
-    Return focal mechanism (strike-slip,normal, or reverse).
-    :param tensor_params: Dictionary containing the following fields:
-           - 'T' Dictionary of 'azimuth' and 'plunge' values for the T axis.
-           - 'N' Dictionary of 'azimuth' and 'plunge' values for the N(B) axis.
-           - 'P' Dictionary of 'azimuth' and 'plunge' values for the P axis.
-           - 'NP1' Dictionary of angles for the first nodal plane ('strike','dip','rake')
-           - 'NP2' Dictionary of angles for the second nodal plane ('strike','dip','rake')
-    :param config:
-      dictionary containing:
-       - constants:
-         - tplunge_rs
-         - bplunge_ds
-         - bplunge_ss
-         - pplunge_nm
-         - delplunge_ss
-    :returns: 
-      String: 'SS','RS','NM','ALL'.
+    """ Return focal mechanism (strike-slip,normal, or reverse).
+
+    Args:
+        tensor_params (dict): Dictionary containing the following fields:
+            - 'T' Dictionary of 'azimuth' and 'plunge' values for the T axis.
+            - 'N' Dictionary of 'azimuth' and 'plunge' values for the N(B) axis.
+            - 'P' Dictionary of 'azimuth' and 'plunge' values for the P axis.
+            - 'NP1' Dictionary of angles for the first nodal plane ('strike','dip','rake')
+            - 'NP2' Dictionary of angles for the second nodal plane ('strike','dip','rake')
+        config (dict): dictionary containing: 
+            - constants:
+            - tplunge_rs
+            - bplunge_ds
+            - bplunge_ss
+            - pplunge_nm
+            - delplunge_ss
+    Returns:
+        str: Focal mechanism string 'SS','RS','NM',or 'ALL'.
     """
     if tensor_params is None:
         return 'ALL'

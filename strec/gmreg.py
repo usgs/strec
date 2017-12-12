@@ -19,6 +19,9 @@ import numpy as np
 from obspy.geodetics.base import gps2dist_azimuth
 import pandas as pd
 
+#local imports
+from strec.utils import get_config
+
 #As we add more layers, define their name/file mappings here.
 #All of these files have polygons where the attribute is true.
 REGIONS = OrderedDict()
@@ -46,10 +49,15 @@ GEOGRAPHIC = 'geographic.json'
 #for each of the above geographic regions, this is the attribute containing the name of the region
 GEOGRAPHIC_FIELD = 'REG_NAME'
 
-def _get_nearest_point(point,shape,inside=False):
+def _get_nearest_point(point,shape):
     """Return distance from point to nearest vertex of a polygon.
-
     
+    Args:
+        point (Point): Shapely point object (lon,lat).
+        shape (shape): Shapely geometry (usually Polygon).
+    
+    Returns:
+        float: Minimum distance in km from input point to nearest vertex on input shape.
     """
     latlong = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees')
     azim = pyproj.Proj('+proj=aeqd +lat_0=%.6f +lon_0=%.6f' % (point.y,point.x))
@@ -78,6 +86,20 @@ def _get_nearest_point(point,shape,inside=False):
     return mindist
         
 def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
+    """Get information about a given layer with respect to an input point.
+
+    Args:
+        layer (str): Name of input layer ("Stable","Active",etc.)
+        point (Point): Shapely Point object (lon,lat).
+        fname (str): Path to file containing spatial data for layer.
+        domain_field (str): Field in fname to find domain (output).
+        default_domain (str): If domain_field is None, the domain to output.
+    Returns:
+        str or None: None if point is not inside layer, name of region if it is.
+        float: Distance from point to nearest point on layer.
+        domain: Tectonic domain of layer.
+        bool: Boolean indicating whether layer has a back-arc subduction region.
+    """
     distance_to_layer = 99999999999999999
     shapes = fiona.open(fname,'r')
     inside = False
@@ -102,7 +124,7 @@ def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
                 distance_to_layer = dist_to_vertex
     if inside:
         region = layer
-        distance = _get_nearest_point(point,pshape,inside=True)
+        distance = _get_nearest_point(point,pshape)
     else:
         distance = distance_to_layer
 
@@ -111,6 +133,10 @@ def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
 class Regionalizer(object):
     def __init__(self,datafolder):
         """Determine tectonic region information given epicenter and depth.
+
+        Args:
+            datafolder (str): Path to directory containing spatial data for 
+                tectonic regions.
         """
         self._datafolder = datafolder
         self._regions = OrderedDict()
@@ -127,55 +153,144 @@ class Regionalizer(object):
     def load(cls):
         """Load regionalizer data from data in the repository.
         
+        Returns:
+            Regionalizer: Instance of Regionalizer class.
         """
-        homedir = os.path.dirname(os.path.abspath(__file__))
-        datadir = os.path.join(homedir,'data')
+        config = get_config()
+        datadir = config['DATA']['folder']
         return cls(datadir)
 
     def getDomainInfo(self,domain):
-        """Return domain information from repository spreadsheet.
+        """Get tectonic sub-domain given tectonic domain and depth.
         
-        :param domain:
-          Seismo-tectonic domain ("SZ (generic)",
+        Args:
+            domain (str): SeismoTectonicDomain, one of:
+                - SCR (generic)
+                - SCR (above slab)
+                - ACR (shallow)
+                - ACR (deep)
+                - ACR (oceanic boundary)
+                - ACR (hot spot)
+                - SZ (generic)
+                - SZ (outer-trench)
+                - SZ (on-shore)
+                - SZ (inland/back-arc)
+                - SOR (generic)
+                - SOR (above slab)
+                - ACR shallow (above slab)
+                - ACR deep (above slab)
+                - ACR oceanic boundary (above slab)
+        Returns:
+            Series: row from domains.xlsx in repository, containing columns:
+                - TYPE
+                - TectonicDomain
+                - H1
+                - SubDomain1
+                - H2
+                - SubDomain2
+                - H3
+                - SubDomain3
         """
-        regimefile = os.path.join(self._datafolder,'regimes.xlsx')
-        df = pd.read_excel(regimefile)
-        try:
-            reginfo = df[df.REGIME_TYPE == domain].iloc[0]
-        except:
-            raise Exception('Could not find domain "%s" in list of domains.' % domain)
-        return reginfo
-        
+        domainfile = os.path.join(self._datafolder,'domains.xlsx')
+        df = pd.read_excel(domainfile)
+        domain_info = df[df.TectonicDomain == domain].iloc[0]
+        if not len(domain_info):
+            raise KeyError('Could not find domain "%s" in list of domains.' % domain)
+        return domain_info
     
-    def getSubType(self,domain,depth):
-        """Get 
-
+    def getSubDomain(self,domain,depth):
+        """Get tectonic sub-domain given tectonic domain and depth.
+        
+        Args:
+            domain (str): SeismoTectonicDomain, one of:
+                - SCR (generic)
+                - SCR (above slab)
+                - ACR (shallow)
+                - ACR (deep)
+                - ACR (oceanic boundary)
+                - ACR (hot spot)
+                - SZ (generic)
+                - SZ (outer-trench)
+                - SZ (on-shore)
+                - SZ (inland/back-arc)
+                - SOR (generic)
+                - SOR (above slab)
+                - ACR shallow (above slab)
+                - ACR deep (above slab)
+                - ACR oceanic boundary (above slab)
+            depth (float):  Earthquake depth (km).
+        Returns:
+            str: SeismoTectonicSubDomain, one of: SCR,ACR,SZIntra,Volcanic,SZInter.
         """
-        reginfo = self.getDomainInfo(domain)
+        domain_info = self.getDomainInfo(domain)
+        if not len(domain_info):
+            raise KeyError('Could not find domain "%s" in list of domains.' % domain)
         
-        H1 = reginfo['H1']
-        H2 = reginfo['H2']
-        H3 = reginfo['H3']
+        H1 = domain_info['H1']
+        H2 = domain_info['H2']
+        H3 = domain_info['H3']
         
-        reg1 = reginfo['REGIME1']
-        reg2 = reginfo['REGIME2']
-        reg3 = reginfo['REGIME3']
+        domain1 = domain_info['SubDomain1']
+        domain2 = domain_info['SubDomain2']
+        domain3 = domain_info['SubDomain3']
 
-        regime = None
+        domain = None
         
         if depth >= 0 and depth < H1:
-            regime = reg1
+            domain = domain1
 
         if depth >= H1 and depth < H2:
-            regime = reg2
+            domain = domain2
 
         if depth >= H2 and depth < H3:
-            regime = reg3
+            domain = domain3
 
-        return (regime,[(reg1,H1),(reg2,H2),(reg3,H3)])
+        return (domain,[(domain1,H1),(domain2,H2),(domain3,H3)])
             
      
     def getRegions(self,lat,lon,depth):
+        """Get information about the tectonic region of a given hypocenter.
+
+        Args:
+            lat (float): Earthquake hypocentral latitude.
+            lon (float): Earthquake hypocentral longitude.
+            depth (float): Earthquake hypocentral depth.
+        Returns:
+            Series: Pandas series object containing labels:
+                - TectonicRegion: Subduction, Active, Stable, or Volcanic.
+                - TectonicDomain: One of...
+                    - SCR (generic)
+                    - SCR (above slab)
+                    - ACR (shallow)
+                    - ACR (deep)
+                    - ACR (oceanic boundary)
+                    - ACR (hot spot)
+                    - SZ (generic)
+                    - SZ (outer-trench)
+                    - SZ (on-shore)
+                    - SZ (inland/back-arc)
+                    - SOR (generic)
+                    - SOR (above slab)
+                    - ACR shallow (above slab)
+                    - ACR deep (above slab)
+                    - ACR oceanic boundary (above slab)
+                - DistanceToStable: Distance in km to nearest stable region.
+                - DistanceToActive: Distance in km to nearest active region.
+                - DistanceToSubduction: Distance in km to nearest subduction region.
+                - DistanceToVolcanic: Distance in km to nearest volcanic region.
+                - Oceanic: Boolean indicating if epicenter is in the ocean.
+                - DistanceToOceanic: Distance in km to nearest oceanic region.
+                - DistanceToContinental: Distance in km to nearest continental region.
+                - TectonicSubDomain: Depth dependent tectonic domain based on simple table.
+                - RegionContainsBackArc: Boolean flag indicating whether epicentral region
+                                         contains a subduction back-arc.
+                - DomainDepthBand1: Depth above which SubDomain1 applies.
+                - SubDomain1: Tectonic SubDomain to apply between 0 depth and DomainDepthBand1.
+                - DomainDepthBand2: Depth above which (below DomainDepthBand1) where SubDomain2 applies.
+                - SubDomain2: Tectonic SubDomain to apply between DomainDeptBand1 and DomainDepthBand2.
+                - DomainDepthBand3: Depth above which (below DomainDepthBand2) where SubDomain3 applies.
+                - SubDomain3: Tectonic SubDomain to apply between DomainDeptBand2 and DomainDepthBand3.
+        """
         regions = OrderedDict()
         point = Point(lon,lat)
         for layer,fname in self._regions.items():
@@ -208,8 +323,8 @@ class Regionalizer(object):
             regions['DistanceToOceanic'] = distance
             regions['DistanceToContinental'] = 0.0
 
-        subtype,depthinfo = self.getSubType(regions['TectonicDomain'],depth)
-        regions['TectonicSubtype'] = subtype
+        subtype,depthinfo = self.getSubDomain(regions['TectonicDomain'],depth)
+        regions['TectonicSubDomain'] = subtype
         regions['DomainDepthBand1'] = depthinfo[0][1]
         regions['DomainDepthBand1Subtype'] = depthinfo[0][0]
         regions['DomainDepthBand2'] = depthinfo[1][1]
@@ -221,31 +336,12 @@ class Regionalizer(object):
                                          'DistanceToActive','DistanceToSubduction',
                                          'DistanceToVolcanic','Oceanic',
                                          'DistanceToOceanic','DistanceToContinental',
-                                         'TectonicSubtype','RegionContainsBackArc',
+                                         'TectonicSubDomain','RegionContainsBackArc',
                                          'DomainDepthBand1','DomainDepthBand1Subtype',
                                          'DomainDepthBand2','DomainDepthBand2Subtype',
                                          'DomainDepthBand3','DomainDepthBand3Subtype'])
         
-        
-        # #Are we induced or tectonic?
-        # region,distance,domain = _get_layer_info('Induced',point,self._induced)
-        # if region is not None:
-        #     regions['Induced'] = True
-        #     #figure out how to get distance to edge of containing polygon (shapely says 0)
-        #     regions['DistanceToTectonic'] = None 
-        # else:
-        #     regions['Induced'] = False
-        #     regions['DistanceToInduced'] = distance
-            
 
-        # #what geographic regions are we in?
-        # geoshapes = fiona.open(self._geographic)
-        # geographic_regions = []
-        # for shape in geoshapes:
-        #     pshape = tShape(shape['geometry'])
-        #     if pshape.contains(point):
-        #         geographic_regions.append(shape['properties'][GEOGRAPHIC_FIELD])
-        # regions['GeographicRegions'] = ','.join(geographic_regions)
         return regions
         
 

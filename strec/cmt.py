@@ -16,8 +16,14 @@ from .tensor import fill_tensor_from_components
 
 
 def getComposite(rows):
-    """rows is a list of tuples consisting of mrr,mtt,mpp,mrt,mrp,mtp
+    """Calculate composite moment tensor.
 
+    Args:
+        rows (list):List of tuples containing (mrr,mtt,mpp,mrt,mrp,mtp)
+    Returns:
+        tuple: Tuple of (composite moment tensor dictionary (see fill_tensor_from_angles),
+               (scalar) similarity index,
+               Number of rows used to calculate composite)
     """
     components = np.array(rows)
     components[:,4] *= -1
@@ -60,17 +66,21 @@ def getComposite(rows):
 
 
 def getCompositeCMT(lat,lon,depth,dbfile,box=0.1,depthbox=10,nmin=3,maxbox=1.0,dbox=0.09):
-    """
-    Search a local sqlite gCMT database for a list of events near input event, calculate composite moment tensor.
-    @param lat: Latitude (dd)
-    @param lat: Longitude (dd)
-    @param depth: Depth (km)
-    @param dbfile: Path to sqlite database file
-    @keyword box: half-width of latitude/longitude search box (dd)
-    @keyword depthbox: half-width of depth search window (km)
-    @keyword nmin: Minimum number of events to use to calculate composite moment tensor
-    @keyword maxbox: Maximum size of search box (dd)
-    @keyword dbox: Increment of search box (dd)
+    """Search a database for list of moment tensors, calculate composite moment tensor.
+    Args:
+        lat (float): Latitude (dd).
+        lon (float): Longitude (dd).
+        depth (float): Depth (km).
+        dbfile (str): Path to sqlite database file.
+        box (float): half-width of latitude/longitude search box (dd)
+        depthbox (float): half-width of depth search window (km)
+        nmin (int): Minimum number of events to use to calculate composite moment tensor
+        maxbox (float): Maximum size of search box (dd)
+        dbox (float): Increment of search box (dd)
+    Returns:
+        tuple: Tuple of (composite moment tensor dictionary (see fill_tensor_from_angles),
+               (scalar) similarity index,
+               Number of rows used to calculate composite)
     """
     conn = sqlite3.connect(dbfile)
     cursor = conn.cursor()

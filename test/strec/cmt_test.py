@@ -55,7 +55,21 @@ def test_composite():
     
     print('Testing that CMT composite tensor is consistent with past results...')
     assert mechanism == 'RS'
-    assert tensor_params1 == testout
+    for key,value in tensor_params1.items():
+        value1 = testout[key]
+        if isinstance(value,float):
+            np.testing.assert_almost_equal(value,value1)
+        elif isinstance(value,str):
+            assert value == value1
+        else:
+            for key2,value2 in value.items():
+                value3 = value1[key2]
+                try:
+                    np.testing.assert_almost_equal(value2,value3)
+                except Exception as e:
+                    print(key2,value2,value3)
+                    raise e
+
     assert similarity == 1.1036343285450121
     assert N == 50
     print('Passed.')

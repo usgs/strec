@@ -1,231 +1,375 @@
-<center>SeismoTectonic Regime Earthquake Calculator (STREC)</center>
-=====
+# SeismoTectonic Regime Earthquake Calculator (STREC)
 
- This library and set of tools was created to provide functionality to
- determine automatically type of an earthquake (subduction zone
- interface, active crustal shallow, stable continental region, etc.),
- as well as the focal mechanism.  For background and detailed information on the implementation of this software, go 
-to the <a href="#background">Background</a> section at the bottom of the page.
+This library and set of tools was created to provide functionality to
+automatically determine the tectonic region of an earthquake
+(Subduction,Active,Volcanic,Stable), and the distance to the tectonic
+regions to which it does *not* belong.
 
-TOOLS
-=====
+In addition, STREC provides a tool that, in subduction zones, returns
+information on the subducting interface, using the USGS Slab1.0 model
+(https://earthquake.usgs.gov/data/slab/models.php).
 
-There are three tools that come with STREC:
+## GLOSSARY
 
-- getstrec.py - Determine the best seismo-tectonic regime and focal mechanism for an input earthquake.
-- strec_convert.py - Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
-- strec_init.py - Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
+In STREC we defined a number of terms that may not be commonly
+understood, so they are explained here.  These terms may be different
+from the Garcia paper upon which this software is originally based.
 
-INSTALLATION
-============
+ - *Tectonic Region*: One of Subduction, Active, Volcanic, or Stable.
+   We have split up the globe into these four regions, such that any
+   point on the globe should fall into one and only one of these
+   regions.
+   
+     * *Subduction*: A tectonic region defined by one plate descending below
+     another (e.g., the western portion of the United States).
 
-STREC has the following dependencies:
-- Python 2.7+ (not 3.X!)
-- numpy 1.5+
-- scipy 0.10+
-- matplotlib 1.3.0+
-- pytz 2011n+
+     * *Active*: A tectonic region which experiences crustal deformation due
+     to plate tectonics.
 
-AND 
+     * *Volcanic*: A tectonic region which is dominated by volcanic
+     activity.  This also includes what are referred to as "hot spots".
 
-- obspy 0.8.2+
+     * *Stable*: Tectonic regions which unlike Active regions, do not
+     experience crustal deformation (e.g., the interior of the
+     Australian continent.)
 
-The best way to install the first set of these dependencies is to use one of the Python distributions described here:
-
-<a href="http://www.scipy.org/install.html">http://www.scipy.org/install.html</a>
-
-Anaconda and Enthought distributions have been successfully tested with strec.
-
-Most of those distributions should include <em>pip</em>, a command line tool for installing and 
-managing Python packages.  You will use pip to install obspy and STREC itself.  
- 
-You may need to open a new terminal window to ensure that the newly installed versions of python and pip
-are in your path.
-
-<em>NB: The Pyzo distribution installs Python 3.3, which is incompatible with the 2.x Python
-code in STREC.</em>
-
-Final dependencies
-------------------
-Once you have a Python distribution installed (Canopy, Anaconda, etc.), you will need to install 
-obspy.  The best way to do this is using <b>pip</b>.  pip comes bundled with Anaconda and pythonxy, 
-but may need an extra step on Canopy.
-
-From the command line, type:
-<pre>
-[sudo] easy_install pip
-</pre>
-
-(sudo may be necessary, depending on whether you have permissions to install software with your regular account, and how Python has been installed).
-
-To install obspy with pip:
-<pre>
-[sudo] pip install obspy
-</pre>
-
-Installing STREC
-----------------
-
-To install this package:
-
-pip install git+git://github.com/usgs/strec.git
-
-The last command will install strec_init.py, strec_convert.py, and getstrec.py in your path.  
-
-Uninstalling and Updating
--------------------------
-
-To uninstall:
-
-pip uninstall strec
-
-To update:
-
-pip install -U git+git://github.com/usgs/strec.git
-
-Usage
-=====
-
-To begin using STREC, you will need to first download some binary data that is not included with the source code.
-
-<pre>
-strec_init.py --help
-usage: strec_init.py [-h] [-g] [-c] [-n] [-r] [-u]
-
-Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.
-
-optional arguments:
-  -h, --help    show this help message and exit
-  -g, --gcmt    Download all GCMT moment tensor data
-  -c, --comcat  Download all USGS ComCat moment tensor data (sans GCMT)
-  -n, --noslab  Do NOT download slab data
-  -r, --reinit  Re-initialize STREC application.
-  -u, --update  Update gcmt data.
-</pre>
-
-Most users will want to download the GCMT data - this is used to populate a database used to determine the earthquake's focal 
-mechanism based on historical seismicity.
-
-<pre>
-getstrec.py --help
-usage: getstrec.py [-h] [-d DATAFILE] [-r PLOTFILE] [-a ANGLES] [-c] [-x] [-p]
-                   [-f]
-                   [LAT LON DEPTH MAG [DATE] [LAT LON DEPTH MAG [DATE] ...]]
-
-Determine most likely seismo-tectonic regime of given earthquake.
-    STREC - Seismo-Tectonic Regionalization of Earthquake Catalogs
-    GCMT Composite Focal Mechanism Solution: %prog lat lon depth magnitude
-    GCMT Historical or Composite Focal Mechanism Solution: %prog lat lon depth magnitude [date]
-    User-defined, GCMT Historical, or GCMT Composite:%prog -d datafolder lat lon depth magnitude [date]
+ - *Tectonic Domain*: This is a sub-grouping of tectonic regions, such
+    that individual polygons in any of the Tectonic Regions above will
+    have one of the following for the Tectonic Domain attribute:
     
+     * *SCR (generic)*: Generic Stable Continental Region
+     * *SCR (above slab)*: Stable Continental Region, above slab.
+     * *ACR (shallow)*: Active Crustal Region, shallow.
+     * *ACR (deep)*: Active Crustal Region, deep.
+     * *ACR (oceanic boundary)*: Active Crustal Region, at oceanic boundary.
+     * *ACR (hot spot)*: Active Crustal Region, at hot spot.
+     * *SZ (generic)*: Generic Subduction Zone.
+     * *SZ (outer-trench)*: Subduction Zone on the outer trench.
+     * *SZ (on-shore)*: Subduction Zone, on-shore.
+     * *SZ (inland/back-arc)*: Subduction Zone, inland or on back-arc.
+     * *SOR (generic)*: Generic Stable Oceanic Region. 
+     * *SOR (above slab)*: Stable Oceanic Region, above slab.
+     * *ACR shallow (above slab)*: Shallow Active Crustal Region, above slab.
+     * *ACR deep (above slab)*: Deep Active Crustal Region, above slab.
+     * *ACR oceanic boundary (above slab)*: Oceanic Boundary Active Crustal Region, above slab.
 
-positional arguments:
-  LAT LON DEPTH MAG [DATE]
-                        lat,lon,depth,magnitude and optionally date/time (YYYYMMDDHHMM) of earthquake
+ - *Tectonic Sub-Domain*: A domain sub-classification that varies with
+    depth. This value will be one of:
+     * *SCR*: Stable Continental Region.
+     * *ACR*: Active Crustal Region.
+     * *SZINtra*: Subduction Zone IntraSlab (below subduction interface).
+     * *SZInter*: Subduction Zone Interface (on subduction interface).
+     * *Volcanic*: In volcanic substrate.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -d DATAFILE, --datafile DATAFILE
-                        Specify the database (.db) file containing moment tensor solutions.
-  -r PLOTFILE, --regionplot PLOTFILE
-                        Tell STREC to plot the EQ location inside Flinn-Engdahl polygon, and provide the output filename.
-  -a ANGLES, --angles ANGLES
-                        Specify the focal mechanism by providing "strike dip rake"
-  -c, --csv-out         print output as csv
-  -x, --xml-out         print output as csv
-  -p, --pretty-out      print output as human readable text
-  -f, --force-composite
-                        Force a composite solution, even if an exact historical moment tensor can be found.
-</pre>
+ - *Oceanic*: Another region, not exclusive with the four Tectonic
+   Regions, that indicates whether the point supplied is in the ocean
+   (i.e., not continental).
 
-Sample:
+ - *Continental*: The opposite of Oceanic.
+
+ - *Focal Mechanism*: A set of parameters that define the deformation in
+   the source region that generates the seismic waves of an earthquake.
+
+ - *Tensor Type*: The short name for the algorithm used to generate
+   the moment tensor used to determine focal mechanism, Kagan angle,
+   etc.  This is usually a short code like *Mww* (W-phase), *Mwr*
+   (regional), *Mwb* (body wave), or *composite*, which indicates that
+   there is no computed moment tensor, so a composite of historical
+   moment tensors around the input coordinates is used instead.
+
+ - *Tensor Source*: When available, this is usually the network that
+   contributed the moment tensor, followed by the ID used by that
+   network (e.g., us_2000bmcg).
+
+ - *Kagan Angle*: An single angle between any two moment tensors or in
+    our case, between a moment tensor and a subducting slab.
+
+ - *Composite Variability*: When the moment tensor solution is of type
+ *composite*, a scalar value describing the variability of the moment
+ tensors used to determine the composite.
+
+ - *Distance to [Region]*: The great circle distance from the input
+   coordinates to the nearest vertex of [Region] polygon.
+
+ - *Domain Depth Band (1,2 or 3)*: The default depth ranges, in the
+   absence of subduction information, that can be used to determine the
+   tectonic subtype within the defined depth range.
+
+ - *Slab Model Region*: We currently use Slab 1.0 subduction models
+   (Hayes 2012), which are currently provided for 13 regions around
+   the globe.  These regions are described in detail here:
+   https://earthquake.usgs.gov/data/slab/models.php
+
+ - *Slab Model Depth*: The best estimate of depth to subduction
+   interface.
+
+ - *Slab Model Depth Uncertainty*: The best estimate of the uncertainty
+   of the depth to subduction interface.
+
+ - *Slab Model Dip*: The best estimate of the dip angle of the
+   subducting plate.
+
+ - *Slab Model Strike*: The best estimate of the strike angle of the
+   subducting plate.
+
+ - *Is Like Interface*: A boolean indicating whether the moment tensor
+   strike angle is similar to the slab strike (Garcia 2012).
+
+ - *Is Near Interface*: A boolean indicating whether the earthquake
+   depth is within a threshold distance from the slab depth.
+
+ - *Is In Slab*: A boolean indicating whether the earthquake
+   depth is below a threshold distance from the slab depth.
+
+## INSTALLATION
+
+
+Currently, the easiest way to install STREC is to use the install script found in this repository.
+
+### Pre-requisites
+
+ - You should be comfortable using a terminal window in general, and
+   the bash shell in particular.
+
+ - You should have either Anaconda
+
+   https://www.anaconda.com/download/
+
+   or Miniconda
+
+   https://conda.io/miniconda.html
+
+   installed on your system.  In theory, this code should work on
+   Windows, but has not been tested on that platform.
+
+ - You should have git installed on your system.  On Linux or Mac OS,
+   you can determine this by typing:
+
+   `which git`
+
+   If you see a response that indicates you have git installed on your
+   system (something like */usr/bin/git*), then you are set.  If not,
+   install git by using the package manager for your system (Linux) or
+   visiting this page:
+
+   https://git-scm.com/download
+
+### Installing STREC In a New Conda Environment
+
+ - Download the STREC source code by running the following command:
+
+   `git clone https://github.com/usgs/strec.git`
+
+   This will create a directory called *strec* below your current working directory.
+
+ - Run the installer script by typing:
+
+   `cd strec;bash installer.sh`
+
+ - *Activate* the STREC virtual environment by running this command:
+
+   `source activate strecenv`.
+
+   You will need to add this command to your bash profile file (~/.bash_profile or ~/.bashrc),
+   or re-run the command when you open a new terminal window.
+
+### Installing STREC in an Existing Conda Environment
+
+ Make sure you have the following dependencies already installed through conda or pip:
+  - numpy
+  - scipy 
+  - pyproj 
+  - pandas 
+  - openpyxl 
+  - xlrd 
+  - xlwt 
+  - pytest 
+  - pytest-cov 
+  - fiona 
+  - h5py 
+  - shapely 
+  - obspy 
+  - rasterio 
+  - gdal
+
+Then run the following commands:
+
+- `pip -q install https://github.com/usgs/MapIO/archive/master.zip`
+- `pip -q install https://github.com/usgs/libcomcat/archive/master.zip`
+- `pip -q install https://github.com/usgs/earthquake-impact-utils/archive/master.zip`
+- `pip -q install https://github.com/usgs/strec/archive/master.zip`
+
+### Using STREC
+
+#### Region Selector
+
+ There are two tools provided by STREC that allow slightly different
+ functionality.  If you are *not* interested in details about
+ subduction zone interfaces, then you will want to use the *regselect*
+ command.  This command can be used in a single event mode:
+
+ - `regselect -e LAT LON DEPTH` to return information about an event based on hypocenter.
+ - `regselect -d EVENTID` to return information about an event based on ComCat event ID.
+
+ComCat event IDs can be obtained from ComCat event page url's. For example, for the url:
+
+https://earthquake.usgs.gov/earthquakes/eventpage/us2000bmcg
+
+The event ID would be *us2000bmcg*.
+
+The output of regselect should look something like this:
 <pre>
->>getstrec.py -29.97226 -71.343155 10.0 7.4
-
-Returns the following output:
-
-Time: Unknown
-Lat: -29.97226
-Lon: -71.343155
-Depth: 10.0
-Magnitude: 7.4
-Earthquake Type: ACRsh
-Focal Mechanism: RS
-FE Region Name:  NEAR COAST OF CENTRAL CHILE
-FE Region Number: 135
-FE Seismotectonic Domain: SZ (generic)
-Focal Mechanism:
-	T Axis Strike and Plunge: 124.99 58.86
-	P Axis Strike and Plunge: 282.13 29.11
-	N Axis Strike and Plunge: 17.83 10.11
-	First Nodal Plane strike,dip,rake: 345.28 18.35 56.09
-	Second Nodal Plane strike,dip,rake: 200.59 74.86 100.48
-	Moment Source: composite
-Slab Parameters:
-	Strike Dip Depth: 278.74 20.90 42.20
-Focal mechanism satisfies interface conditions: True
-Depth within interface depth interval: False
-Depth within intraslab depth interval: False
-Warning: 
+For event located at -23.4733,135.3516,0.0:
+	TectonicRegion : Stable
+	TectonicDomain : SCR (generic)
+	DistanceToStable : 0.0
+	DistanceToActive : 2372.34536692
+	DistanceToSubduction : 1339.17982347
+	DistanceToVolcanic : 1611.06881631
+	Oceanic : False
+	DistanceToOceanic : 2372.34536692
+	DistanceToContinental : 0.0
+	TectonicSubtype : SCR
+	RegionContainsBackArc : False
+	DomainDepthBand1 : 50
+	DomainDepthBand1Subtype : SCR
+	DomainDepthBand2 : 999
+	DomainDepthBand2Subtype : SCR
+	DomainDepthBand3 : 1000
+	DomainDepthBand3Subtype : SCR
 </pre>
 
-Users who have their own catalog of moment tensor solutions may wish to use them with STREC instead of the GCMT database.  
-To convert these data into a form suitable for STREC, use strec_convert.py:
+Descriptions of the return fields can be found in the glossary above.
+
+regselect can be used in batch mode, operating on input CSV or Excel files.
+
+The NEIC *libcomcat* library and tools are installed along with STREC,
+so you can use the *getcsv* command to generate input files to use
+with regselect.  For example:
+
+`getcsv ~/big_events_2016.xlsx -s 2016-01-01 -e 2016-12-31T23:59:59 -m
+6.5 9.9 -f excel`
+
+will download basic event information for all magnitude 6.5 and
+greater events in 2016.  This output can be directly piped into
+regselect, and the results saved back out to Excel:
+
+`regselect -i ~/big_events_2016.xlsx -f excel -o ~/regselect_events.xlsx`
+
+#### Subduction Selector
+
+If you *are* interested in information about subduction zones (depth
+to interface, etc.), then you will want to run the *subselect*
+command.  Basic usage of *subselect* is the same as *regselect*:
+
+ - `subselect -e LAT LON DEPTH` to return information about an event based on hypocenter.
+ - `subselect -d EVENTID` to return information about an event based on ComCat event ID.
+
+The output of subselect will look something like this:
 
 <pre>
-strec_convert.py --help
-usage: strec_convert.py [-h] [-n] [-x] [-c] [-s] [-t TYPE] infile outfile
-
-Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
-The default input format is CSV.
-CSV format columns:
-(Required)
-1) Date/time (YYYYMMDDHHMMSS or YYYYMMDDHHMM)
-2) Lat (dd)
-3) Lon (dd)
-4) Depth (km)
-5) Mag
-6) Mrr (dyne-cm)
-7) Mtt (dyne-cm)
-8) Mpp (dyne-cm)
-9) Mrt (dyne-cm)
-10) Mrp (dyne-cm)
-11) Mtp (dyne-cm)
-(Optional - if these are not supplied STREC will calculate them from moment tensor components above).
-12) T Azimuth (deg)
-13) T Plunge (deg)
-14) N Azimuth (deg)
-15) N Plunge (deg)
-16) P Azimuth (deg)
-17) P Plunge (deg)
-18) NP1 Strike (deg)
-19) NP1 Dip (deg)
-20) NP1 Rake (deg)
-21) NP2 Strike (deg)
-22) NP2 Dip (deg)
-23) NP2 Rake (deg)
-
-positional arguments:
-  infile
-  outfile
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -n, --ndk             Input file is in NDK format
-  -x, --xml             Input file is in QuakeML XML format
-  -c, --csv             Input file is in CSV format (Default)
-  -s, --skipfirst       CSV file has a header row which should be skipped
-  -t TYPE, --type TYPE  Specify the moment tensor type (cmt,body wave,etc.) Defaults to 'User'.
+For event located at -23.4733,135.3516,0.0:
+	TectonicRegion : Stable
+	TectonicDomain : SCR (generic)
+	FocalMechanism : ALL
+	TensorType : composite
+	TensorSource : composite
+	KaganAngle : nan
+	CompositeVariability : nan
+	NComposite : 0
+	DistanceToStable : 0.0
+	DistanceToActive : 2372.34536692
+	DistanceToSubduction : 1339.17982347
+	DistanceToVolcanic : 1611.06881631
+	Oceanic : False
+	DistanceToOceanic : 2372.34536692
+	DistanceToContinental : 0.0
+	TectonicSubtype : SCR
+	RegionContainsBackArc : False
+	DomainDepthBand1 : 50
+	DomainDepthBand1Subtype : SCR
+	DomainDepthBand2 : 999
+	DomainDepthBand2Subtype : SCR
+	DomainDepthBand3 : 1000
+	DomainDepthBand3Subtype : SCR
+	SlabModelRegion : 
+	SlabModelType : 
+	SlabModelDepth : nan
+	SlabModelDepthUncertainty : nan
+	SlabModelDip : nan
+	SlabModelStrike : nan
+	IsLikeInterface : False
+	IsNearInterface : False
+	IsInSlab : False
 </pre>
 
-<a id="tips">Background</a>
-===================================================
-This is the background section.
+subselect can also be used in batch mode, operating on input CSV or Excel files.
 
+As above, getcsv output can be directly piped into
+subselect, and the results saved back out to Excel:
 
+`subselect -i ~/big_events_2016.xlsx -f excel -o ~/subselect_events.xlsx`
 
+### Data Used in STREC
 
+There are three datasets that are included with STREC:
 
+ - Vector (GeoJSON format) data files that define the four mutually
+   exclusive tectonic regions (Active, Stable, Volcanic, Subduction)
+   and Oceanic.
 
+- Database (SQLite format) of GCMT moment tensors that are used to
+  determine composite moment tensors.  This can be overridden by the
+  user (see below).
 
+- USGS Slab 1.0* subduction zone model grids (NetCDF4/HDF5 COARDS
+  format).  These models are described in detail on this page:
+  https://earthquake.usgs.gov/data/slab/models.php
 
+The moment tensor database can be overridden by using the *strec_init*
+command line tool (distributed with this repository), in one of two ways:
+
+ - Downloading up-to-date versions of the GCMT moment tensors
+ - Installing your own catalog of moment tensors.
+
+To update to the most recent version of the GCMT moment tensors, do
+the following:
+
+`strec_init [DATAFOLDER]`
+
+where [DATAFOLDER] is the location where you would like the new SQLite
+database file to be located.  STREC programs will recognize that this
+new file should override the data included in the repository by
+looking at a config file that strec_init will create in
+*~/.strec/strec.ini*.
+
+To use your own catalog of moment tensors, you must have a CSV or
+Excel file of earthquake and moment tensor data, with the following
+(exactly named) columns:
+
+ - time (YYYY-MM-DD HH:MM:SS for CSV)
+ - lat (decimal degrees)
+ - lon (decimal degrees)
+ - depth (km)
+ - mag (moment magnitude units)
+ - mrr (dyne-cm)
+ - mtt (dyne-cm)
+ - mpp (dyne-cm)
+ - mrt (dyne-cm)
+ - mrp (dyne-cm)
+ - mtp (dyne-cm)
+
+and then run the following command:
+
+`strec_init -d [DATAFILE] -s [SOURCE]`
+
+where [DATAFILE] is the name of the aforementioned CSV/Excel file and
+[SOURCE] is the name of the originator of the moment tensor solutions
+("gcmt", "us", "duputel", etc.)
+
+As above, STREC will recognize this new data as the source of moment
+tensors by looking in the STREC ini file.
+
+* - At the time of this writing, an updated set of subduction models
+    is in preparation, and will hopefully be added to the repository
+    soon.

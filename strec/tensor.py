@@ -4,36 +4,32 @@ from obspy.imaging.beachball import aux_plane,mt2axes,mt2plane,MomentTensor
 
 def fill_tensor_from_angles(strike,dip,rake,magnitude=6.0,source='unknown',mtype='unknown'):
     """Fill in moment tensor parameters from strike,dip, and rake.
-    
-    :param strike:
-      Strike from (assumed) first nodal plane (degrees).
-    :param dip:
-      Dip from (assumed) first nodal plane (degrees).
-    :param rake:
-      Rake from (assumed) first nodal plane (degrees).
-    :param magnitude:
-      Magnitude for moment tensor (not required if using moment tensor for angular comparisons.)
-    :param source:
-      Source (network, catalog) for input parameters.
-    :param mtype:
-      Focal mechanism or moment tensor type (Mww,Mwb,Mwc, etc.)
-    :returns:
-      Fully descriptive moment tensor dictionary, including fields:
-        - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
-        - T T-axis values:
-            - azimuth (degrees)
-            - plunge (degrees)
-        - N N-axis values:
-            - azimuth (degrees)
-            - plunge (degrees)
-        - P P-axis values:
-            - azimuth (degrees)
-            - plunge (degrees)
-        - NP1 First nodal plane values:
+
+    Args:
+        strike (float): Strike from (assumed) first nodal plane (degrees).
+        dip (float): Dip from (assumed) first nodal plane (degrees).
+        rake (float): Rake from (assumed) first nodal plane (degrees).
+        magnitude (float): Magnitude for moment tensor 
+            (not required if using moment tensor for angular comparisons.)
+        source (str): Source (network, catalog) for input parameters.
+        mtype (str): Focal mechanism or moment tensor type (Mww,Mwb,Mwc, etc.)
+    Returns:
+        dict: Fully descriptive moment tensor dictionary, including fields:
+            - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
+            - T T-axis values:
+              - azimuth (degrees)
+              - plunge (degrees)
+            - N N-axis values:
+              - azimuth (degrees)
+              - plunge (degrees)
+            - P P-axis values:
+              - azimuth (degrees)
+              - plunge (degrees)
+            - NP1 First nodal plane values:
               - strike (degrees)
               - dip (degrees)
               - rake (degrees)
-        - NP2 Second nodal plane values:
+            - NP2 Second nodal plane values:
               - strike (degrees)
               - dip (degrees)
               - rake (degrees)
@@ -46,31 +42,29 @@ def fill_tensor_from_angles(strike,dip,rake,magnitude=6.0,source='unknown',mtype
 def fill_tensor_from_components(mrr,mtt,mpp,mrt,mrp,mtp,source='unknown',mtype='unknown'):
     """Fill in moment tensor parameters from moment tensor components.
     
-    :param strike:
-      Strike from (assumed) first nodal plane (degrees).
-    :param dip:
-      Dip from (assumed) first nodal plane (degrees).
-    :param rake:
-      Rake from (assumed) first nodal plane (degrees).
-    :param magnitude:
-      Magnitude for moment tensor (not required if using moment tensor for angular comparisons.)
-    :returns:
-      Fully descriptive moment tensor dictionary, including fields:
-        - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
-        - T T-axis values:
-            - azimuth (degrees)
-            - plunge (degrees)
-        - N N-axis values:
-            - azimuth (degrees)
-            - plunge (degrees)
-        - P P-axis values:
-            - azimuth (degrees)
-            - plunge (degrees)
-        - NP1 First nodal plane values:
+    Args:
+        strike (float): Strike from (assumed) first nodal plane (degrees).
+        dip (float): Dip from (assumed) first nodal plane (degrees).
+        rake (float): Rake from (assumed) first nodal plane (degrees).
+        magnitude (float): Magnitude for moment tensor 
+            (not required if using moment tensor for angular comparisons.)
+    Returns:
+        dict: Fully descriptive moment tensor dictionary, including fields:
+            - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
+            - T T-axis values:
+              - azimuth (degrees)
+              - plunge (degrees)
+            - N N-axis values:
+              - azimuth (degrees)
+              - plunge (degrees)
+            - P P-axis values:
+              - azimuth (degrees)
+              - plunge (degrees)
+            - NP1 First nodal plane values:
               - strike (degrees)
               - dip (degrees)
               - rake (degrees)
-        - NP2 Second nodal plane values:
+            - NP2 Second nodal plane values:
               - strike (degrees)
               - dip (degrees)
               - rake (degrees)
@@ -110,23 +104,17 @@ def fill_tensor_from_components(mrr,mtt,mpp,mrt,mrp,mtp,source='unknown',mtype='
 def plane_to_tensor(strike, dip, rake, mag=6.0):
     """Convert strike,dip,rake values to moment tensor parameters.
 
-    :param strike:
-      strike of slab or moment tensor
-    :param dip:
-      dip of slab or moment tensor
-    :param rake:
-      rake of slab or moment tensor
-    :param mag:
-      magnitude moment magnitude of event, not required if only angles are required.
-    :returns:
-      tensor representation as 3x3 numpy matrix: 
-       [[mrr, mrt, mrp]
-        [mrt, mtt, mtp]
-        [mrp, mtp, mpp]]
-        
-        OR
-
-        dictionary with keys: mrr,mtt,mpp,mrt,mrp,mtp.
+    Args:
+        strike (float): Strike from (assumed) first nodal plane (degrees).
+        dip (float): Dip from (assumed) first nodal plane (degrees).
+        rake (float): Rake from (assumed) first nodal plane (degrees).
+        magnitude (float): Magnitude for moment tensor 
+            (not required if using moment tensor for angular comparisons.)
+    Returns:
+        nparray: Tensor representation as 3x3 numpy matrix: 
+            [[mrr, mrt, mrp]
+            [mrt, mtt, mtp]
+            [mrp, mtp, mpp]]
     """
     # define degree-radian conversions
     d2r = np.pi/180.0

@@ -28,10 +28,16 @@ def throw_away():
         tensor = fill_tensor_from_components(row['mrr'],row['mtt'],
                                              row['mpp'],row['mrt'],
                                              row['mrp'],row['mtp'])
-        mech = get_focal_mechanism(tensor,config)
+        mech = get_focal_mechanism(tensor)
         mechs.append(mech)
     dataframe['focal_mechanism'] = mechs
-    dataframe.to_excel('gcmt_mechanisms.xlsx')
+    try:
+        dataframe.to_excel('gcmt_mechanisms.xlsx')
+    except Exception as e:
+        raise e
+    finally:
+        os.remove('gcmt_mechanisms.xlsx')
+        
 
 def test_fetch_gcmt():
     dataframe = fetch_gcmt()

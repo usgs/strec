@@ -13,6 +13,6 @@ setup(name='STREC',
       author_email='mhearne@usgs.gov, garciajimenez.d@gmail.com',
       url='https://github.com/usgs/strec/',
       packages=['strec'],
-      scripts = ['regselect','subselect'],
+      scripts = ['bin/regselect','bin/subselect'],
       package_data = {'strec':['data/*.csv','data/*.txt','data/*.ini']},
      )

@@ -26,19 +26,23 @@ TIMEFMT = '%Y-%m-%d %H:%M:%S.%f'
 def stash_dataframe(dataframe,datafile,source,create_db=False):
     """Store a dataframe in the database.
 
-    :param Dataframe:
-      pandas Dataframe, containing columns:
-        - time (YYYY-MM-DD HH:MM:SS for CSV)
-        - lat (decimal degrees)
-        - lon (decimal degrees)
-        - depth (km)
-        - mag Magnitude
-        - mrr Mrr moment tensor component
-        - mtt Mtt moment tensor component
-        - mpp Mpp moment tensor component
-        - mrt Mrt moment tensor component
-        - mrp Mrp moment tensor component
-        - mtp Mtp moment tensor component
+    Args:
+        dataframe (DataFrame): pandas Dataframe, containing columns:
+            - time (YYYY-MM-DD HH:MM:SS for CSV)
+            - lat (decimal degrees)
+            - lon (decimal degrees)
+            - depth (km)
+            - mag Magnitude
+            - mrr Mrr moment tensor component
+            - mtt Mtt moment tensor component
+            - mpp Mpp moment tensor component
+            - mrt Mrt moment tensor component
+            - mrp Mrp moment tensor component
+            - mtp Mtp moment tensor component
+        datafile (str): Path to SQLite file where dataframe will be stored 
+            as a row.
+        source (str): Network that contributed the data in the dataframe ("us","gcmt", etc.)
+        create_db (bool): Boolean indicating whether to create a new database file or not.
     """
     if create_db:
         if os.path.isfile(datafile):
@@ -75,21 +79,21 @@ def stash_dataframe(dataframe,datafile,source,create_db=False):
 def fetch_dataframe(datafile):
     """Return a pandas dataframe containing earthquake information.
 
-    :param datafile:
-      Path to sqlite3 database file.
-    :returns:
-      pandas Dataframe, containing columns:
-        - time (YYYY-MM-DD HH:MM:SS for CSV)
-        - lat (decimal degrees)
-        - lon (decimal degrees)
-        - depth (km)
-        - mag Magnitude
-        - mrr Mrr moment tensor component
-        - mtt Mtt moment tensor component
-        - mpp Mpp moment tensor component
-        - mrt Mrt moment tensor component
-        - mrp Mrp moment tensor component
-        - mtp Mtp moment tensor component
+    Args:
+        datafile (str): Path to sqlite3 database file.
+    Returns:
+      DataFrame: pandas Dataframe, containing columns:
+                 - time (YYYY-MM-DD HH:MM:SS for CSV)
+                 - lat (decimal degrees)
+                 - lon (decimal degrees)
+                 - depth (km)
+                 - mag Magnitude
+                 - mrr Mrr moment tensor component
+                 - mtt Mtt moment tensor component
+                 - mpp Mpp moment tensor component
+                 - mrt Mrt moment tensor component
+                 - mrp Mrp moment tensor component
+                 - mtp Mtp moment tensor component
     """
     conn = sqlite3.connect(datafile)
     cursor = conn.cursor()
