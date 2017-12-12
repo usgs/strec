@@ -1,75 +1,149 @@
-from math import cos,sin,pi
 import os.path
-import ConfigParser
-import shutil
+import configparser
+import re
 
 STRECINI = 'strec.ini'
 GCMT_OUTPUT = 'gcmt.db'
 
-def deleteConfig():
-    homedir = os.path.expanduser('~') #where is the user's home directory
-    if homedir == '~':
-        return
-    configfolder = os.path.join(homedir,'.strec')
+CONSTANTS = {'minradial_disthist' : 0.01,
+             'maxradial_disthist' : 1.0,
+             'minradial_distcomp' : 0.5,
+             'maxradial_distcomp' : 1.0,
+             'step_distcomp' : 0.1,
+             'depth_rangecomp' : 10,
+             'minno_comp' : 3,
+             'default_szdip' : 17,
+             'dstrike_interf' : 30,
+             'ddip_interf' : 30,
+             'dlambda' : 60,
+             'ddepth_interf' : 20,
+             'ddepth_intra' : 10}
+
+def get_config():
+    """Get configuration information as a dictionary.
+
+    Returns:
+        config (dict): Dictionary containing fields:
+            - CONSTANTS Dictionary containing constants for the application.
+            - DATA Dictionary containing 'folder', 'slabfolder', and 'dbfile'.
+    """
+    #first look in the default path for a config file
+    config_file = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
+    if os.path.isfile(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        if 'DATA' not in config:
+            raise KeyError('STREC config file is missing the [DATA] section.')
+    else:
+        #if we didn't find one, then set the data stuff from the repo
+        config = {'DATA':{}}
+
+    homedir = os.path.dirname(os.path.abspath(__file__))  # where is this file?
+    datafolder = os.path.abspath(os.path.join(homedir,'data'))
+    if 'dbfile' not in config['DATA']:
+        dbfile = 'moment_tensors.db'
+        config['DATA']['dbfile'] = dbfile
+    if 'slabfolder' not in config['DATA']:
+        slabfolder = os.path.join(datafolder,'slabs')
+        config['DATA']['slabfolder'] = slabfolder
+        config['DATA']['folder'] = datafolder
+
+    if 'CONSTANTS' not in config:
+        config['CONSTANTS'] = CONSTANTS
+    return config
+
+def read_input_file(input_file):
+    """Read a CSV/Excel input file, return a DataFrame
+
+    This function will deal with any moment tensor component columns it finds,
+    (mrr,mtt,etc) and convert any that are integers into floats.
+
+    Args:
+        input_file (str): Path to CSV/Excel file containing lat,lon,depth columns
+            and optionally moment tensor columns 
+            ('mrr','mtt','mpp','mrt','mrp','mtp').
+    Returns:
+        DataFrame: Pandas dataframe containing contents of input file.
+    Raises:
+        ValueError: When input file is neither a CSV nor an Excel file.
+    """
+    df = None
     try:
-        shutil.rmtree(configfolder)
+        df = pd.read_csv(input_file)
     except:
-        return
-    return
+        try:
+            df = pd.read_excel(input_file)
+        except:
+            pass
+    row_ok,msg = check_row(df.columns)
+    if not row_ok:
+        df = None
 
-def getConfig():
-    homedir = os.path.expanduser('~') #where is the user's home directory
-    if homedir == '~':
-        msg = 'Could not establish home directory for %s.  Exiting.' % getpass.getuser()
-        raise Exception,msg
-    configfolder = os.path.join(homedir,'.strec')
-    if not os.path.isdir(configfolder):
-        os.mkdir(configfolder)
-    configfile = os.path.join(configfolder,STRECINI)
-    if not os.path.isfile(configfile):
-        #here we should create one from the default
-        thispath = os.path.dirname(os.path.abspath(__file__)) #where is this file?
-        tmpfile = os.path.join(thispath,'data','strec.ini')
-        config = ConfigParser.ConfigParser()
-        config.readfp(open(tmpfile))
-        return config,configfile
-    config = ConfigParser.ConfigParser()
-    config.readfp(open(configfile))
-    return (config,configfile)
+    #convert any long integer moment component columns to floating point, because
+    #otherwise pandas will complain later when re-writing row to a dataframe.  Doesn't make
+    #sense, but seems necessary.
+    for column in df:
+        comps = ['mrr','mtt','mpp','mrt','mrp','mtp']
+        for comp in comps:
+            if column.lower().find(comp) > -1:
+                df[column] += 0.0000000001
+            
+    return (df,msg)
 
-def isNaN(x):
-    return str(x) == str(1e400*0)
+def check_row(row):
+    """Ensure that input Series has columns matching "lat","lon","depth".
 
-def splitWithCommas(line):
-    if line.find('"') == -1:
-        return line.split(',')
-    nquotes = line.count('"')
-    idx1 = 0
-    linelist = list(line)
-    for i in range(0,nquotes/2):
-        idx1 = linelist.index('"',idx1)
-        idx2 = linelist.index('"',idx1+1)
-        lineseg = linelist[idx1:idx2+1]
-        if lineseg.count(','):
-            lineseg = list(''.join(lineseg).replace(',','|'))
-            linelist[idx1:idx2+1] = lineseg
-        idx1 = idx2+1
-    line = ''.join(linelist)
-    parts = line.split(',')
-    newparts = []
-    for p in parts:
-        p = p.replace('"','')
-        newparts.append(p.replace('|',','))
-    return newparts
+    Args:
+        row (Series): Pandas series object.
+    Returns:
+        tuple: (Boolean indicating whether row has valid columns,
+            and a message, when False, indicating which column is missing.)
+    """    
+    #row is a pandas series object
+    if not row.str.contains('^lat',case=False).any():
+        return False,'Missing "lat" column in input.'
+    if not row.str.contains('^lon',case=False).any():
+        return False,'Missing "lon" column in input.'
+    if not row.str.contains('^depth',case=False).any():
+        return False,'Missing "depth" column in input.'
+    return (True,'')
 
-def cosd(input):
+def get_input_columns(row):
+    """Return the latitude,longitude and depth columns from a Series.
+
+    Args:
+        row (Series): Pandas series object.
+    Returns:
+        tuple: (Name of latitude column,
+                Name of longitude column,
+                Name of depth column)
     """
-    Returns cosine of angle given in degrees.
-    """
-    return cos(input * pi/180)
+    #row is a pandas series object
+    lat = row[row.index.str.contains('^lat',case=False)][0]
+    lon = row[row.index.str.contains('^lon',case=False)][0]
+    depth = row[row.index.str.contains('^depth',case=False)][0]
 
-def sind(input):
+    return (lat,lon,depth)
+
+def render_row(row,format,lat,lon,depth):
+    """Render a Series containing regselect output to the screen.
+
+    Args:
+        row (Series): Pandas series object.
+        format (str): One of 'pretty','json','csv'.
+        lat (float): Earthquake hypocentral latitude.
+        lon (float): Earthquake hypocentral longitude.
+        depth (float): Earthquake hypocentral depth.
     """
-    Returns sine of angle given in degrees.
-    """
-    return sin(input * pi/180)
+    if format == 'pretty':
+        print('For event located at %.4f,%.4f,%.1f:' % (lat,lon,depth))
+        for idx,value in row.iteritems():
+            if re.match('^lat|^lon|^depth',idx,re.IGNORECASE):
+                continue
+            print('\t%s : %s' % (idx,str(value)))
+        print()
+    elif format == 'json':
+        print(row.to_json())
+    elif format == 'csv':
+        values = [str(v) for v in row.values]
+        print(','.join(values))
