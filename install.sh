@@ -38,7 +38,7 @@ fi
 # any versions of packages specified.
 if [ $reset -eq 1 ]; then
     echo "Ignoring platform, letting conda sort out dependencies..."
-    env_file=environment_basic.yml
+    env_file=environment.yml
 fi
 
 echo "Using ${env_file}"
