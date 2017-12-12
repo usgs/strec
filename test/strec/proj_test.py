@@ -2,6 +2,7 @@
 
 from strec.proj import get_utm_proj,geo_to_utm,utm_to_geo
 from shapely.geometry import Point,Polygon
+import numpy as np
 
 def test_get_utm_proj():
     lat = 36
@@ -35,7 +36,14 @@ def test_geo_to_utm():
               (500000.0, 3983948.4533356656),
               (500000.0, 3873043.0645342614),
               (408746.74716607813, 3873499.8508478715)]
-    assert utm_polygon.exterior.coords[:] == coords
+    x,y = zip(*utm_polygon.exterior.coords[:])
+    x = np.array(x)
+    y = np.array(y)
+    x1,y1 = zip(*coords)
+    x1 = np.array(x1)
+    y1 = np.array(y1)
+    np.testing.assert_almost_equal(x,x1)
+    np.testing.assert_almost_equal(y,y1)
     assert utmstr == '+proj=utm +zone=10 +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
     
@@ -60,7 +68,16 @@ def test_utm_to_geo():
               (-123.00000000000001, 36.0),
               (-123.00000000000001, 35.0),
               (-124.0, 34.999999999999986)]
-    assert geo_poly.exterior.coords[:] == coords
+
+    x,y = zip(*geo_poly.exterior.coords[:])
+    x = np.array(x)
+    y = np.array(y)
+    x1,y1 = zip(*coords)
+    x1 = np.array(x1)
+    y1 = np.array(y1)
+    np.testing.assert_almost_equal(x,x1)
+    np.testing.assert_almost_equal(y,y1)
+    
     
 
 if __name__ == '__main__':
