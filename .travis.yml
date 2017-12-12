@@ -5,7 +5,7 @@ python:
 
 install:
     # Install shakelib and requirements
-    - bash install.sh -t
+    - bash install.sh
     - export PATH="$HOME/miniconda/bin:$PATH"
     - source activate strecenv
 before_script:
