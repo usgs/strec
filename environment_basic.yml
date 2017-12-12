@@ -1,0 +1,31 @@
+name: strecenv
+channels:
+- conda-forge
+- defaults
+- digitalglobe
+- ioos
+dependencies:
+- affine
+- fiona
+- gdal
+- h5py
+- ipython
+- jupyter
+- numpy
+- obspy
+- openpyxl
+- pandas
+- pyproj
+- pytest
+- pytest-cov
+- python=3.5
+- rasterio
+- shapely
+- xlrd
+- xlwt
+- pip:
+  - ./libcomcat.zip
+  - ./mapio.zip
+  - ./impact-utils.zip
+
+
