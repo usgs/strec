@@ -1,6 +1,5 @@
 *.py[cod]
 *.grd
-*.db
 run*
 build
 *~
