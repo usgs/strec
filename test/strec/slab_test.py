@@ -21,7 +21,8 @@ def test_inside_grid():
     collection = SlabCollection(datadir)
     lat = 10.0
     lon = 126.0
-    slabinfo = collection.getSlabInfo(lat,lon)
+    depth = 0.0
+    slabinfo = collection.getSlabInfo(lat,lon,depth)
     test_slabinfo = {'region': 'phi',
                      'strike': 158.24164,
                      'dip': -45.32,
@@ -44,7 +45,8 @@ def test_inside_trench():
     #rect_bounds = (132.83, 138.674, 31.11, 35.034)
     lat = 33.0
     lon = 132.0
-    slabinfo = collection.getSlabInfo(lat,lon)
+    depth = 0.0
+    slabinfo = collection.getSlabInfo(lat,lon,depth)
     test_slabinfo = {'region': 'AMlvPS',
                      'strike': 244.6,
                      'dip': 17.0,

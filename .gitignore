@@ -1,4 +1,12 @@
 *.py[cod]
 *.grd
-*.db
 run*
+build
+*~
+.DS_Store
+.ipynb_checkpoints/
+.cache
+.coverage
+.coverage.xml
+*.egg-info/
+htmlcov

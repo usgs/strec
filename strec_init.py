@@ -6,9 +6,9 @@ import os.path
 import sys
 import datetime
 import getpass
-import ConfigParser
-import urllib2
-import urlparse
+import configparser
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 import tempfile
 import tarfile
 import gzip
@@ -24,10 +24,10 @@ MONTHLY_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_
 
 def getMonthList(year,rmonth):
     strmonth = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-    yearurl = urlparse.urljoin(MONTHLY_GCMT_URL,str(year))
+    yearurl = urllib.parse.urljoin(MONTHLY_GCMT_URL,str(year))
     try:
-        fh = urllib2.urlopen(yearurl)
-        data = fh.read()
+        fh = urllib.request.urlopen(yearurl)
+        data = fh.read().decode('utf-8')
         mlist = re.findall('[a-z]{3}[0-9]{2}.ndk',data)
         mlist = unique(mlist)
         monthlist = []
@@ -38,8 +38,8 @@ def getMonthList(year,rmonth):
         fh.close()
         monthlist.sort()
         return monthlist
-    except Exception,msg:
-        raise Exception,msg
+    except Exception as msg:
+        raise Exception(msg)
                          
 
 def unique(inlist):
@@ -64,10 +64,10 @@ def getMostRecent(dbfile):
 def getMonthlyGCMT(year,month):
     strmonth = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][month-1]
     stryear = str(year)
-    url = urlparse.urljoin(MONTHLY_GCMT_URL,os.path.join(stryear,strmonth+stryear[2:]+'.ndk'))
+    url = urllib.parse.urljoin(MONTHLY_GCMT_URL,os.path.join(stryear,strmonth+stryear[2:]+'.ndk'))
     try:
-        fh = urllib2.urlopen(url)
-        bytes = fh.read()
+        fh = urllib.request.urlopen(url)
+        bytes = fh.read().decode('utf-8')
         fh.close()
         f,fname = tempfile.mkstemp()
         os.close(f)
@@ -75,12 +75,12 @@ def getMonthlyGCMT(year,month):
         f.write(bytes)
         f.close()
         return fname
-    except Exception,msg:
-        raise Exception,msg
+    except Exception as msg:
+        raise Exception(msg)
 
 def getHistoricalGCMT():
     try:
-        fh = urllib2.urlopen(HIST_GCMT_URL)
+        fh = urllib.request.urlopen(HIST_GCMT_URL)
         bytes = fh.read()
         fh.close()
         f,zipname = tempfile.mkstemp()
@@ -91,21 +91,21 @@ def getHistoricalGCMT():
         gz = gzip.GzipFile(zipname,'rb')
         f,fname = tempfile.mkstemp()
         os.close(f)
-        f = open(fname,'wt')
+        f = open(fname,'wb')
         try:
             bytes = gz.read()
-        except Exception,msg:
+        except Exception as msg:
             pass
         f.write(bytes)
         gz.close()
         f.close()
         return fname
-    except Exception,msg:
-        raise Exception,msg
+    except Exception as msg:
+        raise Exception(msg)
 
 def fetchSlabs(datafolder):
     try:
-        fh = urllib2.urlopen(SLABURL)
+        fh = urllib.request.urlopen(SLABURL)
         bytes = fh.read()
         fh.close()
         f,fname = tempfile.mkstemp()
@@ -117,8 +117,8 @@ def fetchSlabs(datafolder):
         tar.extractall(path=datafolder)
         tar.close()
         os.remove(fname)
-    except Exception,msg:
-        raise Exception,msg
+    except Exception as msg:
+        raise Exception(msg)
 
 if __name__ == '__main__':
     usage = 'Initialize STREC data directory with USGS NEIC Slab data and (optionally) GCMT data.'
@@ -149,29 +149,29 @@ if __name__ == '__main__':
         config,configfile = strec.utils.getConfig()
         if config is not None:
             datafolder = config.get('DATA','folder')
-            print 'Deleting existing data folder %s' % datafolder
+            print('Deleting existing data folder %s' % datafolder)
             shutil.rmtree(datafolder)
-        print 'Deleting config file...'
+        print('Deleting config file...')
         strec.utils.deleteConfig()
     try:
         config,configfile = strec.utils.getConfig()
-    except Exception,msg:
-        print msg
+    except Exception as msg:
+        print(msg)
         sys.exit(1)
     if config is not None and config.has_option('DATA','folder'):
         datafolder = config.get('DATA','folder')
     else:
-        datafolder = raw_input('Enter the desired storage location for STREC data: ')
+        datafolder = input('Enter the desired storage location for STREC data: ')
         if not os.path.isdir(datafolder):
-            answer = raw_input('%s does not exist.  Would you like me to create it for you? y/[n]?: ' % datafolder)
+            answer = input('%s does not exist.  Would you like me to create it for you? y/[n]?: ' % datafolder)
             if answer.lower() != 'y':
-                print 'Stopping.'
+                print('Stopping.')
                 sys.exit(0)
             try:
                 datafolder = os.path.normpath(os.path.expanduser((datafolder)))
                 os.makedirs(datafolder)
-            except Exception,msg:
-                print 'Could not make %s due to error "%s".  Stopping.' % (datafolder,msg)
+            except Exception as msg:
+                print('Could not make %s due to error "%s".  Stopping.' % (datafolder,msg))
                 sys.exit(1)
         else:
             datafolder = os.path.normpath(os.path.expanduser((datafolder)))
@@ -180,23 +180,23 @@ if __name__ == '__main__':
         config.write(open(configfile,'wt'))
     try:
         if not args.noSlab:
-            print 'Downloading all required slab data (this may take a while...)'
+            print('Downloading all required slab data (this may take a while...)')
             fetchSlabs(datafolder)
-            print 'Finished downloading slab data.'
-    except Exception,msg:
-        print 'Error "%s" while downloading NEIC Slab data. Stopping.' % msg.message
+            print('Finished downloading slab data.')
+    except Exception as msg:
+        print('Error "%s" while downloading NEIC Slab data. Stopping.' % msg.message)
         sys.exit(1)
 
     outfile = os.path.join(datafolder,strec.utils.GCMT_OUTPUT)
     if args.getGCMT:
         try:
-            print 'Downloading and converting historical GCMT data...'
+            print('Downloading and converting historical GCMT data...')
             histfile = getHistoricalGCMT()
-        except Exception,msg:
-            print 'Error "%s" when downloading data from %s.  Stopping.' % (msg,HIST_GCMT_URL)
+        except Exception as msg:
+            print('Error "%s" when downloading data from %s.  Stopping.' % (msg,HIST_GCMT_URL))
             sys.exit(1)
         createDataFile(histfile,outfile,'ndk','gcmt',hasHeader=False)
-        print 'Finished converting historical GCMT data.'
+        print('Finished converting historical GCMT data.')
         os.remove(histfile)
     if args.getComCat:
         pass        
@@ -215,21 +215,21 @@ if __name__ == '__main__':
         for year in range(ryear,tyear+1):
             try:
                 monthlist = getMonthList(year,rmonth)
-            except Exception,msg:
-                print 'Could not find a URL (starting with %s) for year %i.  Stopping.' % (MONTHLY_GCMT_URL,year)
+            except Exception as msg:
+                print('Could not find a URL (starting with %s) for year %i.  Stopping.' % (MONTHLY_GCMT_URL,year))
                 sys.exit(0)
             for month in monthlist:
                 try:
-                    print 'Attempting to download data from %s, %i...' % (strmonth[month-1],year)
+                    print('Attempting to download data from %s, %i...' % (strmonth[month-1],year))
                     histfile = getMonthlyGCMT(year,month)
                     appendDataFile(histfile,outfile,'ndk','gcmt',hasHeader=False)
                     os.remove(histfile)
-                except Exception,msg:
+                except Exception as msg:
                     fmt = 'Could not download GCMT data for %s, %i.  (It may not be posted yet)'
-                    print fmt % (strmonth[month-1],year)
+                    print(fmt % (strmonth[month-1],year))
                     continue
         mostrecent = getMostRecent(outfile)
-        print 'GCMT database contains events through %s.' % str(mostrecent)
+        print('GCMT database contains events through %s.' % str(mostrecent))
         sys.exit(0)
     
         

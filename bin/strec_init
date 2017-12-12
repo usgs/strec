@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+
+#stdlib imports
+import argparse
+import pandas as pd
+import os.path
+import sys
+import configparser
+
+#local imports
+from strec.utils import get_config
+from strec.gcmt import fetch_gcmt
+from strec.database import stash_dataframe,fetch_dataframe
+
+#third party imports
+import numpy as np
+
+DBFILE = 'moment_tensors.db'
+
+class FileFormatError(Exception):
+    pass
+
+def read_datafile(filename):
+    dataframe = None
+    dtypes = {'mrr':np.float64,
+              'mtt':np.float64,
+              'mpp':np.float64,
+              'mrt':np.float64,
+              'mrp':np.float64,
+              'mtp':np.float64}
+    try:
+        dataframe = pd.read_csv(filename,dtype=dtypes)
+    except pd.errors.ParserError:
+        try:
+            dataframe = pd.read_excel(filename,dtype=dtypes)
+        except XLRDError:
+            raise FileFormatError('Input file is not CSV or Excel.')
+    req_columns = ['time','lat','lon','depth','mag',
+                   'mrr','mtt','mpp','mrt','mrp','mtp']
+    if not set(req_columns) <= set(dataframe.columns):
+        missing = set(req_columns) - set(dataframe.columns)
+        raise FileFormatError('Missing columns: %s' % str(missing))
+
+    #delete the columns that are no in required list
+    for column in dataframe.columns:
+        if column not in req_columns:
+            dataframe = dataframe.drop(column,1)
+    
+    return dataframe
+
+def get_parser():
+    desc = '''Initialize STREC moment tensor database, and optionally retrieve slab data.
+    
+    By default, %(prog)s will retrieve event/moment-tensor data from the GCMT web site and 
+    use it to populate the STREC moment tensor database, used to derived "composite" moment 
+    tensors for those cases where the user does not have a moment tensor.
+
+    
+    '''
+    parser = argparse.ArgumentParser(description=desc,formatter_class=argparse.RawTextHelpFormatter)
+    #positional arguments
+    req_columns_string = """Required columns:
+time (YYYY-MM-DD HH:MM:SS for CSV)
+lat (decimal degrees)
+lon (decimal degrees)
+depth (km)
+mag
+mrr
+mtt
+mpp
+mrt
+mrp
+mtp
+"""
+    parser.add_argument('datafolder',metavar='DATAFOLDER',
+                        help='Initialize STREC installation with DATAFOLDER')
+    parser.add_argument('-d','--datafile', default=None,
+                        metavar='DATAFILE',
+                        help='Input moment tensor CSV/Excel file. %s' % req_columns_string)
+    parser.add_argument('-s','--source', nargs='?',default='user',
+                        metavar='SOURCE',help='Input moment tensor source [comcat,duputel, etc.]')
+    return parser
+
+def main(args):
+    datafolder = args.datafolder
+    dataframe = None
+    if args.datafile:
+        if not os.path.isfile(args.datafile):
+            print('File %s does not exist.  Exiting.' % args.datafile)
+            sys.exit(1)
+        try:
+            dataframe = read_datafile(args.datafile)
+            if args.source:
+                source = args.source
+            elif 'source' in dataframe.columns:
+                source = dataframe.iloc[0]['source']
+            else:
+                source = 'user'
+        except FileFormatError as ffe:
+            fmt = 'Error reading input file %s.  File must be either CSV or Excel. %s'
+            print(fmt % (args.datafile,req_columns_string))
+            sys.exit(1)
+    else:
+        dataframe = fetch_gcmt()
+        source = 'gcmt'
+    
+    create_db = True
+    dbfile = os.path.join(datafolder,DBFILE)
+    stash_dataframe(dataframe,dbfile,source,create_db=create_db)
+    configfile = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
+    config = configparser.ConfigParser()
+    config['DATA'] = {'dbfile':dbfile}
+    with open(configfile, 'w') as cfile:
+        config.write(cfile)
+
+if __name__ == '__main__':
+    parser = get_parser()
+    pargs = parser.parse_args()
+
+    main(pargs)
+

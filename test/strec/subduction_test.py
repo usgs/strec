@@ -41,11 +41,11 @@ def test_subduction():
                      'T': {'plunge': 53.791403813585845, 
                            'value': 0.76362545152518302, 
                            'azimuth': 55.053604171983046}}
-    slab_params = {'strike': 205.60037231445312, 
+    slab_params = {'strike': 295.60037231445312, 
                    'depth': 91.38458251953125, 
                    'dip': 48.463893890380859}
     depth = 15.0
-    config = {'constants':{'dstrike_interf':30,
+    config = {'CONSTANTS':{'dstrike_interf':30,
                            'ddip_interf':30,
                            'dlambda':60,
                            'ddepth_interf':20,
@@ -55,6 +55,23 @@ def test_subduction():
     assert szone.checkInterfaceDepth() == False
     assert szone.checkSlabDepth(15) == False
     print('Passed.')
+
+    tensor_params2 = izmit_ss = {'T':{'azimuth':41,
+                                      'plunge':18},
+                                 'N':{'azimuth':237,
+                                      'plunge':72},
+                                 'P':{'azimuth':133,
+                                      'plunge':5},
+                                 'NP1':{'strike':178,
+                                        'dip':74,
+                                        'rake':9},
+                                 'NP2':{'strike':86,
+                                        'dip':81,
+                                        'rake':164}}
+    szone = SubductionZone(slab_params,tensor_params2,depth,config)
+    assert szone.checkRupturePlane() == False
+    assert szone.checkInterfaceDepth() == False
+    assert szone.checkSlabDepth(15) == False
     
 if __name__ == '__main__':
     test_subduction()
