@@ -450,10 +450,10 @@ def test_get_online_tensor():
                            'rake': 171.5679508376947,
                            'strike': 122.69120043887619}}
 
-    assert tensor1 == tensor1_cmp
+
+    res,msg = cmp_dicts(tensor1,tensor1_cmp)
+    res,msg = cmp_dicts(tensor3,tensor3_cmp)
     assert tensor2 is None
-    assert tensor3 == tensor3_cmp
-    
 
     
 def test_subtype():
