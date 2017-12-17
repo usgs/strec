@@ -13,7 +13,7 @@ def test_nearest_point():
     point = Point(1,1)
     polygon = Polygon([(3,3),(3,5),(5,5),(5,3)])
     dist = _get_nearest_point(point,polygon)
-    assert dist == 313.7054454693029
+    np.testing.assert_almost_equal(dist,313.7054454693029)
 
 def test_layer_info():
     homedir = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +25,7 @@ def test_layer_info():
                                                           fname,
                                                           domain_field=domain_field)
     assert region == 'Subduction'
-    assert distance == 61.233154384903926
+    np.testing.assert_almost_equal(distance,61.233154384903926)
     assert domain == 'SZ (generic)'
     assert has_backarc == True
 
