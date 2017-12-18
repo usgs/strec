@@ -1,0 +1,30 @@
+{
+  "name": "strec",
+  "organization": "U.S. Geological Survey",
+  "description": "REPOSITORY_DESCRIPTION",
+  "status": "Beta",
+  "homepage": "https://github.com/usgs/strec",
+  "downloadURL": "https://github.com/usgs/strec/archive/master.zip",
+
+  "openSourceProject": 1,
+  "license": "https://github.com/usgs/strec/blob/master/LICENSE.md",
+  "vcs": "git",
+  "repository": "https://github.com/usgs/strec.git",
+
+  "tags": [
+    "earthquake",
+    "tectonic",
+    "subduction",
+  ],
+  "languages": [
+    "python",
+  ],
+
+  "contact": {
+    "name": "Mike Hearne",
+    "email": "mhearne@usgs.gov"
+  },
+  "updated": {
+    "metadataLastUpdated": "2017-12-18"
+  }
+}
