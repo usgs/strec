@@ -2,6 +2,8 @@
 
 from collections import OrderedDict
 from strec.subtype import SubductionSelector,get_focal_mechanism
+from strec.utils import get_config
+from strec.gmreg import Regionalizer
 import pandas as pd
 import numpy as np
 
@@ -39,7 +41,7 @@ def cmp_dicts(dict1,dict2):
         return False,str(mismatched_keys)
     return True,''
 
-def block_test_get_focal_mechanism():
+def test_get_focal_mechanism():
     constants = {'tplunge_rs':50,
                  'bplunge_ds':30,
                  'bplunge_ss':55,
@@ -113,7 +115,287 @@ def block_test_get_focal_mechanism():
     focal_all = get_focal_mechanism(bogus_all)
     assert focal_all == 'ALL'
 
-def block_test_get_online_tensor():
+def test_get_subduction_type():
+    regionalizer = Regionalizer.load()
+    # sumatra parameters
+    lat = 3.295
+    lon = 95.982
+    depth = 30.0
+    reginfo = regionalizer.getRegions(lat,lon,depth)
+    selector = SubductionSelector()
+    tensor_params = {'NP1':{'strike':336,
+                            'dip':7,
+                            'rake':114},
+                     'NP2':{'strike':132,
+                            'dip':84,
+                            'rake':87},
+                     'T':{'value':6.797e+22,'plunge':51,'azimuth':38},
+                     'N':{'value':-0.243e+22,'plunge':3,'azimuth':132},
+                     'P':{'value':-6.554e+22,'plunge':39,'azimuth':224}}
+        
+    slab_params = {'strike':307.0806884765625,
+                   'dip':20.450008392333984,
+                   'depth':38.658607482910156}
+
+    #test a medium depth branch
+    config = get_config()
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            tensor_params,slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'SZInter'
+
+    # test a shallow depth branch
+    depth = 14.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            tensor_params,slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # test a deep depth branch
+    depth = 100.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            tensor_params,slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'SZIntra'
+
+    # test a shallow depth branch with a moment tensor that is not interface like
+    # this is a strike-slip tensor
+    non_interface_ss_params = {'NP1':{'strike':241,
+                                      'dip':79,
+                                      'rake':173},
+                               'NP2':{'strike':332,
+                                      'dip':83,
+                                      'rake':11},
+                               'T':{'value':4.445e+18,'plunge':12,'azimuth':196},
+                               'N':{'value':0.054e+18,'plunge':77,'azimuth':3},
+                               'P':{'value':-4.499e+18,'plunge':3,'azimuth':106}}
+    depth = 14.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            non_interface_ss_params,slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # test a shallow depth branch with a non-interface, RS MT
+    non_interface_rs_params = {'NP1':{'strike':178,
+                                      'dip':77,
+                                      'rake':86},
+                               'NP2':{'strike':17,
+                                      'dip':14,
+                                      'rake':108},
+                               'T':{'value':2.236e+22,'plunge':58,'azimuth':82},
+                               'N':{'value':0.040e+22,'plunge':4,'azimuth':179},
+                               'P':{'value':-2.276e+22,'plunge':32,'azimuth':272}}
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            non_interface_rs_params,slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    #test with a very shallow slab
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':17.0}
+    depth = 14.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            tensor_params,shallow_slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'SZInter'
+
+    # shallow, RS, like-interface,in slab
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':-6.0}
+    depth = 15.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            tensor_params,shallow_slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # shallow, RS, not-like-interface,in slab
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':-6.0}
+    depth = 15.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            non_interface_rs_params,shallow_slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # shallow, ALL (no moment tensor), near-interface
+    non_interface_all_params = {'NP1':{'strike':313,
+                                       'dip':61,
+                                       'rake':152},
+                                'NP2':{'strike':58,
+                                       'dip':66,
+                                       'rake':33},
+                                'T':{'value':5.979e+19,'plunge':40,'azimuth':277},
+                                'N':{'value':0.050e+19,'plunge':50,'azimuth':91},
+                                'P':{'value':-6.030e+19,'plunge':3,'azimuth':185}}
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':10.0}
+    depth = 15.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            None,shallow_slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'SZInter'
+
+    # shallow, ALL (no moment tensor), in slab
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':-6.0}
+    depth = 15.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            None,shallow_slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # shallow, ALL (no moment tensor), above the interface
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':25.0}
+    depth = 0.0
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                            None,shallow_slab_params,reginfo,
+                            config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+
+    # shallow, SS, in the slab
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':-6.0}
+    depth = 15
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             non_interface_ss_params,
+                                             shallow_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # medium, RS, interface-like, in slab
+    depth = 30
+    shallow_slab_params = {'strike':307.0806884765625,
+                           'dip':20.450008392333984,
+                           'depth':-6.0}
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             tensor_params,
+                                             shallow_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'SZIntra'
+
+    # medium, RS, interface-like, deep slab
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':50}
+    depth = 16
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             tensor_params,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # medium, RS, not interface-like, in slab
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':30}
+    depth = 65
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             non_interface_rs_params,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'SZIntra'
+
+    # medium, RS, not interface-like, in crust
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':55}
+    depth = 20
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             non_interface_rs_params,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # medium, ALL (no MT), near interface
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':20}
+    depth = 20
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             None,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'SZInter'
+
+    # medium, ALL (no MT), near interface
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':20}
+    depth = 50
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             None,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'SZIntra'
+
+    # medium, ALL (no MT), in crust
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':55}
+    depth = 20
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             None,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # medium, SS, in slab
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':20}
+    depth = 50
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             non_interface_ss_params,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'SZIntra'
+
+    # medium, SS, in crust
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':55}
+    depth = 20
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             non_interface_ss_params,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'ACR'
+
+    # deep, any MT, not in slab (interface or crustal)
+    deep_slab_params = {'strike':307.0806884765625,
+                        'dip':20.450008392333984,
+                        'depth':110}
+    depth = 75
+    sub_info = selector._get_subduction_type(lat,lon,depth,
+                                             tensor_params,
+                                             deep_slab_params,
+                                             reginfo,
+                                             config)
+    assert sub_info['TectonicSubtype'] == 'SZIntra'
+
+    
+    
+    
+def test_get_online_tensor():
     eventid_with_tensor = 'official20110311054624120_30'
     eventid_without_tensor = 'us2000ati0'
     eventid_with_local_tensor = 'nc72852946'
@@ -168,238 +450,97 @@ def block_test_get_online_tensor():
                            'rake': 171.5679508376947,
                            'strike': 122.69120043887619}}
 
-    assert tensor1 == tensor1_cmp
+
+    res,msg = cmp_dicts(tensor1,tensor1_cmp)
+    res,msg = cmp_dicts(tensor3,tensor3_cmp)
     assert tensor2 is None
-    assert tensor3 == tensor3_cmp
-    
 
     
-def block_test_subtype():
+def test_subtype():
+    selector = SubductionSelector()
+    
     # sumatra
     lat = 3.295
     lon = 95.982
     depth = 30.0
     eventid = 'official20041226005853450_30'
-    tensor_params = {'mrr': 1.601e+22,
-                     'mtt': -5.412e+21,
-                     'mpp': -1.06e+22,
-                     'mrt': 4.894e+22,
-                     'mrp': -4.279e+22,
-                     'mtp': 5.928e+21,
-                     'NP1':{'strike': 335,
-                             'dip': 7,
-                             'rake': 113},
-                     'NP2':{'strike': '131',
-                             'dip': 83,
-                             'rake': 87},
-                     'T':{'value':6.797e+22,
-                          'plunge':51,
-                          'azimuth':38},
-                     'N':{'value':-0.243e+22,
-                          'plunge':3,
-                          'azimuth':132},
-                     'P':{'value':-6.554e+22,
-                          'plunge':39,
-                          'azimuth':224}}
-    selector = SubductionSelector()
+    results1 = selector.getSubductionType(lat,lon,depth,eventid)
+    assert results1['FocalMechanism'] == 'RS'
+    assert results1['TectonicSubtype'] == 'SZInter'
+
+    # northridge
+    lat = 34.213
+    lon = -118.537
+    depth = 18.2
+    eventid = 'ci3144585'
+    results1 = selector.getSubductionType(lat,lon,depth,eventid)
+    assert results1['FocalMechanism'] == 'RS'
+    assert results1['TectonicSubtype'] == 'ACR'
+
+    # landers
+    lat = 34.200
+    lon = -116.437
+    depth = -0.1
+    eventid = 'ci3031111'
+    results1 = selector.getSubductionType(lat,lon,depth,eventid)
+    assert results1['FocalMechanism'] == 'SS'
+    assert results1['TectonicSubtype'] == 'ACR'
+
+    # Made up event that should  have a composite moment tensor
+    lat = 2.321
+    lon = 128.132
+    depth = 21.7
     results1 = selector.getSubductionType(lat,lon,depth)
+    assert results1['TensorType'] == 'composite'
+    assert results1['FocalMechanism'] == 'RS'
+    assert results1['TectonicSubtype'] == 'SZInter'
 
-    cmp_results1 = {'SlabModelStrike': 307.0806884765625,
-                    'KaganAngle': 10.896732671836423,
-                    'TectonicDomain': 'SZ (generic)',
-                    'TensorSource': 'composite',
-                    'DomainDepthBand1': 15,
-                    'Oceanic': False,
-                    'DomainDepthBand3Subtype': 'SZIntra',
-                    'DistanceToContinental': 0.0,
-                    'CompositeVariability': 1.1036343285450119,
-                    'DistanceToOceanic': 573.60696079140143,
-                    'DomainDepthBand1Subtype': 'ACR',
-                    'SlabModelDepth': 38.658607482910156,
-                    'IsInSlab': True,
-                    'DistanceToVolcanic': 4741.4031661472618,
-                    'RegionContainsBackArc': True,
-                    'TensorType': 'composite',
-                    'DomainDepthBand2Subtype': 'SZInter',
-                    'DistanceToSubduction': 0.0,
-                    'TectonicSubtype': 'SZInter',
-                    'FocalMechanism': 'RS',
-                    'IsLikeInterface': True,
-                    'TectonicRegion': 'Subduction',
-                    'DomainDepthBand3': 999,
-                    'SlabModelRegion': 'Sumatra-Java',
-                    'SlabModelDip': 20.450008392333984,
-                    'DistanceToActive': 448.98577711531317,
-                    'DomainDepthBand2': 70,
-                    'IsNearInterface': True,
-                    'NComposite': 50,
-                    'DistanceToStable': 465.37340568412117}
+    # Made up event that should not have a composite moment tensor
+    lat = -27.725
+    lon = -147.832
+    depth = 25
+    results1 = selector.getSubductionType(lat,lon,depth)
+    assert results1['TectonicDomain'] == 'SOR (generic)'
+    assert results1['FocalMechanism'] == 'ALL'
+    assert results1['TectonicSubtype'] == 'SCR'
 
-    cmp_results_series = reindex(pd.Series(cmp_results1))
-    assert cmp_results1 == results1.to_dict()
+    # Pass in an event with tensor parameters
+    # chile 2010
+    lat = -36.122
+    lon = -72.898
+    depth = 22.9
+    tensor_params = {'source':'duputel',
+                     'type':'Mww',
+                     'NP1':{'strike':178,
+                            'dip':77,
+                            'rake':86},
+                     'NP2':{'strike':17,
+                            'dip':14,
+                            'rake':108},
+                     'T':{'value':2.236e+22,'plunge':58,'azimuth':82},
+                     'N':{'value':0.040e+22,'plunge':4,'azimuth':179},
+                     'P':{'value':-2.276e+22,'plunge':32,'azimuth':272}}
+    results1 = selector.getSubductionType(lat,lon,depth,eventid=None,
+                                          tensor_params=tensor_params)
+    assert results1['FocalMechanism'] == 'RS'
+
+    # event location inside grid but not horizontally on subducting slab
+    lat = 13.58
+    lon = -92.92
+    depth = 20.0
+    results1 = selector.getSubductionType(lat,lon,depth)
+    assert results1['TectonicSubtype'] == 'SZInter'
+    assert results1['SlabModelRegion'] == 'Central America'
     
-    results2 = selector.getSubductionType(lat,lon,depth,eventid=eventid)
-
-    cmp_results2 = {'IsNearInterface': True,
-                    'CompositeVariability': np.nan,
-                    'DistanceToSubduction': 0.0,
-                    'SlabModelType': 'grid',
-                    'TectonicSubtype': 'SZInter',
-                    'TectonicRegion': 'Subduction',
-                    'IsInSlab': True,
-                    'DistanceToOceanic': 573.60696079140143,
-                    'RegionContainsBackArc': True,
-                    'Oceanic': False,
-                    'KaganAngle': 15.246101829877405,
-                    'DomainDepthBand2Subtype': 'SZInter',
-                    'DomainDepthBand1Subtype': 'ACR',
-                    'DistanceToVolcanic': 4741.4031661472618,
-                    'TensorSource': 'duputel_122604a',
-                    'SlabModelDepth': 38.658607482910156,
-                    'DomainDepthBand1': 15,
-                    'NComposite': 0,
-                    'SlabModelStrike': 307.0806884765625,
-                    'DistanceToContinental': 0.0,
-                    'DistanceToStable': 465.37340568412117,
-                    'SlabModelDip': 20.450008392333984,
-                    'SlabModelRegion': 'Sumatra-Java',
-                    'TectonicDomain': 'SZ (generic)',
-                    'DistanceToActive': 448.98577711531317,
-                    'TensorType': 'Mww',
-                    'DomainDepthBand3': 999,
-                    'IsLikeInterface': True,
-                    'FocalMechanism': 'RS',
-                    'DomainDepthBand2': 70,
-                    'DomainDepthBand3Subtype': 'SZIntra'}
-
-    res,msg = cmp_dicts(results2.to_dict(),cmp_results2)
-    assert res
-    results3 = selector.getSubductionType(lat,lon,depth,tensor_params=tensor_params)
-
-    cmp_results3 = {'DistanceToStable': 465.37340568412117,
-                    'DomainDepthBand2Subtype': 'SZInter',
-                    'DistanceToActive': 448.98577711531317,
-                    'TensorSource': None,
-                    'DomainDepthBand3Subtype': 'SZIntra',
-                    'RegionContainsBackArc': True,
-                    'DistanceToContinental': 0.0,
-                    'DistanceToVolcanic': 4741.4031661472618,
-                    'FocalMechanism': 'RS',
-                    'SlabModelStrike': 307.0806884765625,
-                    'SlabModelType': 'grid',
-                    'SlabModelRegion': 'Sumatra-Java',
-                    'IsLikeInterface': True,
-                    'TectonicRegion': 'Subduction',
-                    'NComposite': 0,
-                    'Oceanic': False,
-                    'DomainDepthBand2': 70,
-                    'CompositeVariability': np.nan,
-                    'KaganAngle': 15.246101829877405,
-                    'SlabModelDepth': 38.658607482910156,
-                    'DistanceToOceanic': 573.60696079140143,
-                    'IsInSlab': True,
-                    'DomainDepthBand1Subtype': 'ACR',
-                    'SlabModelDip': 20.450008392333984,
-                    'TectonicDomain': 'SZ (generic)',
-                    'TectonicSubtype': 'SZInter',
-                    'DomainDepthBand3': 999,
-                    'TensorType': None,
-                    'IsNearInterface': True,
-                    'DomainDepthBand1': 15,
-                    'DistanceToSubduction': 0.0}
-
-    res,msg = cmp_dicts(results3.to_dict(),cmp_results3)
-    assert res
-
-    #test a region NOT in a subduction zone
-    lat,lon,depth = 39.053318,-104.765625,10.0
-    results4 = selector.getSubductionType(lat,lon,depth)
-
-    cmp_results4 = {'SlabModelRegion': '',
-                    'FocalMechanism': 'ALL',
-                    'TensorType': 'composite',
-                    'KaganAngle': np.nan,
-                    'DomainDepthBand3Subtype': 'SCR',
-                    'TectonicRegion': 'Stable',
-                    'TectonicSubtype': 'SCR',
-                    'CompositeVariability': np.nan,
-                    'DomainDepthBand1Subtype': 'SCR',
-                    'SlabModelDip': np.nan,
-                    'DistanceToOceanic': 1080.7850646123761,
-                    'TectonicDomain': 'SCR (generic)',
-                    'DistanceToStable': 0.0,
-                    'NComposite': 0,
-                    'SlabModelType': '',
-                    'DistanceToActive': 52.3302278884006,
-                    'DistanceToSubduction': 1085.9412247332527,
-                    'IsNearInterface': False,
-                    'IsInSlab': False,
-                    'TensorSource': 'composite',
-                    'DomainDepthBand1': 50,
-                    'DomainDepthBand2Subtype': 'SCR',
-                    'SlabModelDepth': np.nan,
-                    'IsLikeInterface': False,
-                    'DomainDepthBand2': 999,
-                    'DistanceToContinental': 0.0,
-                    'SlabModelStrike': np.nan,
-                    'DistanceToVolcanic': 653.03283204758668,
-                    'RegionContainsBackArc': False,
-                    'DomainDepthBand3': 1000,
-                    'Oceanic': False}
     
-    res,msg = cmp_dicts(results4.to_dict(),cmp_results4)
-    assert res
-    
-
-def block_test_get_subduction_by_id():
-    # Ecuadorian event, has no online moment tensor
+def test_get_subduction_by_id():
     selector = SubductionSelector()
-    eventid = 'us2000bv8q'
-    results = selector.getSubductionTypeByID(eventid)
-    
     # Tohoku, should have an online moment tensor
     eventid = 'official20110311054624120_30'
     results = selector.getSubductionTypeByID(eventid)
-    cmpresults = {'KaganAngle': 15.371885896082663,
-                  'DistanceToActive': 1084.2475225901173,
-                  'DomainDepthBand2': 70,
-                  'DistanceToContinental': 0.0,
-                  'DomainDepthBand2Subtype': 'SZInter',
-                  'TensorSource': 'duputel_201103110546a',
-                  'DomainDepthBand3Subtype': 'SZIntra',
-                  'SlabModelDepth': 30.23206329345703,
-                  'SlabModelDip': 14.894770622253418,
-                  'RegionContainsBackArc': False,
-                  'FocalMechanism': 'RS',
-                  'DistanceToOceanic': 2966.5082894133589,
-                  'SlabModelStrike': 190.22474670410156,
-                  'TectonicRegion': 'Subduction',
-                  'DistanceToStable': 491.91655794343046,
-                  'IsInSlab': True,
-                  'NComposite': 0,
-                  'CompositeVariability': np.nan,
-                  'TectonicSubtype': 'SZInter',
-                  'IsLikeInterface': True,
-                  'Oceanic': False,
-                  'DomainDepthBand1Subtype': 'ACR',
-                  'DistanceToSubduction': 0.0,
-                  'TensorType': 'Mww',
-                  'IsNearInterface': True,
-                  'DistanceToVolcanic': 3663.5463981818389,
-                  'TectonicDomain': 'SZ (on-shore)',
-                  'SlabModelRegion': 'Kamchatka/Kurils/Japan',
-                  'DomainDepthBand1': 15,
-                  'DomainDepthBand3': 999}
-    for key,value_cmp in cmpresults.items():
-        value = results[key]
-        if isinstance(value_cmp,float) and np.isnan(value_cmp):
-            assert np.isnan(value)
-        else:
-            #print('Testing %s: %s and %s' % (key,str(value_cmp),str(value)))
-            try:
-                assert value_cmp == value
-            except:
-                x = 1
+    assert results['FocalMechanism'] == 'RS'
+    assert results['TectonicSubtype'] == 'SZInter'
+    assert results['SlabModelRegion'] == 'Kamchatka/Kurils/Japan'
 
 def block_test_multiple_slabs():
     lat = 6.0
@@ -409,8 +550,11 @@ def block_test_multiple_slabs():
     results = selector.getSubductionType(lat,lon,depth)
             
 if __name__ == '__main__':
-    test_get_subduction_by_id()
-    test_multiple_slabs()
-    test_get_online_tensor()
     test_get_focal_mechanism()
+    test_get_subduction_type()
     test_subtype()
+    test_get_subduction_by_id()
+    # test_multiple_slabs()
+    test_get_online_tensor()
+    
+    # 

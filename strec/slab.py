@@ -87,7 +87,9 @@ class GridSlab(object):
         strike = strike
         if strike < 0:
             strike += 360
-        
+
+        if np.isnan(strike):
+            error = np.nan
         slabinfo = {'region':region,
                     'strike':strike,
                     'dip':dip,
@@ -143,6 +145,8 @@ class SlabCollection(object):
                 if depth < deep_depth:
                     slabinfo = tslabinfo.copy()
                     deep_depth = depth
+                elif np.isnan(depth) and 'depth' not in slabinfo:
+                    slabinfo = tslabinfo.copy()
             
         return slabinfo
     

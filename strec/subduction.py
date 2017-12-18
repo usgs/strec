@@ -6,11 +6,7 @@ def norm_angle(angle):
     Returns:
         float: Input angle normalized to between 0-360 degrees.
     """
-    if angle > 360:
-        angle = angle-360
-    if angle < 0:
-        angle = angle+360
-    return angle
+    return angle % 360
 
 
 class SubductionZone(object):
@@ -36,7 +32,10 @@ class SubductionZone(object):
         self._ddepth_interface = float(config['CONSTANTS']['ddepth_interf'])
         self._ddepth_intraslab = float(config['CONSTANTS']['ddepth_intra'])
         self._slab_params = slab_params.copy()
-        self._tensor_params = tensor_params.copy()
+        if isinstance(tensor_params,dict):
+            self._tensor_params = tensor_params.copy()
+        else:
+            self._tensor_params = None
         self._depth = depth
 
     def checkRupturePlane(self):
@@ -46,6 +45,8 @@ class SubductionZone(object):
         Returns:
             bool: Boolean value indicating if moment tensor is similar to slab.
         """
+        if self._tensor_params is None:
+            return False
         strike = self._slab_params['strike'] - 90
         a = self._tensor_params['P']['azimuth']
         b1 = (norm_angle(strike)-self._dstrike)

@@ -193,10 +193,10 @@ class Regionalizer(object):
         """
         domainfile = os.path.join(self._datafolder,'domains.xlsx')
         df = pd.read_excel(domainfile)
-        domain_info = df[df.TectonicDomain == domain].iloc[0]
+        domain_info = df[df.TectonicDomain == domain]
         if not len(domain_info):
             raise KeyError('Could not find domain "%s" in list of domains.' % domain)
-        return domain_info
+        return domain_info.iloc[0]
     
     def getSubDomain(self,domain,depth):
         """Get tectonic sub-domain given tectonic domain and depth.
@@ -221,10 +221,9 @@ class Regionalizer(object):
             depth (float):  Earthquake depth (km).
         Returns:
             str: SeismoTectonicSubDomain, one of: SCR,ACR,SZIntra,Volcanic,SZInter.
+            list of tuples of each domain and depth limit.
         """
         domain_info = self.getDomainInfo(domain)
-        if not len(domain_info):
-            raise KeyError('Could not find domain "%s" in list of domains.' % domain)
         
         H1 = domain_info['H1']
         H2 = domain_info['H2']

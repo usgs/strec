@@ -1,6 +1,10 @@
+#stdlib imports
 import os.path
 import configparser
 import re
+
+#third party imports
+import pandas as pd
 
 STRECINI = 'strec.ini'
 GCMT_OUTPUT = 'gcmt.db'
@@ -19,6 +23,10 @@ CONSTANTS = {'minradial_disthist' : 0.01,
              'ddepth_interf' : 20,
              'ddepth_intra' : 10}
 
+def get_config_file_name():
+    config_file = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
+    return config_file
+    
 def get_config():
     """Get configuration information as a dictionary.
 
@@ -28,7 +36,7 @@ def get_config():
             - DATA Dictionary containing 'folder', 'slabfolder', and 'dbfile'.
     """
     #first look in the default path for a config file
-    config_file = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
+    config_file = get_config_file_name()
     if os.path.isfile(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
@@ -74,7 +82,7 @@ def read_input_file(input_file):
         try:
             df = pd.read_excel(input_file)
         except:
-            pass
+            raise ValueError('%s is neither a CSV nor Excel file.' % input_file)
     row_ok,msg = check_row(df.columns)
     if not row_ok:
         df = None
@@ -91,20 +99,24 @@ def read_input_file(input_file):
     return (df,msg)
 
 def check_row(row):
-    """Ensure that input Series has columns matching "lat","lon","depth".
+    """Ensure that input Series or Index has columns matching "lat","lon","depth".
 
     Args:
         row (Series): Pandas series object.
     Returns:
         tuple: (Boolean indicating whether row has valid columns,
             and a message, when False, indicating which column is missing.)
-    """    
+    """
+    if isinstance(row,pd.core.indexes.base.Index):
+        rowidx = row
+    else:
+        rowidx = row.index
     #row is a pandas series object
-    if not row.str.contains('^lat',case=False).any():
+    if not rowidx.str.contains('^lat',case=False).any():
         return False,'Missing "lat" column in input.'
-    if not row.str.contains('^lon',case=False).any():
+    if not rowidx.str.contains('^lon',case=False).any():
         return False,'Missing "lon" column in input.'
-    if not row.str.contains('^depth',case=False).any():
+    if not rowidx.str.contains('^depth',case=False).any():
         return False,'Missing "depth" column in input.'
     return (True,'')
 

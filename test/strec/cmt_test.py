@@ -70,7 +70,7 @@ def test_composite():
                     print(key2,value2,value3)
                     raise e
 
-    assert similarity == 1.1036343285450121
+    np.testing.assert_almost_equal(similarity,1.1036343285450121)
     assert N == 50
     print('Passed.')
 
