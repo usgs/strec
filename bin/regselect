@@ -1,72 +1,75 @@
 #!/usr/bin/env python
 
-#stdlib imports
+# stdlib imports
 import argparse
 import sys
 import re
 
-#third party imports
+# third party imports
 import pandas as pd
 from libcomcat.search import get_event_by_id
 
-#local imports
+# local imports
 from strec.gmreg import Regionalizer
-from strec.utils import read_input_file,get_input_columns,render_row
+from strec.utils import read_input_file, get_input_columns, render_row
 
-def main(args,pparser):
-    #check input arguments
+
+def main(args, pparser):
+    # check input arguments
     haseq = args.eqinfo is not None
     hasinput = args.input_file is not None
     hasid = args.event_id is not None
-    if (haseq+hasinput+hasid) >= 2:
+    if (haseq + hasinput + hasid) >= 2:
         print('Must choose no more than one of -e or -i or -d options.')
         sys.exit(1)
 
     if args.event_id:
         try:
             detail = get_event_by_id(args.event_id)
-            lat,lon,depth = (detail.latitude,detail.longitude,detail.depth)
+            lat, lon, depth = (detail.latitude, detail.longitude, detail.depth)
         except Exception as e:
             msg = 'Could not get event information on event ID %s due to error "%s".'
-            tpl = (args.event_id,str(e))
+            tpl = (args.event_id, str(e))
             print(msg % tpl)
             sys.exit(1)
-        d = {'lat':[lat],'lon':[lon],'depth':[depth]}
+        d = {'lat': [lat], 'lon': [lon], 'depth': [depth]}
         df = pd.DataFrame(d)
-        
+
     if not args.output_file and args.output_format == 'excel':
         print('You cannot specify an output format of excel without also providing an output file name.')
         sys.exit(1)
 
     if args.input_file:
-        df,msg = read_input_file(args.input_file)
+        df, msg = read_input_file(args.input_file)
         if df is None:
-            print('Input file %s does not appear to be either a CSV or Excel file.  Returning.' % args.input_file)
+            print('Input file %s does not appear to be either a CSV or Excel file.  Returning.' %
+                  args.input_file)
             sys.exit(1)
 
     elif args.eqinfo:
-        lat,lon,depth = args.eqinfo
-        d = {'lat':[lat],'lon':[lon],'depth':[depth]}
+        lat, lon, depth = args.eqinfo
+        d = {'lat': [lat], 'lon': [lon], 'depth': [depth]}
         df = pd.DataFrame(d)
-        
+
     regionalizer = Regionalizer.load()
     results = []
-    for idx,row in df.iterrows():
-        lat,lon,depth = get_input_columns(row)
-        result = regionalizer.getRegions(lat,lon,depth)
-        dtypes = {'Oceanic':bool}
+    for idx, row in df.iterrows():
+        lat, lon, depth = get_input_columns(row)
+        result = regionalizer.getRegions(lat, lon, depth)
+        dtypes = {'Oceanic': bool}
         row = row.append(result)
-            
+
         if args.output_file:
             results.append(row)
         else:
-            render_row(row,args.output_format,lat,lon,depth)
+            render_row(row, args.output_format, lat, lon, depth)
     if args.output_file:
         df = pd.DataFrame(results)
         if args.output_format == 'csv':
             df.to_csv(args.output_file)
         else:
             df.to_excel(args.output_file)
+
 
 if __name__ == '__main__':
     usage = """Determine various seismo-tectonic parameters for given input coordinates.
@@ -122,19 +125,21 @@ excel - Microsoft Excel format, one earthquake per line.
 json - A JSON representation of the output
 
 '''
-     
-    parser = argparse.ArgumentParser(description=usage,formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("-e","--eqinfo",nargs=3,metavar=('LAT', 'LON', 'DEPTH'),type=float,
+
+    parser = argparse.ArgumentParser(
+        description=usage, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("-e", "--eqinfo", nargs=3, metavar=('LAT', 'LON', 'DEPTH'), type=float,
                         help='lat,lon, depth of earthquake')
-    parser.add_argument("-i", "--input-file",dest="input_file",
+    parser.add_argument("-i", "--input-file", dest="input_file",
                         metavar='INPUTFILE',
                         help=input_file_help)
-    parser.add_argument("-f", "--output-format",dest="output_format",
-                      metavar='OUTPUT FORMAT',choices=('pretty','csv','excel','json'),default='pretty',
-                      help=output_format_help)
-    parser.add_argument("-o", "--output-file",dest="output_file",help='Output filename')
-    parser.add_argument("-d", "--event-id",dest="event_id",help='ComCat Event ID')
+    parser.add_argument("-f", "--output-format", dest="output_format",
+                        metavar='OUTPUT FORMAT', choices=('pretty', 'csv', 'excel', 'json'), default='pretty',
+                        help=output_format_help)
+    parser.add_argument("-o", "--output-file",
+                        dest="output_file", help='Output filename')
+    parser.add_argument("-d", "--event-id", dest="event_id",
+                        help='ComCat Event ID')
     pargs = parser.parse_args()
 
-    main(pargs,parser)
-
+    main(pargs, parser)

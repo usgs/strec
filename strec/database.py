@@ -1,29 +1,30 @@
-#stdlib imports
+# stdlib imports
 import sqlite3
 import os.path
 from datetime import datetime
 from collections import OrderedDict
 
-#third party imports
+# third party imports
 import pandas as pd
 import numpy as np
 
-SCHEMA = OrderedDict([('time','datetime'),
-                      ('sourceid','integer'),
-                      ('lat','float'),
-                      ('lon','float'),
-                      ('depth','float'),
-                      ('mag','float'),
-                      ('mrr','float'),
-                      ('mtt','float'),
-                      ('mpp','float'),
-                      ('mrt','float'),
-                      ('mrp','float'),
-                      ('mtp','float')])
+SCHEMA = OrderedDict([('time', 'datetime'),
+                      ('sourceid', 'integer'),
+                      ('lat', 'float'),
+                      ('lon', 'float'),
+                      ('depth', 'float'),
+                      ('mag', 'float'),
+                      ('mrr', 'float'),
+                      ('mtt', 'float'),
+                      ('mpp', 'float'),
+                      ('mrt', 'float'),
+                      ('mrp', 'float'),
+                      ('mtp', 'float')])
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S.%f'
 
-def stash_dataframe(dataframe,datafile,source,create_db=False):
+
+def stash_dataframe(dataframe, datafile, source, create_db=False):
     """Store a dataframe in the database.
 
     Args:
@@ -50,8 +51,8 @@ def stash_dataframe(dataframe,datafile,source,create_db=False):
         conn = sqlite3.connect(datafile)
         cursor = conn.cursor()
         nuggets = []
-        for key,value in SCHEMA.items():
-            nuggets.append('%s %s' % (key,value))
+        for key, value in SCHEMA.items():
+            nuggets.append('%s %s' % (key, value))
         create_stmt = 'CREATE TABLE earthquake (%s)' % (','.join(nuggets))
         cursor.execute(create_stmt)
         source_stmt = 'CREATE TABLE source (id integer primary key, source text)'
@@ -60,22 +61,26 @@ def stash_dataframe(dataframe,datafile,source,create_db=False):
         conn = sqlite3.connect(datafile)
         cursor = conn.cursor()
 
-    cursor.execute('SELECT id from source where source = "%s"' % source.lower())
+    cursor.execute('SELECT id from source where source = "%s"' %
+                   source.lower())
     sourcerow = cursor.fetchone()
     if sourcerow is not None:
         sourceid = sourcerow[0]
         dataframe['sourceid'] = sourceid
     else:
-        cursor.execute('INSERT INTO source (source) values ("%s")' % source.lower())
+        cursor.execute('INSERT INTO source (source) values ("%s")' %
+                       source.lower())
         conn.commit()
-        cursor.execute('SELECT id from source where source = "%s"' % source.lower())
+        cursor.execute('SELECT id from source where source = "%s"' %
+                       source.lower())
         sourceid = cursor.fetchone()[0]
         dataframe['sourceid'] = sourceid
 
-    dataframe.to_sql('earthquake',conn,if_exists='append',index=False)
-        
+    dataframe.to_sql('earthquake', conn, if_exists='append', index=False)
+
     conn.close()
-    
+
+
 def fetch_dataframe(datafile):
     """Return a pandas dataframe containing earthquake information.
 
@@ -97,18 +102,18 @@ def fetch_dataframe(datafile):
     """
     conn = sqlite3.connect(datafile)
     cursor = conn.cursor()
-    dataframe = pd.read_sql('SELECT * FROM earthquake',conn)
+    dataframe = pd.read_sql('SELECT * FROM earthquake', conn)
 
-    #get the data source information
+    # get the data source information
     dataframe['source'] = ''
     usources = dataframe['sourceid'].unique()
     for source in usources:
         cursor.execute('SELECT source FROM source WHERE id=%i' % source)
         tsource = cursor.fetchone()[0]
         rowidx = dataframe['sourceid'] == source
-        dataframe.loc[rowidx,'source'] = tsource
+        dataframe.loc[rowidx, 'source'] = tsource
 
-    dataframe.drop('sourceid',axis=1,inplace=True)
-        
+    dataframe.drop('sourceid', axis=1, inplace=True)
+
     conn.close()
     return dataframe

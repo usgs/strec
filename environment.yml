@@ -1,6 +1,6 @@
 name: strecenv
 channels:
-- conda-forge
+- conda - forge
 - defaults
 - digitalglobe
 - ioos
@@ -17,15 +17,13 @@ dependencies:
 - pandas
 - pyproj
 - pytest
-- pytest-cov
-- python=3.5
+- pytest - cov
+- python = 3.5
 - rasterio
 - shapely
 - xlrd
 - xlwt
 - pip:
-  - ./libcomcat.zip
-  - ./mapio.zip
-  - ./impact-utils.zip
-
-
+    - . / libcomcat.zip
+    - . / mapio.zip
+    - . / impact - utils.zip

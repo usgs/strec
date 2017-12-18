@@ -1,32 +1,34 @@
-#stdlib imports
+# stdlib imports
 import os.path
 import configparser
 import re
 
-#third party imports
+# third party imports
 import pandas as pd
 
 STRECINI = 'strec.ini'
 GCMT_OUTPUT = 'gcmt.db'
 
-CONSTANTS = {'minradial_disthist' : 0.01,
-             'maxradial_disthist' : 1.0,
-             'minradial_distcomp' : 0.5,
-             'maxradial_distcomp' : 1.0,
-             'step_distcomp' : 0.1,
-             'depth_rangecomp' : 10,
-             'minno_comp' : 3,
-             'default_szdip' : 17,
-             'dstrike_interf' : 30,
-             'ddip_interf' : 30,
-             'dlambda' : 60,
-             'ddepth_interf' : 20,
-             'ddepth_intra' : 10}
+CONSTANTS = {'minradial_disthist': 0.01,
+             'maxradial_disthist': 1.0,
+             'minradial_distcomp': 0.5,
+             'maxradial_distcomp': 1.0,
+             'step_distcomp': 0.1,
+             'depth_rangecomp': 10,
+             'minno_comp': 3,
+             'default_szdip': 17,
+             'dstrike_interf': 30,
+             'ddip_interf': 30,
+             'dlambda': 60,
+             'ddepth_interf': 20,
+             'ddepth_intra': 10}
+
 
 def get_config_file_name():
-    config_file = os.path.join(os.path.expanduser('~'),'.strec','strec.ini')
+    config_file = os.path.join(os.path.expanduser('~'), '.strec', 'strec.ini')
     return config_file
-    
+
+
 def get_config():
     """Get configuration information as a dictionary.
 
@@ -35,7 +37,7 @@ def get_config():
             - CONSTANTS Dictionary containing constants for the application.
             - DATA Dictionary containing 'folder', 'slabfolder', and 'dbfile'.
     """
-    #first look in the default path for a config file
+    # first look in the default path for a config file
     config_file = get_config_file_name()
     if os.path.isfile(config_file):
         config = configparser.ConfigParser()
@@ -43,22 +45,23 @@ def get_config():
         if 'DATA' not in config:
             raise KeyError('STREC config file is missing the [DATA] section.')
     else:
-        #if we didn't find one, then set the data stuff from the repo
-        config = {'DATA':{}}
+        # if we didn't find one, then set the data stuff from the repo
+        config = {'DATA': {}}
 
     homedir = os.path.dirname(os.path.abspath(__file__))  # where is this file?
-    datafolder = os.path.abspath(os.path.join(homedir,'data'))
+    datafolder = os.path.abspath(os.path.join(homedir, 'data'))
     if 'dbfile' not in config['DATA']:
         dbfile = 'moment_tensors.db'
         config['DATA']['dbfile'] = dbfile
     if 'slabfolder' not in config['DATA']:
-        slabfolder = os.path.join(datafolder,'slabs')
+        slabfolder = os.path.join(datafolder, 'slabs')
         config['DATA']['slabfolder'] = slabfolder
         config['DATA']['folder'] = datafolder
 
     if 'CONSTANTS' not in config:
         config['CONSTANTS'] = CONSTANTS
     return config
+
 
 def read_input_file(input_file):
     """Read a CSV/Excel input file, return a DataFrame
@@ -82,21 +85,23 @@ def read_input_file(input_file):
         try:
             df = pd.read_excel(input_file)
         except:
-            raise ValueError('%s is neither a CSV nor Excel file.' % input_file)
-    row_ok,msg = check_row(df.columns)
+            raise ValueError(
+                '%s is neither a CSV nor Excel file.' % input_file)
+    row_ok, msg = check_row(df.columns)
     if not row_ok:
         df = None
 
-    #convert any long integer moment component columns to floating point, because
-    #otherwise pandas will complain later when re-writing row to a dataframe.  Doesn't make
-    #sense, but seems necessary.
+    # convert any long integer moment component columns to floating point, because
+    # otherwise pandas will complain later when re-writing row to a dataframe.  Doesn't make
+    # sense, but seems necessary.
     for column in df:
-        comps = ['mrr','mtt','mpp','mrt','mrp','mtp']
+        comps = ['mrr', 'mtt', 'mpp', 'mrt', 'mrp', 'mtp']
         for comp in comps:
             if column.lower().find(comp) > -1:
                 df[column] += 0.0000000001
-            
-    return (df,msg)
+
+    return (df, msg)
+
 
 def check_row(row):
     """Ensure that input Series or Index has columns matching "lat","lon","depth".
@@ -107,18 +112,19 @@ def check_row(row):
         tuple: (Boolean indicating whether row has valid columns,
             and a message, when False, indicating which column is missing.)
     """
-    if isinstance(row,pd.core.indexes.base.Index):
+    if isinstance(row, pd.core.indexes.base.Index):
         rowidx = row
     else:
         rowidx = row.index
-    #row is a pandas series object
-    if not rowidx.str.contains('^lat',case=False).any():
-        return False,'Missing "lat" column in input.'
-    if not rowidx.str.contains('^lon',case=False).any():
-        return False,'Missing "lon" column in input.'
-    if not rowidx.str.contains('^depth',case=False).any():
-        return False,'Missing "depth" column in input.'
-    return (True,'')
+    # row is a pandas series object
+    if not rowidx.str.contains('^lat', case=False).any():
+        return False, 'Missing "lat" column in input.'
+    if not rowidx.str.contains('^lon', case=False).any():
+        return False, 'Missing "lon" column in input.'
+    if not rowidx.str.contains('^depth', case=False).any():
+        return False, 'Missing "depth" column in input.'
+    return (True, '')
+
 
 def get_input_columns(row):
     """Return the latitude,longitude and depth columns from a Series.
@@ -130,14 +136,15 @@ def get_input_columns(row):
                 Name of longitude column,
                 Name of depth column)
     """
-    #row is a pandas series object
-    lat = row[row.index.str.contains('^lat',case=False)][0]
-    lon = row[row.index.str.contains('^lon',case=False)][0]
-    depth = row[row.index.str.contains('^depth',case=False)][0]
+    # row is a pandas series object
+    lat = row[row.index.str.contains('^lat', case=False)][0]
+    lon = row[row.index.str.contains('^lon', case=False)][0]
+    depth = row[row.index.str.contains('^depth', case=False)][0]
 
-    return (lat,lon,depth)
+    return (lat, lon, depth)
 
-def render_row(row,format,lat,lon,depth):
+
+def render_row(row, format, lat, lon, depth):
     """Render a Series containing regselect output to the screen.
 
     Args:
@@ -148,11 +155,11 @@ def render_row(row,format,lat,lon,depth):
         depth (float): Earthquake hypocentral depth.
     """
     if format == 'pretty':
-        print('For event located at %.4f,%.4f,%.1f:' % (lat,lon,depth))
-        for idx,value in row.iteritems():
-            if re.match('^lat|^lon|^depth',idx,re.IGNORECASE):
+        print('For event located at %.4f,%.4f,%.1f:' % (lat, lon, depth))
+        for idx, value in row.iteritems():
+            if re.match('^lat|^lon|^depth', idx, re.IGNORECASE):
                 continue
-            print('\t%s : %s' % (idx,str(value)))
+            print('\t%s : %s' % (idx, str(value)))
         print()
     elif format == 'json':
         print(row.to_json())

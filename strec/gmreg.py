@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-#stdlib imports
+# stdlib imports
 import glob
 import os.path
 from collections import OrderedDict
 from functools import partial
 
-#third party
+# third party
 import fiona
 from shapely.geometry import shape as tShape
 from shapely.geometry.point import Point
@@ -19,58 +19,61 @@ import numpy as np
 from obspy.geodetics.base import gps2dist_azimuth
 import pandas as pd
 
-#local imports
+# local imports
 from strec.utils import get_config
 
-#As we add more layers, define their name/file mappings here.
-#All of these files have polygons where the attribute is true.
+# As we add more layers, define their name/file mappings here.
+# All of these files have polygons where the attribute is true.
 REGIONS = OrderedDict()
 REGIONS['Stable'] = 'stable.json'
 REGIONS['Active'] = 'active.json'
 REGIONS['Subduction'] = 'subduction.json'
 REGIONS['Volcanic'] = 'volcanic.json'
 
-#for each of the above regions, when we're inside a polygon, we should
-#capture the field below as the "Tectonic Domain".
+# for each of the above regions, when we're inside a polygon, we should
+# capture the field below as the "Tectonic Domain".
 DOMAIN_FIELD = 'REGIME_TYP'
 SLABFIELD = 'SLABFLAG'
 SCRFIELD = 'SCRFLAG'
 
-#these are special layers (not exclusive with above regions)
-#where are the areas of induced seismicity?
+# these are special layers (not exclusive with above regions)
+# where are the areas of induced seismicity?
 INDUCED = 'induced.json'
-#where are the areas that are oceanic (i.e., not continental?)
+# where are the areas that are oceanic (i.e., not continental?)
 OCEANIC = 'oceanic.json'
 
-#this is a layer with many unassociated polygons that delineate purely geographic areas
-#of seismic interest (usually areas which have a specific GMPE).
+# this is a layer with many unassociated polygons that delineate purely geographic areas
+# of seismic interest (usually areas which have a specific GMPE).
 GEOGRAPHIC = 'geographic.json'
 
-#for each of the above geographic regions, this is the attribute containing the name of the region
+# for each of the above geographic regions, this is the attribute containing the name of the region
 GEOGRAPHIC_FIELD = 'REG_NAME'
 
-def _get_nearest_point(point,shape):
+
+def _get_nearest_point(point, shape):
     """Return distance from point to nearest vertex of a polygon.
-    
+
     Args:
         point (Point): Shapely point object (lon,lat).
         shape (shape): Shapely geometry (usually Polygon).
-    
+
     Returns:
         float: Minimum distance in km from input point to nearest vertex on input shape.
     """
-    latlong = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees')
-    azim = pyproj.Proj('+proj=aeqd +lat_0=%.6f +lon_0=%.6f' % (point.y,point.x))
-    
+    latlong = pyproj.Proj(
+        '+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees')
+    azim = pyproj.Proj('+proj=aeqd +lat_0=%.6f +lon_0=%.6f' %
+                       (point.y, point.x))
+
     project = partial(
-    pyproj.transform,
-    latlong,
-    azim)
+        pyproj.transform,
+        latlong,
+        azim)
 
     ppoint = transform(project, point)
     pshape = transform(project, shape)
 
-    if isinstance(pshape,MultiPolygon):
+    if isinstance(pshape, MultiPolygon):
         shapelist = pshape
     else:
         shapelist = [pshape]
@@ -78,14 +81,15 @@ def _get_nearest_point(point,shape):
     mindist = 99999999999999999999
     for pshape in shapelist:
         pshape_string = LineString(pshape.exterior)
-        point_nearest,shape_nearest = nearest_points(ppoint,pshape_string)
-        distance = np.sqrt(shape_nearest.x**2 + shape_nearest.y**2)/1000
+        point_nearest, shape_nearest = nearest_points(ppoint, pshape_string)
+        distance = np.sqrt(shape_nearest.x**2 + shape_nearest.y**2) / 1000
         if distance < mindist:
             mindist = distance
 
     return mindist
-        
-def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
+
+
+def _get_layer_info(layer, point, fname, domain_field=None, default_domain=None):
     """Get information about a given layer with respect to an input point.
 
     Args:
@@ -101,7 +105,7 @@ def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
         bool: Boolean indicating whether layer has a back-arc subduction region.
     """
     distance_to_layer = 99999999999999999
-    shapes = fiona.open(fname,'r')
+    shapes = fiona.open(fname, 'r')
     inside = False
     domain = None
     region = None
@@ -114,24 +118,25 @@ def _get_layer_info(layer,point,fname,domain_field=None,default_domain=None):
                 domain = shape['properties'][DOMAIN_FIELD]
                 if domain is None:
                     domain = default_domain
-                    
+
                 if SLABFIELD in shape['properties']:
                     is_backarc = shape['properties'][SLABFIELD] == 'a'
             break
         else:
-            dist_to_vertex = _get_nearest_point(point,pshape)
+            dist_to_vertex = _get_nearest_point(point, pshape)
             if dist_to_vertex < distance_to_layer:
                 distance_to_layer = dist_to_vertex
     if inside:
         region = layer
-        distance = _get_nearest_point(point,pshape)
+        distance = _get_nearest_point(point, pshape)
     else:
         distance = distance_to_layer
 
-    return (region,distance,domain,is_backarc)
+    return (region, distance, domain, is_backarc)
+
 
 class Regionalizer(object):
-    def __init__(self,datafolder):
+    def __init__(self, datafolder):
         """Determine tectonic region information given epicenter and depth.
 
         Args:
@@ -140,19 +145,19 @@ class Regionalizer(object):
         """
         self._datafolder = datafolder
         self._regions = OrderedDict()
-        for layer,fname in REGIONS.items():
-            fullfile = os.path.join(datafolder,fname)
+        for layer, fname in REGIONS.items():
+            fullfile = os.path.join(datafolder, fname)
             if not os.path.isfile(fullfile):
                 raise OSError('File %s not found' % fullfile)
             self._regions[layer] = fullfile
-        self._oceanic = os.path.join(datafolder,OCEANIC)
+        self._oceanic = os.path.join(datafolder, OCEANIC)
         if not os.path.isfile(self._oceanic):
             raise OSError('File %s not found' % self._oceanic)
 
     @classmethod
     def load(cls):
         """Load regionalizer data from data in the repository.
-        
+
         Returns:
             Regionalizer: Instance of Regionalizer class.
         """
@@ -160,9 +165,9 @@ class Regionalizer(object):
         datadir = config['DATA']['folder']
         return cls(datadir)
 
-    def getDomainInfo(self,domain):
+    def getDomainInfo(self, domain):
         """Get tectonic sub-domain given tectonic domain and depth.
-        
+
         Args:
             domain (str): SeismoTectonicDomain, one of:
                 - SCR (generic)
@@ -191,16 +196,17 @@ class Regionalizer(object):
                 - H3
                 - SubDomain3
         """
-        domainfile = os.path.join(self._datafolder,'domains.xlsx')
+        domainfile = os.path.join(self._datafolder, 'domains.xlsx')
         df = pd.read_excel(domainfile)
         domain_info = df[df.TectonicDomain == domain]
         if not len(domain_info):
-            raise KeyError('Could not find domain "%s" in list of domains.' % domain)
+            raise KeyError(
+                'Could not find domain "%s" in list of domains.' % domain)
         return domain_info.iloc[0]
-    
-    def getSubDomain(self,domain,depth):
+
+    def getSubDomain(self, domain, depth):
         """Get tectonic sub-domain given tectonic domain and depth.
-        
+
         Args:
             domain (str): SeismoTectonicDomain, one of:
                 - SCR (generic)
@@ -224,17 +230,17 @@ class Regionalizer(object):
             list of tuples of each domain and depth limit.
         """
         domain_info = self.getDomainInfo(domain)
-        
+
         H1 = domain_info['H1']
         H2 = domain_info['H2']
         H3 = domain_info['H3']
-        
+
         domain1 = domain_info['SubDomain1']
         domain2 = domain_info['SubDomain2']
         domain3 = domain_info['SubDomain3']
 
         domain = None
-        
+
         if depth >= 0 and depth < H1:
             domain = domain1
 
@@ -244,10 +250,9 @@ class Regionalizer(object):
         if depth >= H2 and depth < H3:
             domain = domain3
 
-        return (domain,[(domain1,H1),(domain2,H2),(domain3,H3)])
-            
-     
-    def getRegions(self,lat,lon,depth):
+        return (domain, [(domain1, H1), (domain2, H2), (domain3, H3)])
+
+    def getRegions(self, lat, lon, depth):
         """Get information about the tectonic region of a given hypocenter.
 
         Args:
@@ -291,17 +296,17 @@ class Regionalizer(object):
                 - SubDomain3: Tectonic SubDomain to apply between DomainDeptBand2 and DomainDepthBand3.
         """
         regions = OrderedDict()
-        point = Point(lon,lat)
-        for layer,fname in self._regions.items():
+        point = Point(lon, lat)
+        for layer, fname in self._regions.items():
             distance_field = 'DistanceTo%s' % layer
             default_domain = None
             if layer == 'Stable':
                 default_domain = 'SCR (generic)'
-                
-            region,distance,domain,is_backarc = _get_layer_info(layer,point,fname,
-                                                                domain_field=DOMAIN_FIELD,
-                                                                default_domain=default_domain)
-            
+
+            region, distance, domain, is_backarc = _get_layer_info(layer, point, fname,
+                                                                   domain_field=DOMAIN_FIELD,
+                                                                   default_domain=default_domain)
+
             if region is not None:
                 regions['TectonicRegion'] = region
                 regions[distance_field] = 0.0
@@ -310,11 +315,12 @@ class Regionalizer(object):
             else:
                 regions[distance_field] = distance
 
-        #Are we oceanic or continental?
-        region,distance,domain,tback = _get_layer_info('Oceanic',point,self._oceanic)
+        # Are we oceanic or continental?
+        region, distance, domain, tback = _get_layer_info(
+            'Oceanic', point, self._oceanic)
         if region is not None:
             regions['Oceanic'] = True
-            #figure out how to get distance to edge of containing polygon (shapely says 0)
+            # figure out how to get distance to edge of containing polygon (shapely says 0)
             regions['DistanceToContinental'] = distance
             regions['DistanceToOceanic'] = 0.0
         else:
@@ -322,7 +328,8 @@ class Regionalizer(object):
             regions['DistanceToOceanic'] = distance
             regions['DistanceToContinental'] = 0.0
 
-        subtype,depthinfo = self.getSubDomain(regions['TectonicDomain'],depth)
+        subtype, depthinfo = self.getSubDomain(
+            regions['TectonicDomain'], depth)
         regions['TectonicSubDomain'] = subtype
         regions['DomainDepthBand1'] = depthinfo[0][1]
         regions['DomainDepthBand1Subtype'] = depthinfo[0][0]
@@ -331,16 +338,13 @@ class Regionalizer(object):
         regions['DomainDepthBand3'] = depthinfo[2][1]
         regions['DomainDepthBand3Subtype'] = depthinfo[2][0]
 
-        regions = pd.Series(regions,index=['TectonicRegion','TectonicDomain','DistanceToStable',
-                                         'DistanceToActive','DistanceToSubduction',
-                                         'DistanceToVolcanic','Oceanic',
-                                         'DistanceToOceanic','DistanceToContinental',
-                                         'TectonicSubDomain','RegionContainsBackArc',
-                                         'DomainDepthBand1','DomainDepthBand1Subtype',
-                                         'DomainDepthBand2','DomainDepthBand2Subtype',
-                                         'DomainDepthBand3','DomainDepthBand3Subtype'])
-        
+        regions = pd.Series(regions, index=['TectonicRegion', 'TectonicDomain', 'DistanceToStable',
+                                            'DistanceToActive', 'DistanceToSubduction',
+                                            'DistanceToVolcanic', 'Oceanic',
+                                            'DistanceToOceanic', 'DistanceToContinental',
+                                            'TectonicSubDomain', 'RegionContainsBackArc',
+                                            'DomainDepthBand1', 'DomainDepthBand1Subtype',
+                                            'DomainDepthBand2', 'DomainDepthBand2Subtype',
+                                            'DomainDepthBand3', 'DomainDepthBand3Subtype'])
 
         return regions
-        
-
