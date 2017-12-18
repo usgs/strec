@@ -6,7 +6,7 @@ import os.path
 import sys
 import datetime
 
-from strec.mtreader import createDataFile,appendDataFile
+from strec.mtreader import createDataFile, appendDataFile
 
 usage = """Convert data from CSV, NDK, or QuakeML XML into internal database format (SQLite).
 The default input format is CSV.
@@ -37,23 +37,24 @@ CSV format columns:
 22) NP2 Dip (deg)
 23) NP2 Rake (deg)
 """
-parser = argparse.ArgumentParser(description=usage,formatter_class=argparse.RawTextHelpFormatter)
+parser = argparse.ArgumentParser(
+    description=usage, formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('infile')
 parser.add_argument('outfile')
 parser.add_argument("-n", "--ndk",
-                  action="store_true", dest="usendk", default=False,
-                  help="Input file is in NDK format")
+                    action="store_true", dest="usendk", default=False,
+                    help="Input file is in NDK format")
 parser.add_argument("-x", "--xml",
-                  action="store_true", dest="usexml", default=False,
-                  help="Input file is in QuakeML XML format")
+                    action="store_true", dest="usexml", default=False,
+                    help="Input file is in QuakeML XML format")
 parser.add_argument("-c", "--csv",
-                  action="store_true", dest="usecsv", default=False,
-                  help="Input file is in CSV format (Default)")
+                    action="store_true", dest="usecsv", default=False,
+                    help="Input file is in CSV format (Default)")
 parser.add_argument("-s", "--skipfirst",
-                  action="store_true", dest="hasheader", default=False,
-                  help="CSV file has a header row which should be skipped")
-parser.add_argument("-t", "--type",dest="fmtype",
-                  metavar="TYPE", help="Specify the moment tensor type (cmt,body wave,etc.) Defaults to 'User'.")
+                    action="store_true", dest="hasheader", default=False,
+                    help="CSV file has a header row which should be skipped")
+parser.add_argument("-t", "--type", dest="fmtype",
+                    metavar="TYPE", help="Specify the moment tensor type (cmt,body wave,etc.) Defaults to 'User'.")
 
 args = parser.parse_args()
 if not args.infile or not args.outfile:
@@ -61,8 +62,8 @@ if not args.infile or not args.outfile:
     parser.print_help()
     sys.exit(0)
 
-suminput = sum([args.usecsv,args.usexml,args.usendk])
-    
+suminput = sum([args.usecsv, args.usexml, args.usendk])
+
 if suminput > 1:
     print 'You must provide ONLY one of -n, -c, or -x options.'
     parser.print_usage()
@@ -84,13 +85,15 @@ if args.usexml:
 if os.path.isfile(outfile):
     print '%s already exists - appending new data.' % outfile
     try:
-        appendDataFile(infile,outfile,filetype,args.fmtype,hasHeader=args.hasheader)
-    except Exception,msg:
-        print 'Error reading input file %s.\n%s' % (infile,msg)
+        appendDataFile(infile, outfile, filetype,
+                       args.fmtype, hasHeader=args.hasheader)
+    except Exception, msg:
+        print 'Error reading input file %s.\n%s' % (infile, msg)
         sys.exit(1)
 else:
     try:
-        createDataFile(infile,outfile,filetype,args.fmtype,hasHeader=args.hasheader)
-    except Exception,msg:
-        print 'Error reading input file %s.\n"%s"' % (infile,msg)
+        createDataFile(infile, outfile, filetype,
+                       args.fmtype, hasHeader=args.hasheader)
+    except Exception, msg:
+        print 'Error reading input file %s.\n"%s"' % (infile, msg)
         sys.exit(1)

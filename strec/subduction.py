@@ -10,9 +10,9 @@ def norm_angle(angle):
 
 
 class SubductionZone(object):
-    def __init__(self,slab_params,tensor_params,depth,config):
+    def __init__(self, slab_params, tensor_params, depth, config):
         """Check where in the subduction zone this event is (crust, interface, slab).
-        
+
         Args:
         slab_params (dict): Dictionary containing depth, strike and dip of 
             the slab interface at a given location.
@@ -32,7 +32,7 @@ class SubductionZone(object):
         self._ddepth_interface = float(config['CONSTANTS']['ddepth_interf'])
         self._ddepth_intraslab = float(config['CONSTANTS']['ddepth_intra'])
         self._slab_params = slab_params.copy()
-        if isinstance(tensor_params,dict):
+        if isinstance(tensor_params, dict):
             self._tensor_params = tensor_params.copy()
         else:
             self._tensor_params = None
@@ -41,7 +41,7 @@ class SubductionZone(object):
     def checkRupturePlane(self):
         """Compare moment tensor angles to slab angles, return True if similar.
 
-        
+
         Returns:
             bool: Boolean value indicating if moment tensor is similar to slab.
         """
@@ -49,10 +49,10 @@ class SubductionZone(object):
             return False
         strike = self._slab_params['strike'] - 90
         a = self._tensor_params['P']['azimuth']
-        b1 = (norm_angle(strike)-self._dstrike)
-        b2 = (norm_angle(strike)+self._dstrike)
-        b3 = (norm_angle(strike)-self._dstrike)
-        b4 = (norm_angle(strike)+self._dstrike)
+        b1 = (norm_angle(strike) - self._dstrike)
+        b2 = (norm_angle(strike) + self._dstrike)
+        b3 = (norm_angle(strike) - self._dstrike)
+        b4 = (norm_angle(strike) + self._dstrike)
 
         if a > 270 and b1 < 90:
             b1 = b1 + 360
@@ -76,14 +76,14 @@ class SubductionZone(object):
         c2 = a <= b2
         c3 = a >= b3
         c4 = a <= b4
-    
-        m2a = (c1 and c2 ) or (c3 and c4)
-        m2b = ((self._tensor_params['P']['plunge'] >= self._slab_params['dip']-self._ddip) and \
-               (self._tensor_params['P']['plunge'] <= self._slab_params['dip']+self._ddip))
-        m2c1 = ((self._tensor_params['NP1']['rake'] > 90-self._dlambda) and \
-                (self._tensor_params['NP1']['rake'] < 90+self._dlambda))
-        m2c2 = ((self._tensor_params['NP2']['rake'] > 90-self._dlambda) and \
-                (self._tensor_params['NP2']['rake'] < 90+self._dlambda))
+
+        m2a = (c1 and c2) or (c3 and c4)
+        m2b = ((self._tensor_params['P']['plunge'] >= self._slab_params['dip'] - self._ddip) and
+               (self._tensor_params['P']['plunge'] <= self._slab_params['dip'] + self._ddip))
+        m2c1 = ((self._tensor_params['NP1']['rake'] > 90 - self._dlambda) and
+                (self._tensor_params['NP1']['rake'] < 90 + self._dlambda))
+        m2c2 = ((self._tensor_params['NP2']['rake'] > 90 - self._dlambda) and
+                (self._tensor_params['NP2']['rake'] < 90 + self._dlambda))
         if (m2a and m2b and (m2c1 or m2c2)):
             return True
         else:
@@ -91,29 +91,28 @@ class SubductionZone(object):
 
     def checkInterfaceDepth(self):
         """Check to see if the focal depth is within range of the slab depth.
-        
+
         Returns:
             bool: True if event is close to slab interface depth, False otherwise.
         """
-        c1 = self._depth >= self._slab_params['depth']-self._ddepth_interface
-        c2 = self._depth < self._slab_params['depth']+self._ddepth_interface
+        c1 = self._depth >= self._slab_params['depth'] - self._ddepth_interface
+        c2 = self._depth < self._slab_params['depth'] + self._ddepth_interface
         if (c1 and c2):
             return True
         else:
             return False
 
-    def checkSlabDepth(self,intraslabdepth):
+    def checkSlabDepth(self, intraslabdepth):
         """Check to see if the depth is deeper than the interface.
 
         Args:
             intraslabdepth (float): Upper limit of intraslab events.
-          
+
         @return: True if depth is deeper than the slab, False if not.
         """
-        c1 = self._depth >= self._slab_params['depth']-self._ddepth_intraslab
+        c1 = self._depth >= self._slab_params['depth'] - self._ddepth_intraslab
         c2 = self._depth >= intraslabdepth
         if c1 and c2:
             return True
         else:
             return False
-        

@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/usgs/strec.svg?branch=master)](https://travis-ci.org/usgs/strec)
+[![codecov](https://codecov.io/gh/usgs/strec/branch/master/graph/badge.svg)](https://codecov.io/gh/usgs/strec)
+
 # SeismoTectonic Regime Earthquake Calculator (STREC)
 
 This library and set of tools was created to provide functionality to
