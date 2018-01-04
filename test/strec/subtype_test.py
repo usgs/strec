@@ -395,6 +395,12 @@ def test_get_subduction_type():
                                              config)
     assert sub_info['TectonicSubtype'] == 'SZIntra'
 
+    # test higher level function when we have slab but no tensor information
+    lat = -1.597
+    lon = -72.532
+    depth = 644.8
+    results = selector.getSubductionType(lat,lon,depth)
+    assert results['TectonicSubtype'] == 'SZIntra'
 
 def test_get_online_tensor():
     eventid_with_tensor = 'official20110311054624120_30'

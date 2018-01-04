@@ -353,10 +353,13 @@ class SubductionSelector(object):
                 results['SlabModelDepthUncertainty'] = slab_params['depth_uncertainty']
                 results['SlabModelDip'] = slab_params['dip']
                 results['SlabModelStrike'] = slab_params['strike']
-                np1 = tensor_params['NP1']
-                kagan = get_kagan_angle(slab_params['strike'], slab_params['dip'], SLAB_RAKE,
-                                        np1['strike'], np1['dip'], np1['rake'])
-                results['KaganAngle'] = kagan
+                if tensor_params is not None:
+                    np1 = tensor_params['NP1']
+                    kagan = get_kagan_angle(slab_params['strike'], slab_params['dip'], SLAB_RAKE,
+                                            np1['strike'], np1['dip'], np1['rake'])
+                    results['KaganAngle'] = kagan
+                else:
+                    results['KaganAngle'] = np.nan
         else:
             results = reginfo.copy()
             results['FocalMechanism'] = get_focal_mechanism(tensor_params)
