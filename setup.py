@@ -16,5 +16,6 @@ setup(name='STREC',
       scripts=['bin/regselect', 'bin/subselect'],
       package_data={'strec': ['data/*.csv', 'data/*.txt',
                               'data/*.ini', 'data/*.json',
-                              'data/*.db']},
+                              'data/*.db','data/*.xlsx',
+                              'data/slabs/*.grd']},
       )
