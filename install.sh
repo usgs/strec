@@ -47,13 +47,38 @@ echo "Using ${env_file}"
 source deactivate
 
 # Download dependencies not in conda or pypi
+
+# impactutils library
 curl --max-time 60 --retry 3 -L \
-    https://github.com/usgs/earthquake-impact-utils/archive/master.zip -o impact-utils.zip
+     https://github.com/usgs/earthquake-impact-utils/archive/master.zip -o impact-utils.zip
+
+# Bail if download failed
+if [ $? -ne 0 ]; then
+    echo "Failed to download impactutils zip file."
+    exit
+fi
+
+# libcomcat library
 curl --max-time 60 --retry 3 -L \
-    https://github.com/usgs/libcomcat/archive/master.zip -o libcomcat.zip
+     https://github.com/usgs/libcomcat/archive/master.zip -o libcomcat.zip
+
+# Bail if download failed
+if [ $? -ne 0 ]; then
+    echo "Failed to download libcomcat zip file."
+    rm impact-utils.zip
+    exit
+fi
+
 curl --max-time 60 --retry 3 -L \
     https://github.com/usgs/MapIO/archive/master.zip -o mapio.zip
 
+# Bail if download failed
+if [ $? -ne 0 ]; then
+    echo "Failed to download mapio zip file."
+    rm impact-utils.zip
+    rm libcomcat.zip
+    exit
+fi
 
 # Create a conda virtual environment
 echo "Creating the $VENV virtual environment:"
