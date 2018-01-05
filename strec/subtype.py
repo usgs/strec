@@ -174,6 +174,7 @@ class SubductionSelector(object):
         tensor_params['mrt'] = float(tensor['tensor-mrt'])
         tensor_params['mrp'] = float(tensor['tensor-mrp'])
 
+        # sometimes the online MT is missing properties
         if not tensor.hasProperty('t-axis-length'):
             tensor_dict = fill_tensor_from_components(tensor_params['mrr'],
                                                       tensor_params['mtt'],
