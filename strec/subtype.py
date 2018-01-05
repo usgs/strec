@@ -174,6 +174,7 @@ class SubductionSelector(object):
         tensor_params['mrt'] = float(tensor['tensor-mrt'])
         tensor_params['mrp'] = float(tensor['tensor-mrp'])
 
+
         # sometimes the online MT is missing properties
         if not tensor.hasProperty('t-axis-length'):
             tensor_dict = fill_tensor_from_components(tensor_params['mrr'],
@@ -203,6 +204,7 @@ class SubductionSelector(object):
             P['plunge'] = float(tensor['p-axis-plunge'])
             P['azimuth'] = float(tensor['p-axis-azimuth'])
             tensor_params['P'] = P.copy()
+
 
         if not tensor.hasProperty('nodal-plane-1-strike'):
             tensor2 = fill_tensor_from_components(tensor_params['mrr'],

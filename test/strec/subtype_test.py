@@ -463,9 +463,6 @@ def test_get_online_tensor():
     res, msg = cmp_dicts(tensor3, tensor3_cmp)
     assert tensor2 is None
 
-    # test event missing axes parameters
-    eventid = 'usc000f1s0'
-    lat, lon, depth, tensor_params = selector.getOnlineTensor(eventid)
 
 def test_subtype():
     selector = SubductionSelector()
