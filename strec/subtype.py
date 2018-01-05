@@ -174,23 +174,34 @@ class SubductionSelector(object):
         tensor_params['mrt'] = float(tensor['tensor-mrt'])
         tensor_params['mrp'] = float(tensor['tensor-mrp'])
 
-        T = {}
-        T['value'] = float(tensor['t-axis-length'])
-        T['plunge'] = float(tensor['t-axis-plunge'])
-        T['azimuth'] = float(tensor['t-axis-azimuth'])
-        tensor_params['T'] = T.copy()
+        if not tensor.hasProperty('t-axis-length'):
+            tensor_dict = fill_tensor_from_components(tensor_params['mrr'],
+                                                      tensor_params['mtt'],
+                                                      tensor_params['mpp'],
+                                                      tensor_params['mrt'],
+                                                      tensor_params['mrp'],
+                                                      tensor_params['mtp'])
+            tensor_params['T'] = tensor_dict['T'].copy()
+            tensor_params['N'] = tensor_dict['T'].copy()
+            tensor_params['P'] = tensor_dict['P'].copy()
+        else:
+            T = {}
+            T['value'] = float(tensor['t-axis-length'])
+            T['plunge'] = float(tensor['t-axis-plunge'])
+            T['azimuth'] = float(tensor['t-axis-azimuth'])
+            tensor_params['T'] = T.copy()
 
-        N = {}
-        N['value'] = float(tensor['n-axis-length'])
-        N['plunge'] = float(tensor['n-axis-plunge'])
-        N['azimuth'] = float(tensor['n-axis-azimuth'])
-        tensor_params['N'] = N.copy()
+            N = {}
+            N['value'] = float(tensor['n-axis-length'])
+            N['plunge'] = float(tensor['n-axis-plunge'])
+            N['azimuth'] = float(tensor['n-axis-azimuth'])
+            tensor_params['N'] = N.copy()
 
-        P = {}
-        P['value'] = float(tensor['p-axis-length'])
-        P['plunge'] = float(tensor['p-axis-plunge'])
-        P['azimuth'] = float(tensor['p-axis-azimuth'])
-        tensor_params['P'] = P.copy()
+            P = {}
+            P['value'] = float(tensor['p-axis-length'])
+            P['plunge'] = float(tensor['p-axis-plunge'])
+            P['azimuth'] = float(tensor['p-axis-azimuth'])
+            tensor_params['P'] = P.copy()
 
         if not tensor.hasProperty('nodal-plane-1-strike'):
             tensor2 = fill_tensor_from_components(tensor_params['mrr'],
