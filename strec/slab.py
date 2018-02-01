@@ -7,6 +7,7 @@ from functools import partial
 # third party imports
 from mapio.gmt import GMTGrid
 import numpy as np
+import pandas as pd
 import fiona
 from shapely.ops import transform
 from shapely.geometry import shape as tshape
@@ -41,6 +42,16 @@ class GridSlab(object):
         self._strike_file = strike_file
         self._error_file = error_file  # can be None for Slab 1.0
 
+        # there may be a table of maximum slab depths in the same directory
+        # as all of the slab grids.  Read it into a local dictionary if found,
+        # otherwise we'll use the MAX_INTERFACE_DEPTH constant found above.
+        fpath,fname = os.path.split(self._depth_file)
+        table_file_name = os.path.join(fpath,'maximum_interface_depths.csv')
+        if os.path.isfile(table_file_name):
+            self._slab_table = pd.read_csv(table_file_name)
+        else:
+            self._slab_table = None
+            
     def contains(self, lat, lon):
         """Check to see if input coordinates are contained inside Slab model.
 
@@ -51,7 +62,15 @@ class GridSlab(object):
             bool: True if point falls inside minimum bounding box of slab model.
         """
         gdict, tmp = GMTGrid.getFileGeoDict(self._depth_file)
-        if lat >= gdict.ymin and lat <= gdict.ymax and lon >= gdict.xmin and lon <= gdict.xmax:
+        gxmin = gdict.xmin
+        gxmax = gdict.xmax
+        if lon < 0:
+            if gxmin > gxmax:
+                gxmin -= 360
+        else:
+            if gxmin > gxmax:
+                gxmax += 360
+        if lat >= gdict.ymin and lat <= gdict.ymax and lon >= gxmin and lon <= gxmax:
             return True
         return False
 
@@ -78,6 +97,8 @@ class GridSlab(object):
         depth_grid = GMTGrid.load(self._depth_file)
         # slab grids are negative depth
         depth = -1 * depth_grid.getValue(lat, lon)
+
+        
         dip_grid = GMTGrid.load(self._dip_file)
         strike_grid = GMTGrid.load(self._strike_file)
         if self._error_file is not None:
@@ -85,7 +106,12 @@ class GridSlab(object):
             error = error_grid.getValue(lat, lon)
         else:
             error = DEFAULT_DEPTH_ERROR
-        dip = dip_grid.getValue(lat, lon) * -1
+
+        # Slab 2.0 dip directions are positive, 1.0 is negative
+        dip = dip_grid.getValue(lat, lon)
+        if dip < 0:
+            dip = dip * -1
+        
         strike = strike_grid.getValue(lat, lon)
         strike = strike
         if strike < 0:
@@ -93,10 +119,19 @@ class GridSlab(object):
 
         if np.isnan(strike):
             error = np.nan
+
+        # get the maximum interface depth from table (if present)
+        if self._slab_table is not None:
+            df = self._slab_table
+            max_int_depth = df[df['zone'] == region].iloc[0]['interface_max_depth']
+        else:
+            max_int_depth = MAX_INTERFACE_DEPTH
+
         slabinfo = {'region': region,
                     'strike': strike,
                     'dip': dip,
                     'depth': depth,
+                    'maximum_interface_depth' : max_int_depth,
                     'depth_uncertainty': error}
         return slabinfo
 

@@ -112,9 +112,15 @@ class SubductionSelector(object):
                 - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
                 - IsNearInterface : Boolean indicating whether depth is close to interface.
                 - IsInSlab : Boolean indicating whether depth is within the slab.
-
+        Raises:
+            AttributeError if the eventid is not found in ComCat.
         """
         lat, lon, depth, tensor_params = self.getOnlineTensor(eventid)
+        if lat is None:
+            raise AttributeError('Event %s is not found in ComCat.' % eventid)
+        
+        lat = float(lat)
+        lon = float(lon)
         results = self.getSubductionType(
             lat, lon, depth, tensor_params=tensor_params)
         return results
@@ -147,7 +153,10 @@ class SubductionSelector(object):
                   - dip
                   - rake
         """
-        detail = get_event_by_id(eventid)
+        try:
+            detail = get_event_by_id(eventid)
+        except Exception as e:
+            return (None,None,None,{})
         lat = detail.latitude
         lon = detail.longitude
         depth = detail.depth
@@ -268,10 +277,12 @@ class SubductionSelector(object):
         Returns:
             Pandas Series object with indices:
                 - TectonicRegion : (Subduction,Active,Stable,Volcanic)
-                - TectonicDomain : SZ (generic)
                 - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
                 - TensorType : (actual, composite)
+                - TensorSource : String indicating the source of the moment tensor information.
                 - KaganAngle : Angle between moment tensor and slab interface.
+                - CompositeVariability : A measure of the uncertainty in the composite moment tensor.
+                - NComposite : Number of events used to create composite moment tensor.
                 - DistanceToStable : Distance in km from the nearest stable polygon.
                 - DistanceToActive : Distance in km from the nearest active polygon.
                 - DistanceToSubduction : Distance in km from the nearest subduction polygon.
@@ -279,22 +290,12 @@ class SubductionSelector(object):
                 - Oceanic : Boolean indicating whether we are in an oceanic region.
                 - DistanceToOceanic : Distance in km to nearest oceanic polygon.
                 - DistanceToContinental : Distance in km to nearest continental polygon.
-                - TectonicSubtype : (SZInter,ACR,SZIntra)
-                - RegionContainsBackArc : Boolean indicating whether event is in a back-arc subduction region.
-                - DomainDepthBand1 : Bottom of generic depth level for shallowest subduction type.
-                - DomainDepthBand1Subtype : Shallowest subduction type.
-                - DomainDepthBand2 : Bottom of generic depth level for middle subduction type.
-                - DomainDepthBand2Subtype : Middle subduction type.
-                - DomainDepthBand3 : Bottom of generic depth level for deepest subduction type.
-                - DomainDepthBand3Subtype : Deepest subduction type
                 - SlabModelRegion : Subduction region.
                 - SlabModelType : (grid,trench)
                 - SlabModelDepth : Depth to slab interface at epicenter.
+                - SlabModelDepthUncertainty : Uncertainty of depth to slab interface.
                 - SlabModelDip : Dip of slab at epicenter.
                 - SlabModelStrike : Strike of slab at epicenter.
-                - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
-                - IsNearInterface : Boolean indicating whether depth is close to interface.
-                - IsInSlab : Boolean indicating whether depth is within the slab.
         """
 
         # sometimes events are specified with negative depths, which don't work with
@@ -342,31 +343,23 @@ class SubductionSelector(object):
         slab_collection = SlabCollection(slab_data_folder)
         slab_params = slab_collection.getSlabInfo(lat, lon, depth)
 
-        reginfo = self._regionalizer.getRegions(lat, lon, depth)
-        reginfo['TensorType'] = tensor_type
-        reginfo['TensorSource'] = tensor_source
-        reginfo['CompositeVariability'] = similarity
-        reginfo['NComposite'] = nevents
+        results = self._regionalizer.getRegions(lat, lon, depth)
+        results['TensorType'] = tensor_type
+        results['TensorSource'] = tensor_source
+        results['CompositeVariability'] = similarity
+        results['NComposite'] = nevents
+        results['FocalMechanism'] = get_focal_mechanism(tensor_params)
         if len(slab_params):
             if np.isnan(slab_params['depth']):
-                if tensor_params is not None:
-                    reginfo['FocalMechanism'] = get_focal_mechanism(
-                        tensor_params)
-                results = reginfo.copy()
                 results['SlabModelRegion'] = SLAB_REGIONS[slab_params['region']]
                 results['KaganAngle'] = np.nan
-                regizer = self._regionalizer
-                domain = reginfo['TectonicDomain']
-                results['TectonicSubtype'], _ = regizer.getSubDomain(
-                    domain, depth)
             else:
-                results = self._get_subduction_type(
-                    lat, lon, depth, tensor_params, slab_params, reginfo, config)
                 results['SlabModelRegion'] = SLAB_REGIONS[slab_params['region']]
                 results['SlabModelDepth'] = slab_params['depth']
                 results['SlabModelDepthUncertainty'] = slab_params['depth_uncertainty']
                 results['SlabModelDip'] = slab_params['dip']
                 results['SlabModelStrike'] = slab_params['strike']
+                results['SlabModelMaximumDepth'] = slab_params['maximum_interface_depth']
                 if tensor_params is not None:
                     np1 = tensor_params['NP1']
                     kagan = get_kagan_angle(slab_params['strike'], slab_params['dip'], SLAB_RAKE,
@@ -375,160 +368,29 @@ class SubductionSelector(object):
                 else:
                     results['KaganAngle'] = np.nan
         else:
-            results = reginfo.copy()
             results['FocalMechanism'] = get_focal_mechanism(tensor_params)
             results['SlabModelRegion'] = ''
             results['SlabModelDepth'] = np.nan
             results['SlabModelDepthUncertainty'] = np.nan
             results['SlabModelDip'] = np.nan
             results['SlabModelStrike'] = np.nan
-            results['IsLikeInterface'] = False
-            results['IsNearInterface'] = False
-            results['IsInSlab'] = False
+            results['SlabModelMaximumDepth'] = np.nan
             results['KaganAngle'] = np.nan
-            regizer = self._regionalizer
-            domain = reginfo['TectonicDomain']
-            results['TectonicSubtype'], _ = regizer.getSubDomain(domain, depth)
 
-        results = results.reindex(index=['TectonicRegion', 'TectonicDomain', 'FocalMechanism',
+
+        results = results.reindex(index=['TectonicRegion', 'FocalMechanism',
                                          'TensorType', 'TensorSource', 'KaganAngle', 'CompositeVariability',
                                          'NComposite', 'DistanceToStable',
                                          'DistanceToActive', 'DistanceToSubduction',
                                          'DistanceToVolcanic', 'Oceanic',
                                          'DistanceToOceanic', 'DistanceToContinental',
-                                         'TectonicSubtype', 'RegionContainsBackArc',
-                                         'DomainDepthBand1', 'DomainDepthBand1Subtype',
-                                         'DomainDepthBand2', 'DomainDepthBand2Subtype',
-                                         'DomainDepthBand3', 'DomainDepthBand3Subtype',
                                          'SlabModelRegion',
                                          'SlabModelDepth',
                                          'SlabModelDepthUncertainty',
                                          'SlabModelDip', 'SlabModelStrike',
-                                         'IsLikeInterface', 'IsNearInterface', 'IsInSlab'])
+                                         'SlabModelMaximumDepth'])
 
         return results
-
-    def _get_subduction_type(self, lat, lon, depth,
-                             tensor_params, slab_params, reginfo,
-                             config):
-        """Append subduction zone information to Regionalizer output.
-
-        Args:
-            lat (float): Epicentral latitude.
-            lon (float): Epicentral longitude.
-            depth (float): Epicentral depth.
-            tensor_params (dict): Dictionary containing moment tensor parameters.
-            slab_params (dict): Dictionary containing slab model parameters.
-            reginfo (Series): Output from Regionalizer.getRegions().
-            config (dict): Dictionary containing configuration information.
-        Returns:
-            Series: Indices appended to reginfo:
-                - FocalMechanism 
-                - IsLikeInterface
-                - IsNearInterface
-                - IsInSlab
-                - TectonicSubtype
-        """
-
-        results = reginfo.copy()
-        if depth <= reginfo['DomainDepthBand1']:
-            depthzone = "shallow"
-        elif depth > reginfo['DomainDepthBand1'] and depth <= reginfo['DomainDepthBand2']:
-            depthzone = "medium"
-        else:
-            depthzone = "deep"
-        fmstring = get_focal_mechanism(tensor_params)
-        szinfo = SubductionZone(slab_params, tensor_params, depth, config)
-        is_interface_like = szinfo.checkRupturePlane()
-        is_near_interface = szinfo.checkInterfaceDepth()
-        depth_band = reginfo['DomainDepthBand1']
-        is_in_slab = szinfo.checkSlabDepth(depth_band)
-
-        results['FocalMechanism'] = fmstring
-        results['IsLikeInterface'] = is_interface_like
-        results['IsNearInterface'] = is_near_interface
-        results['IsInSlab'] = is_in_slab
-
-        # get the bottom of the active crustal shallowest depth zone
-        row = self._regionalizer.getDomainInfo('ACR (shallow)')
-        acr_depth = row['H1']
-        warning = ''
-        # brace yourself, here's the sz flowchart...
-        if depthzone == 'shallow':
-            if fmstring == 'RS':
-                if is_interface_like:  # eq. 2
-                    if is_near_interface:
-                        regime = 'SZInter'
-                    else:
-                        if is_in_slab:
-                            regime = 'ACR'
-                            warning = 'Event near/below interface'
-                        else:
-                            regime = 'ACR'
-                else:
-                    if is_in_slab:
-                        regime = 'ACR'
-                        warning = 'Event near/below interface'
-                    else:
-                        regime = 'ACR'
-            else:  # fmstring is 'SS' or 'NM' or 'ALL'
-                if fmstring == 'ALL' and tensor_params is None:
-                    if is_near_interface:
-                        regime = 'SZInter'
-                        warning = 'No focal mechanism available'
-                    else:
-                        if is_in_slab:
-                            regime = 'ACR'
-                            warning = 'Event near/below interface'
-                        else:
-                            regime = 'ACR'
-                else:
-                    if is_in_slab:
-                        regime = 'ACR'
-                        warning = 'Event near/below interface'
-                    else:
-                        regime = 'ACR'
-        elif depthzone == 'medium':
-            if fmstring == 'RS':
-                if is_interface_like:
-                    if is_near_interface:
-                        regime = 'SZInter'
-                    else:
-                        if is_in_slab:
-                            regime = 'SZIntra'
-                        else:
-                            regime = 'ACR'
-                else:
-                    if is_in_slab:
-                        regime = 'SZIntra'
-                    else:
-                        regime = 'ACR'
-            else:
-                if fmstring == 'ALL' and tensor_params is None:
-                    if is_near_interface:
-                        regime = 'SZInter'
-                        warning = 'No focal mechanism available'
-                    else:
-                        if is_in_slab:
-                            regime = 'SZIntra'
-                        else:
-                            regime = 'ACR'
-                else:
-                    if is_in_slab:
-                        regime = 'SZIntra'
-                    else:
-                        regime = 'ACR'
-        elif depthzone == 'deep':
-            if is_in_slab:
-                regime = 'SZIntra'
-            else:
-                warning = 'Event above interface'
-                regime = 'SZIntra'
-
-        results['TectonicSubtype'] = regime
-
-        return results
-
 
 def get_focal_mechanism(tensor_params):
     """ Return focal mechanism (strike-slip,normal, or reverse).

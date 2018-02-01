@@ -36,34 +36,6 @@ from the Garcia paper upon which this software is originally based.
      experience crustal deformation (e.g., the interior of the
      Australian continent.)
 
- - *Tectonic Domain*: This is a sub-grouping of tectonic regions, such
-    that individual polygons in any of the Tectonic Regions above will
-    have one of the following for the Tectonic Domain attribute:
-    
-     * *SCR (generic)*: Generic Stable Continental Region
-     * *SCR (above slab)*: Stable Continental Region, above slab.
-     * *ACR (shallow)*: Active Crustal Region, shallow.
-     * *ACR (deep)*: Active Crustal Region, deep.
-     * *ACR (oceanic boundary)*: Active Crustal Region, at oceanic boundary.
-     * *ACR (hot spot)*: Active Crustal Region, at hot spot.
-     * *SZ (generic)*: Generic Subduction Zone.
-     * *SZ (outer-trench)*: Subduction Zone on the outer trench.
-     * *SZ (on-shore)*: Subduction Zone, on-shore.
-     * *SZ (inland/back-arc)*: Subduction Zone, inland or on back-arc.
-     * *SOR (generic)*: Generic Stable Oceanic Region. 
-     * *SOR (above slab)*: Stable Oceanic Region, above slab.
-     * *ACR shallow (above slab)*: Shallow Active Crustal Region, above slab.
-     * *ACR deep (above slab)*: Deep Active Crustal Region, above slab.
-     * *ACR oceanic boundary (above slab)*: Oceanic Boundary Active Crustal Region, above slab.
-
- - *Tectonic Sub-Domain*: A domain sub-classification that varies with
-    depth. This value will be one of:
-     * *SCR*: Stable Continental Region.
-     * *ACR*: Active Crustal Region.
-     * *SZINtra*: Subduction Zone IntraSlab (below subduction interface).
-     * *SZInter*: Subduction Zone Interface (on subduction interface).
-     * *Volcanic*: In volcanic substrate.
-
  - *Oceanic*: Another region, not exclusive with the four Tectonic
    Regions, that indicates whether the point supplied is in the ocean
    (i.e., not continental).
@@ -94,10 +66,6 @@ from the Garcia paper upon which this software is originally based.
  - *Distance to [Region]*: The great circle distance from the input
    coordinates to the nearest vertex of [Region] polygon.
 
- - *Domain Depth Band (1,2 or 3)*: The default depth ranges, in the
-   absence of subduction information, that can be used to determine the
-   tectonic subtype within the defined depth range.
-
  - *Slab Model Region*: We currently use Slab 1.0 subduction models
    (Hayes 2012), which are currently provided for 13 regions around
    the globe.  These regions are described in detail here:
@@ -114,15 +82,6 @@ from the Garcia paper upon which this software is originally based.
 
  - *Slab Model Strike*: The best estimate of the strike angle of the
    subducting plate.
-
- - *Is Like Interface*: A boolean indicating whether the moment tensor
-   strike angle is similar to the slab strike (Garcia 2012).
-
- - *Is Near Interface*: A boolean indicating whether the earthquake
-   depth is within a threshold distance from the slab depth.
-
- - *Is In Slab*: A boolean indicating whether the earthquake
-   depth is below a threshold distance from the slab depth.
 
 ## INSTALLATION
 
@@ -204,66 +163,11 @@ Then run the following commands:
 
 ### Using STREC
 
-#### Region Selector
-
- There are two tools provided by STREC that allow slightly different
- functionality.  If you are *not* interested in details about
- subduction zone interfaces, then you will want to use the *regselect*
- command.  This command can be used in a single event mode:
-
- - `regselect -e LAT LON DEPTH` to return information about an event based on hypocenter.
- - `regselect -d EVENTID` to return information about an event based on ComCat event ID.
-
-ComCat event IDs can be obtained from ComCat event page url's. For example, for the url:
-
-https://earthquake.usgs.gov/earthquakes/eventpage/us2000bmcg
-
-The event ID would be *us2000bmcg*.
-
-The output of regselect should look something like this:
-<pre>
-For event located at -23.4733,135.3516,0.0:
-	TectonicRegion : Stable
-	TectonicDomain : SCR (generic)
-	DistanceToStable : 0.0
-	DistanceToActive : 2372.34536692
-	DistanceToSubduction : 1339.17982347
-	DistanceToVolcanic : 1611.06881631
-	Oceanic : False
-	DistanceToOceanic : 2372.34536692
-	DistanceToContinental : 0.0
-	TectonicSubtype : SCR
-	RegionContainsBackArc : False
-	DomainDepthBand1 : 50
-	DomainDepthBand1Subtype : SCR
-	DomainDepthBand2 : 999
-	DomainDepthBand2Subtype : SCR
-	DomainDepthBand3 : 1000
-	DomainDepthBand3Subtype : SCR
-</pre>
-
-Descriptions of the return fields can be found in the glossary above.
-
-regselect can be used in batch mode, operating on input CSV or Excel files.
-
-The NEIC *libcomcat* library and tools are installed along with STREC,
-so you can use the *getcsv* command to generate input files to use
-with regselect.  For example:
-
-`getcsv ~/big_events_2016.xlsx -s 2016-01-01 -e 2016-12-31T23:59:59 -m
-6.5 9.9 -f excel`
-
-will download basic event information for all magnitude 6.5 and
-greater events in 2016.  This output can be directly piped into
-regselect, and the results saved back out to Excel:
-
-`regselect -i ~/big_events_2016.xlsx -f excel -o ~/regselect_events.xlsx`
-
 #### Subduction Selector
 
-If you *are* interested in information about subduction zones (depth
-to interface, etc.), then you will want to run the *subselect*
-command.  Basic usage of *subselect* is the same as *regselect*:
+The *subselect* command gives you several pieces of information
+regarding the earthquake ID or location you input. Basic usage of
+*subselect* for single events is as follows:
 
  - `subselect -e LAT LON DEPTH` to return information about an event based on hypocenter.
  - `subselect -d EVENTID` to return information about an event based on ComCat event ID.
@@ -271,45 +175,41 @@ command.  Basic usage of *subselect* is the same as *regselect*:
 The output of subselect will look something like this:
 
 <pre>
-For event located at -23.4733,135.3516,0.0:
-	TectonicRegion : Stable
-	TectonicDomain : SCR (generic)
-	FocalMechanism : ALL
+For event located at 3.2950,95.9820,30.0:
+	TectonicRegion : Subduction
+	FocalMechanism : RS
 	TensorType : composite
 	TensorSource : composite
-	KaganAngle : nan
-	CompositeVariability : nan
-	NComposite : 0
-	DistanceToStable : 0.0
-	DistanceToActive : 2372.34536692
-	DistanceToSubduction : 1339.17982347
-	DistanceToVolcanic : 1611.06881631
+	KaganAngle : 10.685829986253886
+	CompositeVariability : 1.1036343285450119
+	NComposite : 50
+	DistanceToStable : 481.143972927
+	DistanceToActive : 481.143972927
+	DistanceToSubduction : 0.0
+	DistanceToVolcanic : 4864.56919929
 	Oceanic : False
-	DistanceToOceanic : 2372.34536692
+	DistanceToOceanic : 573.606960791
 	DistanceToContinental : 0.0
-	TectonicSubtype : SCR
-	RegionContainsBackArc : False
-	DomainDepthBand1 : 50
-	DomainDepthBand1Subtype : SCR
-	DomainDepthBand2 : 999
-	DomainDepthBand2Subtype : SCR
-	DomainDepthBand3 : 1000
-	DomainDepthBand3Subtype : SCR
-	SlabModelRegion : 
-	SlabModelType : 
-	SlabModelDepth : nan
-	SlabModelDepthUncertainty : nan
-	SlabModelDip : nan
-	SlabModelStrike : nan
-	IsLikeInterface : False
-	IsNearInterface : False
-	IsInSlab : False
+	SlabModelRegion : Sumatra-Java
+	SlabModelDepth : 34.91320037841797
+	SlabModelDepthUncertainty : 11.31596851348877
+	SlabModelDip : 14.680322647094727
+	SlabModelStrike : 307.7746276855469
+	SlabModelMaximumDepth : 55
+
 </pre>
 
 subselect can also be used in batch mode, operating on input CSV or Excel files.
 
-As above, getcsv output can be directly piped into
-subselect, and the results saved back out to Excel:
+The NEIC libcomcat library and tools are installed along with STREC,
+so you can use the getcsv command to generate input files to use with
+regselect. For example:
+
+getcsv ~/big_events_2016.xlsx -s 2016-01-01 -e 2016-12-31T23:59:59 -m 6.5 9.9 -f excel
+
+will download basic event information for all magnitude 6.5 and
+greater events in 2016. This output can be directly piped into
+regselect, and the results saved back out to Excel:
 
 `subselect -i ~/big_events_2016.xlsx -f excel -o ~/subselect_events.xlsx`
 
