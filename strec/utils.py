@@ -5,6 +5,7 @@ import re
 
 # third party imports
 import pandas as pd
+import numpy as np
 
 STRECINI = 'strec.ini'
 GCMT_OUTPUT = 'gcmt.db'
@@ -32,6 +33,10 @@ def get_config_file_name():
 def get_config():
     """Get configuration information as a dictionary.
 
+    'folder' should always be set to point to library data path.
+    'dbfile' should be set to point to library data path unless specified in ~/.strec/strec.ini
+    'slabfolder' should be set to point to library data path unless specified in ~/.strec/strec.ini
+
     Returns:
         config (dict): Dictionary containing fields:
             - CONSTANTS Dictionary containing constants for the application.
@@ -50,13 +55,15 @@ def get_config():
 
     homedir = os.path.dirname(os.path.abspath(__file__))  # where is this file?
     datafolder = os.path.abspath(os.path.join(homedir, 'data'))
+    #automatically set path to json files, etc.
+    config['DATA']['folder'] = datafolder
     if 'dbfile' not in config['DATA']:
         dbfile = 'moment_tensors.db'
-        config['DATA']['dbfile'] = dbfile
+        config['DATA']['dbfile'] = os.path.join(datafolder,dbfile)
+        
     if 'slabfolder' not in config['DATA']:
         slabfolder = os.path.join(datafolder, 'slabs')
         config['DATA']['slabfolder'] = slabfolder
-        config['DATA']['folder'] = datafolder
 
     if 'CONSTANTS' not in config:
         config['CONSTANTS'] = CONSTANTS
@@ -98,9 +105,16 @@ def read_input_file(input_file):
         comps = ['mrr', 'mtt', 'mpp', 'mrt', 'mrp', 'mtp']
         for comp in comps:
             if column.lower().find(comp) > -1:
-                df[column] += 0.0000000001
+                col = df[column].apply(lambda x: convert_float(x))
+                df[column] = col
 
     return (df, msg)
+
+def convert_float(val):
+    try:
+        return float(val)
+    except ValueError:
+        return np.nan
 
 
 def check_row(row):

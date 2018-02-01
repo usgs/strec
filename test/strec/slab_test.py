@@ -60,6 +60,7 @@ def test_inside_grid():
                      'dip': 45.32,
                      'depth': 55.900005340576172,
                      'depth_uncertainty': 10.0,
+                     'maximum_interface_depth': 70,
                      }
     print('Testing against slab grid...')
     for key, value in slabinfo.items():
