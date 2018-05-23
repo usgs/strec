@@ -57,7 +57,8 @@ fi
 echo "Using ${env_file}"
 
 # Turn off whatever other virtual environment user might be in
-source deactivate
+echo "Activate base virtual environment"
+conda activate base
 
 # Create a conda virtual environment
 echo "Creating the $VENV virtual environment:"
@@ -67,18 +68,17 @@ conda env create -f $env_file --force
 # Clean up zip files we've downloaded
 if [ $? -ne 0 ]; then
     echo "Failed to create conda environment.  Resolve any conflicts, then try again."
-    echo "Cleaning up zip files..."
     exit
 fi
 
 
 # Activate the new environment
 echo "Activating the $VENV virtual environment"
-source activate $VENV
+conda activate $VENV
 
 # This package
 echo "Installing strecenv..."
 pip install -e .
 
 # Tell the user they have to activate this environment
-echo "Type 'source activate $VENV' to use this new virtual environment."
+echo "Type 'conda activate $VENV' to use this new virtual environment."
