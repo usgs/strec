@@ -5,6 +5,7 @@ build
 .DS_Store
 .ipynb_checkpoints/
 .cache
+.pytest_cache/
 .coverage
 .coverage.xml
 *.egg-info/
