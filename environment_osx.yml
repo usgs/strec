@@ -1,199 +1,49 @@
-name: pager
+name: base
 channels:
-- conda-forge
-- defaults
-- digitalglobe
-- ioos
+  - conda-forge
+  - defaults
+  - digitalglobe
+  - ioos
 dependencies:
-- affine=2.1.0
-- anyjson=0.3.3
-- appnope=0.1.0
-- argon2_cffi=16.3.0
-- arrow=0.10.0
-- asn1crypto=0.22.0
-- attrs=17.3.0
-- babel=2.5.1
-- beautifulsoup4=4.6.0
-- blas=1.1
-- bleach=2.0.0
-- boto3=1.4.7
-- botocore=1.5.92
-- bzip2=1.0.6
-- ca-certificates=2017.11.5
-- cartopy=0.15.1
-- certifi=2017.11.5
-- cffi=1.11.2
-- chardet=3.0.4
-- click=6.7
-- click-plugins=1.0.3
-- cligj=0.4.0
-- colour=0.1.4
-- coverage=4.4.2
-- cryptography=2.1.4
-- curl=7.55.1
-- cycler=0.10.0
-- cython=0.27.3
-- decorator=4.1.2
-- descartes=1.1.0
-- docutils=0.14
-- entrypoints=0.2.3
-- et_xmlfile=1.0.1
-- expat=2.1.0
-- fiona=1.7.11
-- flake8=3.5.0
-- freetype=2.6.3
-- freexl=1.0.4
-- furl=1.0.1
-- gdal=2.1.3
-- geos=3.6.2
-- giflib=5.1.4
-- h5py=2.7.1
-- hdf4=4.2.13
-- hdf5=1.10.1
-- html5lib=1.0.1
-- hypothesis=3.44.3
-- icu=58.2
-- idna=2.6
-- infinity=1.4
-- intervals=0.8.0
-- ipykernel=4.7.0
-- ipython=6.2.1
-- ipython_genutils=0.2.0
-- ipywidgets=7.0.5
-- jdcal=1.3
-- jedi=0.10.2
-- jinja2=2.10
-- jmespath=0.9.3
-- jpeg=9b
-- json-c=0.12.1
-- jsonschema=2.6.0
-- jupyter=1.0.0
-- jupyter_client=5.2.0
-- jupyter_console=5.2.0
-- jupyter_core=4.4.0
-- kealib=1.4.7
-- krb5=1.14.2
-- libdap4=3.18.3
-- libffi=3.2.1
-- libgfortran=3.0.0
-- libiconv=1.15
-- libnetcdf=4.4.1.1
-- libpng=1.6.28
-- libpq=9.6.3
-- libsodium=1.0.15
-- libspatialindex=1.8.5
-- libspatialite=4.3.0a
-- libssh2=1.8.0
-- libtiff=4.0.9
-- libxml2=2.9.5
-- libxslt=1.1.32
-- lxml=4.1.1
-- markupsafe=1.0
-- matplotlib=2.0.0rc2
-- mccabe=0.6.1
-- mistune=0.8.3
-- mock=2.0.0
-- munch=2.2.0
-- nbconvert=5.3.1
-- nbformat=4.4.0
-- ncurses=5.9
-- nose=1.3.7
-- notebook=5.2.2
-- numexpr=2.6.4
-- numpy=1.12.1
-- olefile=0.44
-- openblas=0.2.20
-- openjpeg=2.1.2
-- openpyxl=2.5.0b1
-- openssl=1.0.2n
-- orderedmultidict=0.7.11
-- owslib=0.16.0
-- pandas=0.21.1
-- pandoc=2.0.5
-- pandocfilters=1.4.1
-- paramiko=2.3.1
-- passlib=1.7.1
-- pbr=3.1.1
-- pcre=8.39
-- pexpect=4.3.1
-- phonenumbers=8.8.5
-- pickleshare=0.7.4
-- pillow=4.0.0
-- pip=9.0.1
-- pluggy=0.6.0
-- proj4=4.9.3
-- prompt_toolkit=1.0.15
-- psutil=5.4.0
-- ptyprocess=0.5.2
-- py=1.5.2
-- pyasn1=0.3.7
-- pycodestyle=2.3.1
-- pycparser=2.18
-- pycrypto=2.6.1
-- pyepsg=0.3.2
-- pyflakes=1.6.0
-- pygments=2.2.0
-- pynacl=1.1.2
-- pyopenssl=17.4.0
-- pyparsing=2.2.0
-- pyproj=1.9.5.1
-- pyqt=5.6.0
-- pyshp=1.2.12
-- pysocks=1.6.7
-- pytables=3.4.2
-- pytest=3.3.1
-- pytest-cov=2.5.1
-- pytest-mpl=0.9
-- python=3.5.4
-- python-dateutil=2.6.1
-- pytz=2017.3
-- pyyaml=3.12
-- pyzmq=16.0.2
-- qt=5.6.2
-- qtconsole=4.3.1
-- rasterio=0.36.0
-- readline=6.2
-- requests=2.18.4
-- rtree=0.8.3
-- s3transfer=0.1.11
-- scipy=1.0.0
-- setuptools=38.2.4
-- shapely=1.6.3
-- simplegeneric=0.8.1
-- sip=4.18
-- six=1.11.0
-- snuggs=1.4.1
-- sqlalchemy=1.1.13
-- sqlalchemy-utils=0.32.16
-- sqlite=3.13.0
-- terminado=0.8.1
-- testpath=0.3.1
-- tk=8.5.19
-- tornado=4.5.2
-- traitlets=4.3.2
-- urllib3=1.22
-- wcwidth=0.1.7
-- webencodings=0.5
-- wheel=0.30.0
-- widgetsnbextension=3.0.8
-- xerces-c=3.2.0
-- xlrd=1.1.0
-- xlwt=1.3.0
-- xz=5.2.3
-- yaml=0.1.7
-- zeromq=4.2.1
-- zlib=1.2.11
-- bcrypt=3.1.4
-- pip:
-  - argon2-cffi==16.3.0
-  - et-xmlfile==1.0.1
-  - ipython-genutils==0.2.0
-  - jupyter-client==5.2.0
-  - jupyter-console==5.2.0
-  - jupyter-core==4.4.0
-  - prompt-toolkit==1.0.15
-  - tables==3.4.2
-  - ./impact-utils.zip
-  - ./libcomcat.zip
-  - ./mapio.zip  
+  - autopep8=1.3.4
+  - ca-certificates=2018.4.16
+  - certifi=2018.4.16
+  - conda=4.5.4
+  - flake8=3.5.0
+  - mccabe=0.6.1
+  - openssl=1.0.2o
+  - pep8=1.7.1
+  - pycodestyle=2.3.1
+  - pyflakes=1.6.0
+  - asn1crypto=0.24.0
+  - cffi=1.11.5
+  - chardet=3.0.4
+  - conda-env=2.6.0
+  - cryptography=2.2.2
+  - idna=2.6
+  - libcxx=4.0.1
+  - libcxxabi=4.0.1
+  - libedit=3.1
+  - libffi=3.2.1
+  - ncurses=6.0
+  - pip=9.0.3
+  - pycosat=0.6.3
+  - pycparser=2.18
+  - pyopenssl=17.5.0
+  - pysocks=1.6.8
+  - python=3.6.5
+  - python.app=2
+  - readline=7.0
+  - requests=2.18.4
+  - ruamel_yaml=0.15.35
+  - setuptools=39.0.1
+  - six=1.11.0
+  - sqlite=3.23.1
+  - tk=8.6.7
+  - urllib3=1.22
+  - wheel=0.31.0
+  - xz=5.2.3
+  - yaml=0.1.7
+  - zlib=1.2.11
+prefix: /Users/mhearne/miniconda3
 
