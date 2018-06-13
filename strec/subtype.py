@@ -156,7 +156,7 @@ class SubductionSelector(object):
         try:
             detail = get_event_by_id(eventid)
         except Exception as e:
-            return (None,None,None,{})
+            return (None,None,None,None)
         lat = detail.latitude
         lon = detail.longitude
         depth = detail.depth
