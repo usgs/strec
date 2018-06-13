@@ -13,7 +13,7 @@ import pandas as pd
 
 
 TIMEOUT = 30
-HIST_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/jan76_dec10.ndk.gz'
+HIST_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/jan76_dec17.ndk.gz'
 MONTHLY_GCMT_URL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_MONTHLY/'
 
 
@@ -42,7 +42,7 @@ def fetch_gcmt():
     dataframe = ndk_to_dataframe(histfile)
     t3 = str(datetime.utcnow())
     print('%s - Fetching monthly data...' % t3)
-    start_year = 2010
+    start_year = 2018
     end_year = datetime.utcnow().year
     end_month = datetime.utcnow().month
     for year in range(start_year, end_year + 1):

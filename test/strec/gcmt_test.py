@@ -40,7 +40,7 @@ def throw_away():
         os.remove('gcmt_mechanisms.xlsx')
 
 
-def test_fetch_gcmt():
+def null_test_fetch_gcmt():
     dataframe = fetch_gcmt()
     first = dataframe.iloc[0]
     assert first['time'] == datetime(1976, 1, 1, 1, 29, 39, 600000)
@@ -65,6 +65,6 @@ def test_ndk_read():
 
 
 if __name__ == '__main__':
-    throw_away()
+    # throw_away()
     test_ndk_read()
-    test_fetch_gcmt()
+    # test_fetch_gcmt()
