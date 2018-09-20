@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 # stdlib imports
 import os.path
-import sys
-
-# hack the path so that I can debug these functions if I need to
-homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
-repodir = os.path.abspath(os.path.join(homedir, '..', '..'))
-# put this at the front of the system path, ignoring any installed version of the repo
-sys.path.insert(0, repodir)
 
 # local imports
 from strec.slab import SlabCollection, GridSlab
@@ -21,21 +14,23 @@ def test_grid_slab():
         __file__))  # where is this script?
     datadir = os.path.join(homedir, '..', '..', 'strec',
                            'data', 'slabs')  # all slabs should be here
-    depthgrid = os.path.join(datadir, 'kur_slab1_dep_01.01.12.grd')
-    dipgrid = os.path.join(datadir, 'kur_slab1_dip_01.01.12.grd')
-    strgrid = os.path.join(datadir, 'kur_slab1_str_01.01.12.grd')
-    grid = GridSlab(depthgrid, dipgrid, strgrid, None)
+    depthgrid = os.path.join(datadir, 'kur_slab2_dep_02.24.18.grd')
+    dipgrid = os.path.join(datadir, 'kur_slab2_dip_02.24.18.grd')
+    strgrid = os.path.join(datadir, 'kur_slab2_str_02.24.18.grd')
+    uncgrid = os.path.join(datadir, 'kur_slab2_unc_02.24.18.grd')
+    grid = GridSlab(depthgrid, dipgrid, strgrid, uncgrid)
     is_inside = grid.contains(40.0, 140.0)
     assert is_inside
 
     slabinfo = grid.getSlabInfo(40.0, 140.0)
     if not len(slabinfo):
         raise AssertionError('Slab results are empty!')
-    cmp_dict = {'strike': 191.26111,
-                'depth_uncertainty': 10,
+    cmp_dict = {'dip': 28.817652,
+                'depth': 127.33068084716797,
+                'depth_uncertainty': 16.426598,
+                'strike': 186.17316,
                 'region': 'kur',
-                'dip': 25.959999084472656,
-                'depth': 129.61000061035156}
+                'maximum_interface_depth': 57}
     for key, value in cmp_dict.items():
         value2 = slabinfo[key]
         if isinstance(value, float):
@@ -55,13 +50,12 @@ def test_inside_grid():
     slabinfo = collection.getSlabInfo(lat, lon, depth)
     if not len(slabinfo):
         raise AssertionError('Slab results are empty!')
-    test_slabinfo = {'region': 'phi',
-                     'strike': 158.24164,
-                     'dip': 45.32,
-                     'depth': 55.900005340576172,
-                     'depth_uncertainty': 10.0,
-                     'maximum_interface_depth': 70,
-                     }
+    test_slabinfo = {'maximum_interface_depth': 53,
+                     'depth': 67.86959075927734,
+                     'strike': 159.2344,
+                     'dip': 45.410145,
+                     'depth_uncertainty': 14.463925,
+                     'region': 'phi'}
     print('Testing against slab grid...')
     for key, value in slabinfo.items():
         assert key in test_slabinfo
