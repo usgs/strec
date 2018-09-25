@@ -81,7 +81,7 @@ def _get_nearest_point(point, shape):
     mindist = 99999999999999999999
     for pshape in shapelist:
         pshape_string = LineString(pshape.exterior)
-        point_nearest, shape_nearest = nearest_points(ppoint, pshape_string)
+        point_nearest, shape_nearest = nearest_points(ppoint, pshape)
         distance = np.sqrt(shape_nearest.x**2 + shape_nearest.y**2) / 1000
         if distance < mindist:
             mindist = distance
