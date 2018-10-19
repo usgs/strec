@@ -30,7 +30,7 @@ def test_grid_slab():
                 'depth_uncertainty': 16.426598,
                 'strike': 186.17316,
                 'region': 'kur',
-                'maximum_interface_depth': 57}
+                'maximum_interface_depth': 54}
     for key, value in cmp_dict.items():
         value2 = slabinfo[key]
         if isinstance(value, float):
@@ -50,7 +50,7 @@ def test_inside_grid():
     slabinfo = collection.getSlabInfo(lat, lon, depth)
     if not len(slabinfo):
         raise AssertionError('Slab results are empty!')
-    test_slabinfo = {'maximum_interface_depth': 53,
+    test_slabinfo = {'maximum_interface_depth': 49,
                      'depth': 67.86959075927734,
                      'strike': 159.2344,
                      'dip': 45.410145,
