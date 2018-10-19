@@ -23,16 +23,29 @@ echo $PATH
 
 VENV=strecenv
 
-# Is the reset flag set?
-reset=0
-while getopts r FLAG; do
-  case $FLAG in
-    r)
-        reset=1
-        
-      ;;
-  esac
-done
+package_list=(
+    affine
+    fiona
+    gdal
+    h5py
+    impactutils
+    ipython
+    jupyter
+    libcomcat
+    mapio
+    numpy
+    obspy
+    openpyxl
+    pandas
+    pyproj
+    pytest
+    pytest-cov
+    python=3.5
+    rasterio
+    shapely
+    xlrd
+    xlwt
+)
 
 
 # create a matplotlibrc file with the non-interactive backend "Agg" in it.
@@ -80,21 +93,16 @@ echo ""
 # Choose an environment file based on platform
 echo ". $HOME/miniconda/etc/profile.d/conda.sh" >> $prof
 
-# If the user has specified the -r (reset) flag, then create an
-# environment based on only the named dependencies, without
-# any versions of packages specified.
-if [ $reset == 1 ]; then
-    echo "Ignoring platform, letting conda sort out dependencies..."
-    env_file=environment.yml
-fi
-
 # Start in conda base environment
 echo "Activate base virtual environment"
 conda activate base
 
+# Remove existing shakemap environment if it exists
+conda remove -y -n $VENV --all
+
 # Create a conda virtual environment
 echo "Creating the $VENV virtual environment:"
-conda env create -f $env_file --force
+conda create -y -n $VENV -c conda-forge --channel-priority ${package_list[*]}
 
 # Bail out at this point if the conda create command fails.
 # Clean up zip files we've downloaded

@@ -18,5 +18,6 @@ setup(name='STREC',
                               'data/*.ini', 'data/*.json',
                               'data/*.geojson', 'data/*.grd',
                               'data/*.db', 'data/*.xlsx',
+                              'data/slabs/*.csv',
                               'data/slabs/*.grd']},
       )
