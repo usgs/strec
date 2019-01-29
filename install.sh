@@ -24,27 +24,27 @@ echo $PATH
 VENV=strecenv
 
 package_list=(
-    affine
-    fiona
-    gdal
-    h5py
-    impactutils
-    ipython
-    jupyter
-    libcomcat
-    mapio
-    numpy
-    obspy
-    openpyxl
-    pandas
-    pyproj
-    pytest
-    pytest-cov
-    python=3.5
-    rasterio
-    shapely
-    xlrd
-    xlwt
+    "affine"
+    "fiona"
+    "gdal"
+    "h5py"
+    "impactutils"
+    "ipython"
+    "jupyter"
+    "libcomcat"
+    "mapio"
+    "numpy"
+    "obspy"
+    "openpyxl"
+    "pandas"
+    "pyproj"
+    "pytest"
+    "pytest-cov"
+    "python>=3.6"
+    "rasterio"
+    "shapely"
+    "xlrd"
+    "xlwt"
 )
 
 
