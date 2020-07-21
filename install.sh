@@ -74,6 +74,10 @@ if [ $? -ne 0 ]; then
     echo "No conda detected, installing miniconda from ${mini_conda_url}..."
 
     curl $mini_conda_url -o miniconda.sh;
+    if [ $? -ne 0 ]; then
+        echo "Failed to download ${mini_conda_url}, exiting."
+        exit 1
+    fi
     echo "Install directory: $HOME/miniconda"
 
     bash miniconda.sh -f -b -p $HOME/miniconda
