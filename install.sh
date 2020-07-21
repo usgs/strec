@@ -80,6 +80,13 @@ if [ $? -ne 0 ]; then
     fi
     echo "Install directory: $HOME/miniconda"
 
+    if [ -e miniconda.sh ]; then
+        echo "Found shell script."
+    else
+        echo "Failed to download ${mini_conda_url}, exiting."
+        exit 1
+    fi
+
     bash miniconda.sh -f -b -p $HOME/miniconda
 
     # Need this to get conda into path
