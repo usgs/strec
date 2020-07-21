@@ -71,7 +71,7 @@ fi
 # Is conda installed?
 conda --version
 if [ $? -ne 0 ]; then
-    echo "No conda detected, installing miniconda..."
+    echo "No conda detected, installing miniconda from ${mini_conda_url}..."
 
     curl $mini_conda_url -o miniconda.sh;
     echo "Install directory: $HOME/miniconda"
