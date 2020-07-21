@@ -17,7 +17,8 @@ before_script:
 
 script:
     - export PYTHONPATH="."
-    - py.test --cov=strec
+    - conda activate strecenv
+    - py.test --cov=.
 
 after_success:
     - pip install codecov codacy-coverage
