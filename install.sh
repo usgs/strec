@@ -87,7 +87,9 @@ if [ $? -ne 0 ]; then
         exit 1
     fi
 
+    echo "####Running miniconda shell script..."
     bash miniconda.sh -f -b -p $HOME/miniconda
+    echo "###Done running miniconda shell script..."
 
     # Need this to get conda into path
     . $HOME/miniconda/etc/profile.d/conda.sh
