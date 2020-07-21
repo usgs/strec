@@ -2,24 +2,15 @@
 
 # stdlib imports
 import os.path
-from collections import OrderedDict
-from urllib.request import urlopen
-import configparser
-import json
+import logging
 
 # third party imports
-import fiona
-from shapely.geometry import shape as tshape
-from shapely.geometry.point import Point
-import pandas as pd
 import numpy as np
 from libcomcat.search import get_event_by_id
 
 # local imports
-from strec.subduction import SubductionZone
 from strec.slab import SlabCollection
 from strec.cmt import getCompositeCMT
-from strec.proj import geo_to_utm
 from strec.gmreg import Regionalizer
 from strec.kagan import get_kagan_angle
 from strec.tensor import fill_tensor_from_components
@@ -70,10 +61,15 @@ class SubductionSelector(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, prefix=None, verbose=False):
         """Construct a SubductionSelector object.
 
         """
+        if prefix is not None:
+            self.logger = logging.getLogger(prefix)
+        else:
+            self.logger = logging.getLogger()
+        self.verbose = verbose
         self._regionalizer = Regionalizer.load()
         self._config = get_config()
 
@@ -115,10 +111,14 @@ class SubductionSelector(object):
         Raises:
             AttributeError if the eventid is not found in ComCat.
         """
+        if self.verbose:
+            self.logger.info('Inside getSubductionTypeByID...')
         lat, lon, depth, tensor_params = self.getOnlineTensor(eventid)
+        if self.verbose:
+            self.logger.info('Tensor Parameters: %s' % str(tensor_params))
         if lat is None:
             raise AttributeError('Event %s is not found in ComCat.' % eventid)
-        
+
         lat = float(lat)
         lon = float(lon)
         results = self.getSubductionType(
@@ -153,16 +153,24 @@ class SubductionSelector(object):
                   - dip
                   - rake
         """
+        if self.verbose:
+            self.logger.info('Inside getOnlineTensor')
         try:
             detail = get_event_by_id(eventid)
         except Exception as e:
-            return (None,None,None,None)
+            msg = 'Failed to get event information for %s - error "%s"'
+            tpl = (eventid, str(e))
+            self.logger.warn(msg % tpl)
+            return (None, None, None, None)
         lat = detail.latitude
         lon = detail.longitude
         depth = detail.depth
         if not detail.hasProduct('moment-tensor'):
+            self.logger.info('No moment tensor available for %s' % eventid)
             return lat, lon, depth, None
 
+        if self.verbose:
+            self.logger.info('Getting tensor components...')
         tensor = detail.getProducts('moment-tensor')[0]
         tensor_params = {}
         btype = 'unknown'
@@ -183,9 +191,12 @@ class SubductionSelector(object):
         tensor_params['mrt'] = float(tensor['tensor-mrt'])
         tensor_params['mrp'] = float(tensor['tensor-mrp'])
 
-
+        if self.verbose:
+            self.logger.info('Getting tensor axes...')
         # sometimes the online MT is missing properties
         if not tensor.hasProperty('t-axis-length'):
+            if self.verbose:
+                self.logger.info('Calling fill_tensor function...')
             tensor_dict = fill_tensor_from_components(tensor_params['mrr'],
                                                       tensor_params['mtt'],
                                                       tensor_params['mpp'],
@@ -214,8 +225,11 @@ class SubductionSelector(object):
             P['azimuth'] = float(tensor['p-axis-azimuth'])
             tensor_params['P'] = P.copy()
 
-
+        if self.verbose:
+            self.logger.info('Getting tensor angles...')
         if not tensor.hasProperty('nodal-plane-1-strike'):
+            if self.verbose:
+                self.logger.info('Calling fill_tensor function...')
             tensor2 = fill_tensor_from_components(tensor_params['mrr'],
                                                   tensor_params['mtt'],
                                                   tensor_params['mpp'],
@@ -297,7 +311,8 @@ class SubductionSelector(object):
                 - SlabModelDip : Dip of slab at epicenter.
                 - SlabModelStrike : Strike of slab at epicenter.
         """
-
+        if self.verbose:
+            self.logger.info('Inside getSubductionType...')
         # sometimes events are specified with negative depths, which don't work with
         # our algorithms.  Pin those depths to 0.
         if depth < 0:
@@ -377,7 +392,6 @@ class SubductionSelector(object):
             results['SlabModelMaximumDepth'] = np.nan
             results['KaganAngle'] = np.nan
 
-
         results = results.reindex(index=['TectonicRegion', 'FocalMechanism',
                                          'TensorType', 'TensorSource', 'KaganAngle', 'CompositeVariability',
                                          'NComposite', 'DistanceToStable',
@@ -391,6 +405,7 @@ class SubductionSelector(object):
                                          'SlabModelMaximumDepth'])
 
         return results
+
 
 def get_focal_mechanism(tensor_params):
     """ Return focal mechanism (strike-slip,normal, or reverse).
