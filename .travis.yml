@@ -8,7 +8,7 @@ services:
 install:
     # Install shakelib and requirements
     - bash install.sh
-    - export PATH="$HOME/miniconda/bin:$PATH"
+    - . $HOME/miniconda/etc/profile.d/conda.sh
     - source activate strecenv
 
 before_script:
