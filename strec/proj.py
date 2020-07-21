@@ -42,7 +42,7 @@ def geo_to_utm(shape, utmstr=None):
         utmstr = get_utm_proj(point.y, point.x)
     project = partial(
         pyproj.transform,
-        pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees'),
+        pyproj.Proj('+proj=longlat +datum=WGS84'),
         pyproj.Proj(utmstr))
 
     pshape = transform(project, shape)
@@ -61,6 +61,6 @@ def utm_to_geo(pshape, utmstr):
     reverse = partial(
         pyproj.transform,
         pyproj.Proj(utmstr),
-        pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees'),)
+        pyproj.Proj('+proj=longlat +datum=WGS84'),)
     shape = transform(reverse, pshape)
     return shape

@@ -8,7 +8,7 @@ services:
 install:
     # Install shakelib and requirements
     - bash install.sh
-    - export PATH="$HOME/miniconda/bin:$PATH"
+    - . $HOME/miniconda/etc/profile.d/conda.sh
     - source activate strecenv
 
 before_script:
@@ -17,7 +17,8 @@ before_script:
 
 script:
     - export PYTHONPATH="."
-    - py.test --cov=strec
+    - conda activate strecenv
+    - py.test --cov=.
 
 after_success:
     - pip install codecov codacy-coverage

@@ -1,16 +1,15 @@
 #!/bin/bash
 
 unamestr=`uname`
+env_file=environment.yml
 if [ "$unamestr" == 'Linux' ]; then
     prof=~/.bashrc
     mini_conda_url=https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     matplotlibdir=~/.config/matplotlib
-    env_file=environment_linux.yml
 elif [ "$unamestr" == 'FreeBSD' ] || [ "$unamestr" == 'Darwin' ]; then
     prof=~/.bash_profile
     mini_conda_url=https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
     matplotlibdir=~/.matplotlib
-    env_file=environment_osx.yml
 else
     echo "Unsupported environment. Exiting."
     exit
@@ -72,12 +71,33 @@ fi
 # Is conda installed?
 conda --version
 if [ $? -ne 0 ]; then
-    echo "No conda detected, installing miniconda..."
+    echo "No conda detected, installing miniconda from ${mini_conda_url}..."
 
-    curl $mini_conda_url -o miniconda.sh;
+    curl -L $mini_conda_url -o miniconda.sh;
+    if [ $? -ne 0 ]; then
+        echo "Failed to download ${mini_conda_url}, exiting."
+        exit 1
+    fi
     echo "Install directory: $HOME/miniconda"
 
+    if [ -e miniconda.sh ]; then
+        echo "Found shell script."
+    else
+        echo "Failed to download ${mini_conda_url}, exiting."
+        exit 1
+    fi
+
+    # Is the shell script really a shell script?
+    echo "This should say 'shell script', or something similar..."
+    file miniconda.sh
+
+    # Is the shell script of non-zero size?
+    echo "This file size should be non-zero..."
+    ls -lh miniconda.sh
+
+    echo "####Running miniconda shell script..."
     bash miniconda.sh -f -b -p $HOME/miniconda
+    echo "###Done running miniconda shell script..."
 
     # Need this to get conda into path
     . $HOME/miniconda/etc/profile.d/conda.sh
