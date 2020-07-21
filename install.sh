@@ -87,6 +87,14 @@ if [ $? -ne 0 ]; then
         exit 1
     fi
 
+    # Is the shell script really a shell script?
+    echo "This should say 'shell script', or something similar..."
+    file miniconda.sh
+
+    # Is the shell script of non-zero size?
+    echo "This file size should be non-zero..."
+    ls -lh miniconda.sh
+
     echo "####Running miniconda shell script..."
     bash miniconda.sh -f -b -p $HOME/miniconda
     echo "###Done running miniconda shell script..."
