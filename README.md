@@ -126,7 +126,7 @@ Currently, the easiest way to install STREC is to use the install script found i
 
  - Run the installer script by typing:
 
-   `cd strec;bash installer.sh`
+   `cd strec;bash install.sh`
 
  - *Activate* the STREC virtual environment by running this command:
 
