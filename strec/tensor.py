@@ -3,14 +3,15 @@ import numpy as np
 from obspy.imaging.beachball import aux_plane, mt2axes, mt2plane, MomentTensor
 
 
-def fill_tensor_from_angles(strike, dip, rake, magnitude=6.0, source='unknown', mtype='unknown'):
+def fill_tensor_from_angles(strike, dip, rake, magnitude=6.0, source='unknown',
+                            mtype='unknown'):
     """Fill in moment tensor parameters from strike,dip, and rake.
 
     Args:
         strike (float): Strike from (assumed) first nodal plane (degrees).
         dip (float): Dip from (assumed) first nodal plane (degrees).
         rake (float): Rake from (assumed) first nodal plane (degrees).
-        magnitude (float): Magnitude for moment tensor 
+        magnitude (float): Magnitude for moment tensor
             (not required if using moment tensor for angular comparisons.)
         source (str): Source (network, catalog) for input parameters.
         mtype (str): Focal mechanism or moment tensor type (Mww,Mwb,Mwc, etc.)
@@ -41,15 +42,19 @@ def fill_tensor_from_angles(strike, dip, rake, magnitude=6.0, source='unknown', 
                                        source=source, mtype=mtype)
 
 
-def fill_tensor_from_components(mrr, mtt, mpp, mrt, mrp, mtp, source='unknown', mtype='unknown'):
+def fill_tensor_from_components(mrr, mtt, mpp, mrt, mrp, mtp, source='unknown',
+                                mtype='unknown'):
     """Fill in moment tensor parameters from moment tensor components.
 
     Args:
-        strike (float): Strike from (assumed) first nodal plane (degrees).
-        dip (float): Dip from (assumed) first nodal plane (degrees).
-        rake (float): Rake from (assumed) first nodal plane (degrees).
-        magnitude (float): Magnitude for moment tensor 
-            (not required if using moment tensor for angular comparisons.)
+        mrr (float): Moment tensor component
+        mtt (float): Moment tensor component
+        mpp (float): Moment tensor component
+        mrt (float): Moment tensor component
+        mrp (float): Moment tensor component
+        mtp (float): Moment tensor component
+        source (str): Source (network, catalog) for input parameters.
+        mtype (str): Focal mechanism or moment tensor type (Mww,Mwb,Mwc, etc.)
     Returns:
         dict: Fully descriptive moment tensor dictionary, including fields:
             - mrr,mtt,mpp,mrt,mrp,mtp Moment tensor components.
@@ -111,18 +116,16 @@ def plane_to_tensor(strike, dip, rake, mag=6.0):
         strike (float): Strike from (assumed) first nodal plane (degrees).
         dip (float): Dip from (assumed) first nodal plane (degrees).
         rake (float): Rake from (assumed) first nodal plane (degrees).
-        magnitude (float): Magnitude for moment tensor 
+        magnitude (float): Magnitude for moment tensor
             (not required if using moment tensor for angular comparisons.)
     Returns:
-        nparray: Tensor representation as 3x3 numpy matrix: 
+        nparray: Tensor representation as 3x3 numpy matrix:
             [[mrr, mrt, mrp]
             [mrt, mtt, mtp]
             [mrp, mtp, mpp]]
     """
     # define degree-radian conversions
     d2r = np.pi / 180.0
-    r2d = 180.0 / np.pi
-
     # get exponent and moment magnitude
     magpow = mag * 1.5 + 16.1
     mom = np.power(10, magpow)
@@ -130,15 +133,18 @@ def plane_to_tensor(strike, dip, rake, mag=6.0):
     # get tensor components
     mrr = mom * np.sin(2 * dip * d2r) * np.sin(rake * d2r)
     mtt = -mom * ((np.sin(dip * d2r) * np.cos(rake * d2r) * np.sin(2 * strike * d2r)) +
-                  (np.sin(2 * dip * d2r) * np.sin(rake * d2r) * (np.sin(strike * d2r) * np.sin(strike * d2r))))
+                  (np.sin(2 * dip * d2r) * np.sin(rake * d2r) *
+                  (np.sin(strike * d2r) * np.sin(strike * d2r))))
     mpp = mom * ((np.sin(dip * d2r) * np.cos(rake * d2r) * np.sin(2 * strike * d2r)) -
-                 (np.sin(2 * dip * d2r) * np.sin(rake * d2r) * (np.cos(strike * d2r) * np.cos(strike * d2r))))
+                 (np.sin(2 * dip * d2r) * np.sin(rake * d2r) *
+                 (np.cos(strike * d2r) * np.cos(strike * d2r))))
     mrt = -mom * ((np.cos(dip * d2r) * np.cos(rake * d2r) * np.cos(strike * d2r)) +
                   (np.cos(2 * dip * d2r) * np.sin(rake * d2r) * np.sin(strike * d2r)))
     mrp = mom * ((np.cos(dip * d2r) * np.cos(rake * d2r) * np.sin(strike * d2r)) -
                  (np.cos(2 * dip * d2r) * np.sin(rake * d2r) * np.cos(strike * d2r)))
     mtp = -mom * ((np.sin(dip * d2r) * np.cos(rake * d2r) * np.cos(2 * strike * d2r)) +
-                  (0.5 * np.sin(2 * dip * d2r) * np.sin(rake * d2r) * np.sin(2 * strike * d2r)))
+                  (0.5 * np.sin(2 * dip * d2r) * np.sin(rake * d2r) *
+                  np.sin(2 * strike * d2r)))
 
     mt_matrix = np.array([[mrr, mrt, mrp],
                           [mrt, mtt, mtp],

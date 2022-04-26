@@ -41,11 +41,20 @@ OCEANIC = 'oceanic.json'
 # of seismic interest (usually areas which have a specific GMPE).
 GEOGRAPHIC = 'geographic.json'
 
-# for each of the above geographic regions, this is the attribute containing the name of the region
+# for each of the above geographic regions, this is the attribute containing the name
+#  of the region
 GEOGRAPHIC_FIELD = 'REG_NAME'
 
 
 def geodetic_distance(lon1, lat1, lon2, lat2):
+    """ Description
+
+    Args:
+        lon1 (float):
+        lat1 (float):
+        lon2 (float):
+        lat2 (float):
+    """
     distance = 6371.0 * \
         np.sqrt(((lon1 - lon2) * np.cos(0.5 * (lat1 + lat2)))
                 ** 2 + (lat1 - lat2)**2)
@@ -53,6 +62,14 @@ def geodetic_distance(lon1, lat1, lon2, lat2):
 
 
 def get_dist_to_type(center_lon, center_lat, grid, regions):
+    """ Description
+
+    Args:
+        center_lon (float):
+        center_lat (float):
+        grid:
+        regions (dict):
+    """
     gd = grid.getGeoDict()
     #
     # The distance calculation wants everything in radians

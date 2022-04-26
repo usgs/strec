@@ -14,16 +14,17 @@ class SubductionZone(object):
         """Check where in the subduction zone this event is (crust, interface, slab).
 
         Args:
-        slab_params (dict): Dictionary containing depth, strike and dip of 
+        slab_params (dict): Dictionary containing depth, strike and dip of
             the slab interface at a given location.
-        tensor_params (dict): Dictionary containing the moment tensor 
+        tensor_params (dict): Dictionary containing the moment tensor
             parameters (six components, and nodal plane values.)
         depth (float): Event depth.
         config (dict): dict containing keys:
             DSTRIKE_INTERF - Threshold strike angle difference.
             DDIP_INTERF - Threshold dip angle difference.
             DLAMBDA - Threshold rake angle difference.
-            DDEPTH_INTERF - Acceptable depth range around interface depth for interface event.
+            DDEPTH_INTERF - Acceptable depth range around interface depth for interface
+            event.
             DDEPTH_INTRA - intra-slab depth range.
         """
         self._dstrike = float(config['CONSTANTS']['dstrike_interf'])
@@ -78,8 +79,10 @@ class SubductionZone(object):
         c4 = a <= b4
 
         m2a = (c1 and c2) or (c3 and c4)
-        m2b = ((self._tensor_params['P']['plunge'] >= self._slab_params['dip'] - self._ddip) and
-               (self._tensor_params['P']['plunge'] <= self._slab_params['dip'] + self._ddip))
+        m2b = ((self._tensor_params['P']['plunge'] >= self._slab_params['dip'] -
+                self._ddip) and
+               (self._tensor_params['P']['plunge'] <= self._slab_params['dip'] +
+               self._ddip))
         m2c1 = ((self._tensor_params['NP1']['rake'] > 90 - self._dlambda) and
                 (self._tensor_params['NP1']['rake'] < 90 + self._dlambda))
         m2c2 = ((self._tensor_params['NP2']['rake'] > 90 - self._dlambda) and

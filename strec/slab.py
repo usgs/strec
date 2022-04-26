@@ -1,22 +1,11 @@
 # stdlib imports
 import os.path
-import json
 import glob
-from functools import partial
 
 # third party imports
 from mapio.gmt import GMTGrid
 import numpy as np
 import pandas as pd
-import fiona
-from shapely.ops import transform
-from shapely.geometry import shape as tshape
-from shapely.geometry.point import Point
-from shapely.geometry.polygon import Polygon
-from obspy.geodetics import gps2dist_azimuth
-
-# local imports
-from .proj import geo_to_utm, utm_to_geo
 
 MAX_INTERFACE_DEPTH = 70  # depth beyond which any tectonic regime has to be intraslab
 
@@ -45,13 +34,13 @@ class GridSlab(object):
         # there may be a table of maximum slab depths in the same directory
         # as all of the slab grids.  Read it into a local dictionary if found,
         # otherwise we'll use the MAX_INTERFACE_DEPTH constant found above.
-        fpath,fname = os.path.split(self._depth_file)
-        table_file_name = os.path.join(fpath,'maximum_interface_depths.csv')
+        fpath, fname = os.path.split(self._depth_file)
+        table_file_name = os.path.join(fpath, 'maximum_interface_depths.csv')
         if os.path.isfile(table_file_name):
             self._slab_table = pd.read_csv(table_file_name)
         else:
             self._slab_table = None
-            
+
     def contains(self, lat, lon):
         """Check to see if input coordinates are contained inside Slab model.
 
@@ -97,8 +86,6 @@ class GridSlab(object):
         depth_grid = GMTGrid.load(self._depth_file)
         # slab grids are negative depth
         depth = -1 * depth_grid.getValue(lat, lon)
-
-        
         dip_grid = GMTGrid.load(self._dip_file)
         strike_grid = GMTGrid.load(self._strike_file)
         if self._error_file is not None:
@@ -111,7 +98,6 @@ class GridSlab(object):
         dip = dip_grid.getValue(lat, lon)
         if dip < 0:
             dip = dip * -1
-        
         strike = strike_grid.getValue(lat, lon)
         strike = strike
         if strike < 0:
@@ -140,15 +126,13 @@ class SlabCollection(object):
     def __init__(self, datafolder):
         """Object representing a collection of SlabX.Y grids.
 
-        This object can be queried with a latitude/longitude to see if that point is within a subduction
-        slab - if so, the slab information is returned.
+        This object can be queried with a latitude/longitude to see if that point is
+        within a subduction slab - if so, the slab information is returned.
 
         Args:
             datafolder (str): String path where grid files and GeoJSON file reside.
         """
         self._depth_files = glob.glob(os.path.join(datafolder, '*_dep*.grd'))
-        homedir = os.path.dirname(os.path.abspath(
-            __file__))  # where is this script?
 
     def getSlabInfo(self, lat, lon, depth):
         """Query the entire set of slab models and return a SlabInfo object, or None.
