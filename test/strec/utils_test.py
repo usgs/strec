@@ -71,27 +71,6 @@ def test_get_config():
     finally:
         restore_config(tempfile)
 
-    if sys.platform == 'darwin':
-        cfile = None
-        try:
-            tempfile = move_config()
-
-            # create a config file
-            config = ConfigParser()
-            config['CONSTANTS'] = CONSTANTS
-            cfile = get_config_file_name()
-            with open(cfile, 'w') as configfile:
-                config.write(configfile)
-
-            # this will raise an exception
-            config = get_config()
-
-        except KeyError as ke:
-            assert 1 == 1
-        finally:
-            if cfile is not None:
-                os.remove(cfile)
-
 
 def test_read_input_file():
     df = pd.DataFrame({'lat': [1, 2, 3],
