@@ -47,13 +47,14 @@ GEOGRAPHIC_FIELD = 'REG_NAME'
 
 
 def geodetic_distance(lon1, lat1, lon2, lat2):
-    """ Description
+    """ Determines the distance between the two points set based on Longitude and
+        Latitude
 
     Args:
-        lon1 (float):
-        lat1 (float):
-        lon2 (float):
-        lat2 (float):
+        lon1 (float): Longitude value of first point
+        lat1 (float): Latitude value of first point
+        lon2 (float): Longitude value of second point
+        lat2 (float): Latitude value of second point
     """
     distance = 6371.0 * \
         np.sqrt(((lon1 - lon2) * np.cos(0.5 * (lat1 + lat2)))
@@ -62,13 +63,13 @@ def geodetic_distance(lon1, lat1, lon2, lat2):
 
 
 def get_dist_to_type(center_lon, center_lat, grid, regions):
-    """ Description
+    """ Determine distance from point to a feature described in a dictionary object
 
     Args:
-        center_lon (float):
-        center_lat (float):
-        grid:
-        regions (dict):
+        center_lon (float): Longitude of event's epicenter
+        center_lat (float): Latitude of event's epicenter
+        grid (Mapi.io): Grid of desired feature
+        regions (dict): Dictionary contining values for the feature description
     """
     gd = grid.getGeoDict()
     #
