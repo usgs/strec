@@ -85,7 +85,8 @@ def getCompositeCMT(lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbo
     rows = []
     searchwidth = box
     while len(rows) < nmin and searchwidth < maxbox:
-        qstr = 'SELECT mrr,mtt,mpp,mrt,mrp,mtp FROM earthquake WHERE lat >= %.4f AND lat <= %.4f AND lon >= %.4f AND lon <= %.4f'
+        qstr = ("SELECT mrr,mtt,mpp,mrt,mrp,mtp FROM earthquake WHERE lat >= %.4f AND "
+                "lat <= %.4f AND lon >= %.4f AND lon <= %.4f")
         query = qstr % (lat - searchwidth, lat + searchwidth,
                         lon - searchwidth, lon + searchwidth)
         cursor.execute(query)
