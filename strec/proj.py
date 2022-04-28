@@ -53,8 +53,9 @@ def utm_to_geo(pshape, utmstr):
     """Project a shapely geometry from UTM to geographic coordinates.
 
     Args:
-        shape (shapely.geometry.shape): Shapely geometry (Polygon, LineString, etc.) in UTM.
-        utmstr (str): Proj4 projection string with appropriate UTM projection. 
+        shape (shapely.geometry.shape): Shapely geometry (Polygon, LineString, etc.) in
+        UTM.
+        utmstr (str): Proj4 projection string with appropriate UTM projection.
     Returns:
         shapely.geometry.shape: Input shapely geometry projected to UTM.
     """

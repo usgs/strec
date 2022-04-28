@@ -34,8 +34,10 @@ def get_config():
     """Get configuration information as a dictionary.
 
     'folder' should always be set to point to library data path.
-    'dbfile' should be set to point to library data path unless specified in ~/.strec/strec.ini
-    'slabfolder' should be set to point to library data path unless specified in ~/.strec/strec.ini
+    'dbfile' should be set to point to library data path unless specified in
+    ~/.strec/strec.ini
+    'slabfolder' should be set to point to library data path unless specified in
+    ~/.strec/strec.ini
 
     Returns:
         config (dict): Dictionary containing fields:
@@ -55,12 +57,11 @@ def get_config():
 
     homedir = os.path.dirname(os.path.abspath(__file__))  # where is this file?
     datafolder = os.path.abspath(os.path.join(homedir, 'data'))
-    #automatically set path to json files, etc.
+    # automatically set path to json files, etc.
     config['DATA']['folder'] = datafolder
     if 'dbfile' not in config['DATA']:
         dbfile = 'moment_tensors.db'
-        config['DATA']['dbfile'] = os.path.join(datafolder,dbfile)
-        
+        config['DATA']['dbfile'] = os.path.join(datafolder, dbfile)
     if 'slabfolder' not in config['DATA']:
         slabfolder = os.path.join(datafolder, 'slabs')
         config['DATA']['slabfolder'] = slabfolder
@@ -78,7 +79,7 @@ def read_input_file(input_file):
 
     Args:
         input_file (str): Path to CSV/Excel file containing lat,lon,depth columns
-            and optionally moment tensor columns 
+            and optionally moment tensor columns
             ('mrr','mtt','mpp','mrt','mrp','mtp').
     Returns:
         DataFrame: Pandas dataframe containing contents of input file.
@@ -99,8 +100,8 @@ def read_input_file(input_file):
         df = None
 
     # convert any long integer moment component columns to floating point, because
-    # otherwise pandas will complain later when re-writing row to a dataframe.  Doesn't make
-    # sense, but seems necessary.
+    # otherwise pandas will complain later when re-writing row to a dataframe.  Doesn't
+    # make sense, but seems necessary.
     for column in df:
         comps = ['mrr', 'mtt', 'mpp', 'mrt', 'mrp', 'mtp']
         for comp in comps:
@@ -109,6 +110,7 @@ def read_input_file(input_file):
                 df[column] = col
 
     return (df, msg)
+
 
 def convert_float(val):
     try:

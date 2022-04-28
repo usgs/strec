@@ -2,11 +2,6 @@
 
 # stdlib imports
 import sqlite3
-import datetime
-import sys
-import obspy.imaging.beachball
-import math
-from optparse import OptionParser
 
 # third party imports
 import numpy as np
@@ -21,9 +16,10 @@ def getComposite(rows):
     Args:
         rows (list):List of tuples containing (mrr,mtt,mpp,mrt,mrp,mtp)
     Returns:
-        tuple: Tuple of (composite moment tensor dictionary (see fill_tensor_from_angles),
-               (scalar) similarity index,
-               Number of rows used to calculate composite)
+        tuple: Tuple of (composite moment tensor dictionary
+                (see fill_tensor_from_angles),
+                (scalar) similarity index,
+                Number of rows used to calculate composite)
     """
     components = np.array(rows)
     components[:, 4] *= -1
@@ -44,7 +40,6 @@ def getComposite(rows):
     m23 = comp_av[4]
     m12 = comp_av[5]
 
-    vm33 = comp_sq_mean_sq[0]
     vm11 = comp_sq_mean_sq[1]
     vm22 = comp_sq_mean_sq[2]
     vm13 = comp_sq_mean_sq[3]
@@ -66,7 +61,8 @@ def getComposite(rows):
     return (tensor, similarity, nrows)
 
 
-def getCompositeCMT(lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbox=1.0, dbox=0.09):
+def getCompositeCMT(lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbox=1.0,
+                    dbox=0.09):
     """Search a database for list of moment tensors, calculate composite moment tensor.
     Args:
         lat (float): Latitude (dd).
@@ -79,9 +75,10 @@ def getCompositeCMT(lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbo
         maxbox (float): Maximum size of search box (dd)
         dbox (float): Increment of search box (dd)
     Returns:
-        tuple: Tuple of (composite moment tensor dictionary (see fill_tensor_from_angles),
-               (scalar) similarity index,
-               Number of rows used to calculate composite)
+        tuple: Tuple of (composite moment tensor dictionary
+                (see fill_tensor_from_angles),
+                (scalar) similarity index,
+                Number of rows used to calculate composite)
     """
     conn = sqlite3.connect(dbfile)
     cursor = conn.cursor()

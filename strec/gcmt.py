@@ -1,6 +1,5 @@
 import io
 from urllib import request, parse
-from urllib.error import URLError
 import gzip
 import tempfile
 import os.path
@@ -62,12 +61,13 @@ def fetch_gcmt():
 def get_historical_gcmt():
     """Retrieve the Jan 1976 - Dec 2010 GCMT catalog.
 
-    NDK format explained: 
+    NDK format explained:
 
     http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/allorder.ndk_explained
 
     Returns:
-        io.StringIO: StringIO object containing the NDK file for the 1976-2010 period.
+        io.StringIO:
+            StringIO object containing the NDK file for the 1976-2010 period.
     """
     zipfile = None
     try:
@@ -94,10 +94,13 @@ def get_monthly_gcmt(year, month):
     """Download one month's worth of GCMT data into a StringIO object.
 
     Args:
-        year (int): Integer year.
-        month (int): Integer month (1-12).
+        year (int):
+            Integer year.
+        month (int):
+            Integer month (1-12).
     Returns:
-        io.StringIO: StringIO object containing NDK file for given month/year.
+        io.StringIO:
+            StringIO object containing NDK file for given month/year.
     """
     strmonth = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
                 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'][month - 1]
@@ -118,8 +121,9 @@ def ndk_to_dataframe(ndkfile):
     """Turn an ndk file-like object or filename into a pandas dataframe.
 
     Args:
-        ndkfile (str or file-like object): String file name or file-like object 
-            containing NDK-formatted earthquake data.
+        ndkfile (str or file-like object):
+            String file name or file-like object containing NDK-formatted earthquake
+            data.
     Returns:
         pandas DataFrame containing columns:
             - time (YYYY-MM-DD HH:MM:SS for CSV)

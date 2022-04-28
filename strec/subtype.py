@@ -82,31 +82,39 @@ class SubductionSelector(object):
             Pandas Series object with indices:
                 - TectonicRegion : (Subduction,Active,Stable,Volcanic)
                 - TectonicDomain : SZ (generic)
-                - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
+                - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL
+                [Unknown])
                 - TensorType : (actual, composite)
                 - KaganAngle : Angle between moment tensor and slab interface.
                 - DistanceToStable : Distance in km from the nearest stable polygon.
                 - DistanceToActive : Distance in km from the nearest active polygon.
-                - DistanceToSubduction : Distance in km from the nearest subduction polygon.
+                - DistanceToSubduction : Distance in km from the nearest subduction
+                polygon.
                 - DistanceToVolcanic : Distance in km from the nearest volcanic polygon.
                 - Oceanic : Boolean indicating whether we are in an oceanic region.
                 - DistanceToOceanic : Distance in km to nearest oceanic polygon.
                 - DistanceToContinental : Distance in km to nearest continental polygon.
                 - TectonicSubtype : (SZInter,ACR,SZIntra)
-                - RegionContainsBackArc : Boolean indicating whether event is in a back-arc subduction region.
-                - DomainDepthBand1 : Bottom of generic depth level for shallowest subduction type.
+                - RegionContainsBackArc : Boolean indicating whether event is in a
+                back-arc subduction region.
+                - DomainDepthBand1 : Bottom of generic depth level for shallowest
+                subduction type.
                 - DomainDepthBand1Subtype : Shallowest subduction type.
-                - DomainDepthBand2 : Bottom of generic depth level for middle subduction type.
+                - DomainDepthBand2 : Bottom of generic depth level for middle
+                subduction type.
                 - DomainDepthBand2Subtype : Middle subduction type.
-                - DomainDepthBand3 : Bottom of generic depth level for deepest subduction type.
+                - DomainDepthBand3 : Bottom of generic depth level for deepest
+                subduction type.
                 - DomainDepthBand3Subtype : Deepest subduction type
                 - SlabModelRegion : Subduction region.
                 - SlabModelType : (grid,trench)
                 - SlabModelDepth : Depth to slab interface at epicenter.
                 - SlabModelDip : Dip of slab at epicenter.
                 - SlabModelStrike : Strike of slab at epicenter.
-                - IsLikeInterface : Boolean indicating whether moment tensor strike is similar to interface.
-                - IsNearInterface : Boolean indicating whether depth is close to interface.
+                - IsLikeInterface : Boolean indicating whether moment tensor strike is
+                similar to interface.
+                - IsNearInterface : Boolean indicating whether depth is close to
+                interface.
                 - IsInSlab : Boolean indicating whether depth is within the slab.
         Raises:
             AttributeError if the eventid is not found in ComCat.
@@ -287,19 +295,24 @@ class SubductionSelector(object):
                   - dip
                   - rake
                 (optional) - type Moment Tensor type.
-                (optional) - source Moment Tensor source (regional network, name of study, etc.)
+                (optional) - source Moment Tensor source (regional network, name of
+                study, etc.)
         Returns:
             Pandas Series object with indices:
                 - TectonicRegion : (Subduction,Active,Stable,Volcanic)
-                - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL [Unknown])
+                - FocalMechanism : (RS [Reverse],SS [Strike-Slip], NM [Normal], ALL
+                [Unknown])
                 - TensorType : (actual, composite)
-                - TensorSource : String indicating the source of the moment tensor information.
+                - TensorSource : String indicating the source of the moment tensor
+                information.
                 - KaganAngle : Angle between moment tensor and slab interface.
-                - CompositeVariability : A measure of the uncertainty in the composite moment tensor.
+                - CompositeVariability : A measure of the uncertainty in the composite
+                moment tensor.
                 - NComposite : Number of events used to create composite moment tensor.
                 - DistanceToStable : Distance in km from the nearest stable polygon.
                 - DistanceToActive : Distance in km from the nearest active polygon.
-                - DistanceToSubduction : Distance in km from the nearest subduction polygon.
+                - DistanceToSubduction : Distance in km from the nearest subduction
+                polygon.
                 - DistanceToVolcanic : Distance in km from the nearest volcanic polygon.
                 - Oceanic : Boolean indicating whether we are in an oceanic region.
                 - DistanceToOceanic : Distance in km to nearest oceanic polygon.
@@ -341,11 +354,13 @@ class SubductionSelector(object):
 
                 # Minimum number of events required to get composite mechanism
                 nmin = int(config['CONSTANTS']['minno_comp'])
-                tensor_params, similarity, nevents = getCompositeCMT(lat, lon, depth, dbfile,
+                tensor_params, similarity, nevents = getCompositeCMT(lat, lon,
+                                                                     depth, dbfile,
                                                                      box=minboxcomp,
                                                                      depthbox=depthboxcomp,
                                                                      maxbox=maxboxcomp,
-                                                                     dbox=dboxcomp, nmin=nmin)
+                                                                     dbox=dboxcomp,
+                                                                     nmin=nmin)
                 if tensor_params is not None:
                     tensor_type = 'composite'
                     tensor_source = 'composite'
@@ -374,11 +389,13 @@ class SubductionSelector(object):
                 results['SlabModelDepthUncertainty'] = slab_params['depth_uncertainty']
                 results['SlabModelDip'] = slab_params['dip']
                 results['SlabModelStrike'] = slab_params['strike']
-                results['SlabModelMaximumDepth'] = slab_params['maximum_interface_depth']
+                results['SlabModelMaximumDepth'] = slab_params['maximum_interface_depth'
+                                                               ]
                 if tensor_params is not None:
                     np1 = tensor_params['NP1']
-                    kagan = get_kagan_angle(slab_params['strike'], slab_params['dip'], SLAB_RAKE,
-                                            np1['strike'], np1['dip'], np1['rake'])
+                    kagan = get_kagan_angle(slab_params['strike'], slab_params['dip'],
+                                            SLAB_RAKE, np1['strike'], np1['dip'],
+                                            np1['rake'])
                     results['KaganAngle'] = kagan
                 else:
                     results['KaganAngle'] = np.nan
@@ -393,14 +410,13 @@ class SubductionSelector(object):
             results['KaganAngle'] = np.nan
 
         results = results.reindex(index=['TectonicRegion', 'FocalMechanism',
-                                         'TensorType', 'TensorSource', 'KaganAngle', 'CompositeVariability',
-                                         'NComposite', 'DistanceToStable',
-                                         'DistanceToActive', 'DistanceToSubduction',
-                                         'DistanceToVolcanic', 'Oceanic',
-                                         'DistanceToOceanic', 'DistanceToContinental',
-                                         'SlabModelRegion',
-                                         'SlabModelDepth',
-                                         'SlabModelDepthUncertainty',
+                                         'TensorType', 'TensorSource', 'KaganAngle',
+                                         'CompositeVariability', 'NComposite',
+                                         'DistanceToStable', 'DistanceToActive',
+                                         'DistanceToSubduction', 'DistanceToVolcanic',
+                                         'Oceanic', 'DistanceToOceanic',
+                                         'DistanceToContinental', 'SlabModelRegion',
+                                         'SlabModelDepth', 'SlabModelDepthUncertainty',
                                          'SlabModelDip', 'SlabModelStrike',
                                          'SlabModelMaximumDepth'])
 
@@ -415,9 +431,11 @@ def get_focal_mechanism(tensor_params):
             - 'T' Dictionary of 'azimuth' and 'plunge' values for the T axis.
             - 'N' Dictionary of 'azimuth' and 'plunge' values for the N(B) axis.
             - 'P' Dictionary of 'azimuth' and 'plunge' values for the P axis.
-            - 'NP1' Dictionary of angles for the first nodal plane ('strike','dip','rake')
-            - 'NP2' Dictionary of angles for the second nodal plane ('strike','dip','rake')
-        config (dict): dictionary containing: 
+            - 'NP1' Dictionary of angles for the first nodal plane ('strike','dip',
+            'rake')
+            - 'NP2' Dictionary of angles for the second nodal plane ('strike','dip',
+            'rake')
+        config (dict): dictionary containing:
             - constants:
             - tplunge_rs
             - bplunge_ds

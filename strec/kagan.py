@@ -9,9 +9,10 @@ from .tensor import plane_to_tensor
 
 
 def get_kagan_angle(strike1, dip1, rake1, strike2, dip2, rake2):
-    """Calculate the Kagan angle between two moment tensors defined by strike,dip and rake.
+    """Calculate the Kagan angle between two moment tensors defined by strike,dip and
+    rake.
 
-    Kagan, Y. "Simplified algorithms for calculating double-couple rotation", 
+    Kagan, Y. "Simplified algorithms for calculating double-couple rotation",
     Geophysical Journal, Volume 171, Issue 1, pp. 411-418.
 
     Args:
@@ -65,10 +66,9 @@ def calc_eigenvec(TM):
     """  Calculate eigenvector of moment tensor matrix.
 
 
-    Args:  
+    Args:
         ndarray: moment tensor matrix (see plane_to_tensor)
-
-    Returns:    
+    Returns:
         ndarray: eigenvector representation of input moment tensor.
     """
 
@@ -83,11 +83,11 @@ def calc_eigenvec(TM):
 def ang_from_R1R2(R1, R2):
     """Calculate angle between two eigenvectors.
 
-    Args:  
+    Args:
         R1 (ndarray): eigenvector of first moment tensor
         R2 (ndarray): eigenvector of second moment tensor
-    Returns:    
-        float: angle between eigenvectors 
+    Returns:
+        float: angle between eigenvectors
     """
 
     return np.arccos((np.trace(np.dot(R1, R2.transpose())) - 1.) / 2.)
