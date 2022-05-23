@@ -14,7 +14,8 @@ def getComposite(rows):
     """Calculate composite moment tensor.
 
     Args:
-        rows (list):List of tuples containing (mrr,mtt,mpp,mrt,mrp,mtp)
+        rows (list):
+            List of tuples containing (mrr,mtt,mpp,mrt,mrp,mtp)
     Returns:
         tuple: Tuple of (composite moment tensor dictionary
                 (see fill_tensor_from_angles),
@@ -45,8 +46,7 @@ def getComposite(rows):
     vm13 = comp_sq_mean_sq[3]
     vm23 = comp_sq_mean_sq[4]
     vm12 = comp_sq_mean_sq[5]
-    varforbenius = vm11 * vm11 + vm12 * vm12 + \
-        vm13 * vm13 + vm22 * vm22 + vm23 * vm23
+    varforbenius = vm11 * vm11 + vm12 * vm12 + vm13 * vm13 + vm22 * vm22 + vm23 * vm23
     forbenius = m11 * m11 + m12 * m12 + m13 * m13 + m22 * m22 + m23 * m23
     similarity = np.sqrt(varforbenius) / forbenius
 
@@ -61,8 +61,9 @@ def getComposite(rows):
     return (tensor, similarity, nrows)
 
 
-def getCompositeCMT(lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbox=1.0,
-                    dbox=0.09):
+def getCompositeCMT(
+    lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbox=1.0, dbox=0.09
+):
     """Search a database for list of moment tensors, calculate composite moment tensor.
     Args:
         lat (float): Latitude (dd).
@@ -85,10 +86,16 @@ def getCompositeCMT(lat, lon, depth, dbfile, box=0.1, depthbox=10, nmin=3, maxbo
     rows = []
     searchwidth = box
     while len(rows) < nmin and searchwidth < maxbox:
-        qstr = ("SELECT mrr,mtt,mpp,mrt,mrp,mtp FROM earthquake WHERE lat >= %.4f AND "
-                "lat <= %.4f AND lon >= %.4f AND lon <= %.4f")
-        query = qstr % (lat - searchwidth, lat + searchwidth,
-                        lon - searchwidth, lon + searchwidth)
+        qstr = (
+            "SELECT mrr,mtt,mpp,mrt,mrp,mtp FROM earthquake WHERE lat >= %.4f AND "
+            "lat <= %.4f AND lon >= %.4f AND lon <= %.4f"
+        )
+        query = qstr % (
+            lat - searchwidth,
+            lat + searchwidth,
+            lon - searchwidth,
+            lon + searchwidth,
+        )
         cursor.execute(query)
         rows = cursor.fetchall()
         if len(rows) >= nmin:
