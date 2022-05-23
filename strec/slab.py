@@ -14,8 +14,7 @@ DEFAULT_DEPTH_ERROR = 10
 
 
 class GridSlab(object):
-    """Represents USGS Slab model grids for a given subduction zone.
-    """
+    """Represents USGS Slab model grids for a given subduction zone."""
 
     def __init__(self, depth_file, dip_file, strike_file, error_file):
         """Construct GridSlab object from input files.
@@ -35,7 +34,7 @@ class GridSlab(object):
         # as all of the slab grids.  Read it into a local dictionary if found,
         # otherwise we'll use the MAX_INTERFACE_DEPTH constant found above.
         fpath, fname = os.path.split(self._depth_file)
-        table_file_name = os.path.join(fpath, 'maximum_interface_depths.csv')
+        table_file_name = os.path.join(fpath, "maximum_interface_depths.csv")
         if os.path.isfile(table_file_name):
             self._slab_table = pd.read_csv(table_file_name)
         else:
@@ -70,7 +69,7 @@ class GridSlab(object):
             lat (float):  Hypocentral latitude in decimal degrees.
             lon (float):  Hypocentral longitude in decimal degrees.
         Returns:
-            dict: Dictionary containing keys:
+            slabinfo (dict): Dictionary containing keys:
                 - region Three letter Slab model region code.
                 - strike Slab model strike angle.
                 - dip Slab model dip angle.
@@ -81,7 +80,7 @@ class GridSlab(object):
         if not self.contains(lat, lon):
             return slabinfo
         fpath, fname = os.path.split(self._depth_file)
-        parts = fname.split('_')
+        parts = fname.split("_")
         region = parts[0]
         depth_grid = GMTGrid.load(self._depth_file)
         # slab grids are negative depth
@@ -109,16 +108,18 @@ class GridSlab(object):
         # get the maximum interface depth from table (if present)
         if self._slab_table is not None:
             df = self._slab_table
-            max_int_depth = df[df['zone'] == region].iloc[0]['interface_max_depth']
+            max_int_depth = df[df["zone"] == region].iloc[0]["interface_max_depth"]
         else:
             max_int_depth = MAX_INTERFACE_DEPTH
 
-        slabinfo = {'region': region,
-                    'strike': strike,
-                    'dip': dip,
-                    'depth': depth,
-                    'maximum_interface_depth' : max_int_depth,
-                    'depth_uncertainty': error}
+        slabinfo = {
+            "region": region,
+            "strike": strike,
+            "dip": dip,
+            "depth": depth,
+            "maximum_interface_depth": max_int_depth,
+            "depth_uncertainty": error,
+        }
         return slabinfo
 
 
@@ -132,7 +133,7 @@ class SlabCollection(object):
         Args:
             datafolder (str): String path where grid files and GeoJSON file reside.
         """
-        self._depth_files = glob.glob(os.path.join(datafolder, '*_dep*.grd'))
+        self._depth_files = glob.glob(os.path.join(datafolder, "*_dep*.grd"))
 
     def getSlabInfo(self, lat, lon, depth):
         """Query the entire set of slab models and return a SlabInfo object, or None.
@@ -143,7 +144,7 @@ class SlabCollection(object):
             depth (float): Hypocentral depth in km.
 
         Returns:
-            dict: Dictionary containing keys:
+            slabinfo (dict): Dictionary containing keys:
                 - region Three letter Slab model region code.
                 - strike Slab model strike angle.
                 - dip Slab model dip angle.
@@ -155,9 +156,9 @@ class SlabCollection(object):
         slabinfo = {}
         # loop over all slab regions, return keep all slabs found
         for depth_file in self._depth_files:
-            dip_file = depth_file.replace('dep', 'dip')
-            strike_file = depth_file.replace('dep', 'str')
-            error_file = depth_file.replace('dep', 'unc')
+            dip_file = depth_file.replace("dep", "dip")
+            strike_file = depth_file.replace("dep", "str")
+            error_file = depth_file.replace("dep", "unc")
             if not os.path.isfile(error_file):
                 error_file = None
             gslab = GridSlab(depth_file, dip_file, strike_file, error_file)
@@ -165,11 +166,11 @@ class SlabCollection(object):
             if not len(tslabinfo):
                 continue
             else:
-                depth = tslabinfo['depth']
+                depth = tslabinfo["depth"]
                 if depth < deep_depth:
                     slabinfo = tslabinfo.copy()
                     deep_depth = depth
-                elif np.isnan(depth) and 'depth' not in slabinfo:
+                elif np.isnan(depth) and "depth" not in slabinfo:
                     slabinfo = tslabinfo.copy()
 
         return slabinfo
