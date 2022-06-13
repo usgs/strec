@@ -9,14 +9,17 @@ import logging
 import pandas as pd
 import numpy as np
 from libcomcat.search import get_event_by_id
+from impactutils.rupture.tensor import (
+    fill_tensor_from_angles,
+    fill_tensor_from_components,
+)
 
 
 # local imports
 from strec.subtype import SubductionSelector
-from strec.tensor import fill_tensor_from_angles, fill_tensor_from_components
 from strec.utils import read_input_file, get_input_columns, render_row
 
-LOGGER = 'subselect'
+LOGGER = "subselect"
 
 
 def check_moment_row(row):
@@ -24,24 +27,24 @@ def check_moment_row(row):
     hasAngles = True
     hasComponents = True
 
-    if not row.str.contains('mrr', case=False).any():
+    if not row.str.contains("mrr", case=False).any():
         hasComponents = False
-    if not row.str.contains('mpp', case=False).any():
+    if not row.str.contains("mpp", case=False).any():
         hasComponents = False
-    if not row.str.contains('mtt', case=False).any():
+    if not row.str.contains("mtt", case=False).any():
         hasComponents = False
-    if not row.str.contains('mrt', case=False).any():
+    if not row.str.contains("mrt", case=False).any():
         hasComponents = False
-    if not row.str.contains('mrp', case=False).any():
+    if not row.str.contains("mrp", case=False).any():
         hasComponents = False
-    if not row.str.contains('mtp', case=False).any():
+    if not row.str.contains("mtp", case=False).any():
         hasComponents = False
 
-    if not row.str.contains('strike', case=False).any():
+    if not row.str.contains("strike", case=False).any():
         hasAngles = False
-    if not row.str.contains('dip', case=False).any():
+    if not row.str.contains("dip", case=False).any():
         hasAngles = False
-    if not row.str.contains('rake', case=False).any():
+    if not row.str.contains("rake", case=False).any():
         hasAngles = False
 
     return hasAngles or hasComponents
@@ -51,12 +54,12 @@ def get_moment_columns(row):
     # row is a pandas series object
     isreal = row.notnull()
 
-    has_mtt = row.index.str.contains('mtt', case=False)
-    has_mpp = row.index.str.contains('mpp', case=False)
-    has_mrr = row.index.str.contains('mrr', case=False)
-    has_mrt = row.index.str.contains('mrt', case=False)
-    has_mrp = row.index.str.contains('mrp', case=False)
-    has_mtp = row.index.str.contains('mtp', case=False)
+    has_mtt = row.index.str.contains("mtt", case=False)
+    has_mpp = row.index.str.contains("mpp", case=False)
+    has_mrr = row.index.str.contains("mrr", case=False)
+    has_mrt = row.index.str.contains("mrt", case=False)
+    has_mrp = row.index.str.contains("mrp", case=False)
+    has_mtp = row.index.str.contains("mtp", case=False)
 
     mtts = row[isreal & has_mtt]
     mpps = row[isreal & has_mpp]
@@ -80,13 +83,12 @@ def get_moment_columns(row):
         mtp = float(mtps[0])
 
     if not np.isnan(mtt):
-        tensor_params = fill_tensor_from_components(
-            mrr, mtt, mpp, mrt, mrp, mtp)
+        tensor_params = fill_tensor_from_components(mrr, mtt, mpp, mrt, mrp, mtp)
         return tensor_params
 
-    has_strike = row.index.str.contains('strike', case=False)
-    has_dip = row.index.str.contains('dip', case=False)
-    has_rake = row.index.str.contains('rake', case=False)
+    has_strike = row.index.str.contains("strike", case=False)
+    has_dip = row.index.str.contains("dip", case=False)
+    has_rake = row.index.str.contains("rake", case=False)
     strikes = row[isreal & has_strike]
     dips = row[isreal & has_dip]
     rakes = row[isreal & has_rake]
@@ -107,17 +109,18 @@ def get_moment_columns(row):
 
 
 def get_logger():
-    '''Return a logger instance.
+    """Return a logger instance.
 
     Returns:
         logger: Logger instance.
-    '''
+    """
     loglevel = logging.DEBUG
     handler = logging.StreamHandler()
     handler.setLevel(loglevel)
-    logformat = (r'%(levelname)s -- %(asctime)s -- '
-                 r'%(module)s. %(funcName)s -- %(message)s')
-    datefmt = '%Y-%m-%d %H:%M:%S'
+    logformat = (
+        r"%(levelname)s -- %(asctime)s -- " r"%(module)s. %(funcName)s -- %(message)s"
+    )
+    datefmt = "%Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(logformat, datefmt=datefmt)
     logger = logging.getLogger(LOGGER)
     logger.setLevel(loglevel)
@@ -136,19 +139,23 @@ def main(args, pparser):
     hasinput = args.input_file is not None
     hasid = args.event_id is not None
     if (haseq + hasinput + hasid) >= 2:
-        print('Must choose no more than one of -e or -i or -d options.')
+        print("Must choose no more than one of -e or -i or -d options.")
         sys.exit(1)
 
     if (hasid or hasinput) and args.moment_info:
-        msg = ('Supplying moment tensor information is '
-               'unnecessary/inapplicable when also supplying '
-               'event ID or input file.')
+        msg = (
+            "Supplying moment tensor information is "
+            "unnecessary/inapplicable when also supplying "
+            "event ID or input file."
+        )
         print(msg)
         sys.exit(1)
 
-    if not args.output_file and args.output_format == 'excel':
-        msg = ('You cannot specify an output format of excel '
-               'without also providing an output file name.')
+    if not args.output_file and args.output_format == "excel":
+        msg = (
+            "You cannot specify an output format of excel "
+            "without also providing an output file name."
+        )
         print(msg)
         sys.exit(1)
 
@@ -157,14 +164,16 @@ def main(args, pparser):
     if args.input_file:
         df, msg = read_input_file(args.input_file)
         if df is None:
-            msg = ('Input file %s does not appear to be either a CSV '
-                   'or Excel file.  Returning.' % args.input_file)
+            msg = (
+                "Input file %s does not appear to be either a CSV "
+                "or Excel file.  Returning." % args.input_file
+            )
             print(msg)
             sys.exit(1)
 
     if args.eqinfo:
         lat, lon, depth = args.eqinfo
-        d = {'lat': [lat], 'lon': [lon], 'depth': [depth]}
+        d = {"lat": [lat], "lon": [lon], "depth": [depth]}
         df = pd.DataFrame(d)
 
     if args.moment_info:
@@ -176,13 +185,12 @@ def main(args, pparser):
             detail = get_event_by_id(args.event_id)
             lat, lon, depth = detail.latitude, detail.longitude, detail.depth
         except Exception as e:
-            msg = ('Could not get event information on event '
-                   'ID %s due to error "%s".')
+            msg = "Could not get event information on event " 'ID %s due to error "%s".'
             tpl = (args.event_id, str(e))
             print(msg % tpl)
             sys.exit(1)
 
-        d = {'lat': [lat], 'lon': [lon], 'depth': [depth]}
+        d = {"lat": [lat], "lon": [lon], "depth": [depth]}
         df = pd.DataFrame(d)
 
     results = []
@@ -191,20 +199,19 @@ def main(args, pparser):
     ic = 0
     inc = min(100, np.power(10, np.floor(np.log10(len(df))) - 1))
     if args.verbose:
-        logger.info(
-            'Getting event info - reporting every %i events.\n' % inc)
+        logger.info("Getting event info - reporting every %i events.\n" % inc)
     for idx, row in df.iterrows():
         if ic % inc == 0 and args.verbose:
-            msg = 'Getting detailed information for %i of %i events.\n'
+            msg = "Getting detailed information for %i of %i events.\n"
             logger.info(msg % (ic, len(df)))
         lat, lon, depth = get_input_columns(row)
         if not tensor_params and has_tensor:
             tensor_params = get_moment_columns(row)
         else:
             tensor_params = None
-        result = selector.getSubductionType(lat, lon, depth,
-                                            eventid=args.event_id,
-                                            tensor_params=tensor_params)
+        result = selector.getSubductionType(
+            lat, lon, depth, eventid=args.event_id, tensor_params=tensor_params
+        )
         tensor_params = None
         row = row.append(result)
         ###############################################
@@ -223,13 +230,13 @@ def main(args, pparser):
         ic += 1
     if args.output_file:
         df = pd.DataFrame(results)
-        if args.output_format == 'csv':
+        if args.output_format == "csv":
             df.to_csv(args.output_file, index=False)
         else:
             df.to_excel(args.output_file, index=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     usage = """Determine various seismo-tectonic parameters for given input coordinates.
     GMREG - Ground Motion Regionalization Tool
 
@@ -269,7 +276,7 @@ Usage:
 %(prog)s -d official20041226005853450_30
 
 """
-    input_file_help = '''Input files can be CSV or Excel format (%(prog)s  will attempt to determine
+    input_file_help = """Input files can be CSV or Excel format (%(prog)s  will attempt to determine
 format automatically) and MUST include the following columns (case doesn't matter):
 
 Lat Numeric latitude of input earthquake.
@@ -277,39 +284,57 @@ Lon Numeric longitude of input earthquake.
 Depth Numeric depth of earthquake (km).
 
 Any other columns present in the input will be copied to the output.
-'''
+"""
 
-    output_format_help = '''The output format must be one of the following:
+    output_format_help = """The output format must be one of the following:
 
 pretty - A human readable pretty-printed representation of the output.
 csv - A CSV output, one earthquake per line.
 excel - Microsoft Excel format, one earthquake per line.
 json - A JSON representation of the output
 
-'''
+"""
 
     parser = argparse.ArgumentParser(
-        description=usage, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("-e", "--eqinfo", nargs=3,
-                        metavar=('LAT', 'LON', 'DEPTH'), type=float,
-                        help='lat,lon, depth of earthquake')
-    parser.add_argument("-i", "--input-file", dest="input_file",
-                        metavar='INPUTFILE',
-                        help=input_file_help)
-    parser.add_argument("-f", "--output-format", dest="output_format",
-                        metavar='OUTPUT FORMAT',
-                        choices=('pretty', 'csv', 'excel', 'json'),
-                        default='pretty',
-                        help=output_format_help)
-    parser.add_argument("-o", "--output-file",
-                        dest="output_file", help='Output filename')
-    parser.add_argument("-m", "--moment-info", nargs=4,
-                        metavar=('STRIKE', 'DIP', 'RAKE', 'MAG'), type=float,
-                        help='strike,dip,rake,magnitude of earthquake')
-    parser.add_argument("-d", "--event-id", dest="event_id",
-                        help='ComCat Event ID')
-    parser.add_argument("-v", "--verbose",
-                        help='Verbose output', action='store_true')
+        description=usage, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "-e",
+        "--eqinfo",
+        nargs=3,
+        metavar=("LAT", "LON", "DEPTH"),
+        type=float,
+        help="lat,lon, depth of earthquake",
+    )
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        dest="input_file",
+        metavar="INPUTFILE",
+        help=input_file_help,
+    )
+    parser.add_argument(
+        "-f",
+        "--output-format",
+        dest="output_format",
+        metavar="OUTPUT FORMAT",
+        choices=("pretty", "csv", "excel", "json"),
+        default="pretty",
+        help=output_format_help,
+    )
+    parser.add_argument(
+        "-o", "--output-file", dest="output_file", help="Output filename"
+    )
+    parser.add_argument(
+        "-m",
+        "--moment-info",
+        nargs=4,
+        metavar=("STRIKE", "DIP", "RAKE", "MAG"),
+        type=float,
+        help="strike,dip,rake,magnitude of earthquake",
+    )
+    parser.add_argument("-d", "--event-id", dest="event_id", help="ComCat Event ID")
+    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     pargs = parser.parse_args()
 
     main(pargs, parser)

@@ -5,7 +5,7 @@ import numpy as np
 from copy import deepcopy
 
 # local imports
-from .tensor import plane_to_tensor
+from impactutils.rupture.tensor import plane_to_tensor
 
 
 def get_kagan_angle(strike1, dip1, rake1, strike2, dip2, rake2):
@@ -59,11 +59,11 @@ def calc_theta(vm1, vm2):
         x = ang_from_R1R2(V1, V3)
         if x < th:
             th = x
-    return th * 180. / np.pi
+    return th * 180.0 / np.pi
 
 
 def calc_eigenvec(TM):
-    """  Calculate eigenvector of moment tensor matrix.
+    """Calculate eigenvector of moment tensor matrix.
 
 
     Args:
@@ -89,6 +89,6 @@ def ang_from_R1R2(R1, R2):
     Returns:
         float: angle between eigenvectors
     """
-    
-#    return np.arccos((np.trace(np.dot(R1, R2.transpose())) - 1.) / 2.)
-    return np.arccos(np.clip((np.trace(np.dot(R1, R2.transpose())) - 1.) / 2.,-1,1))
+
+    #    return np.arccos((np.trace(np.dot(R1, R2.transpose())) - 1.) / 2.)
+    return np.arccos(np.clip((np.trace(np.dot(R1, R2.transpose())) - 1.0) / 2.0, -1, 1))

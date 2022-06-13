@@ -7,7 +7,7 @@ import sqlite3
 import numpy as np
 
 # local imports
-from .tensor import fill_tensor_from_components
+from impactutils.rupture.tensor import fill_tensor_from_components
 
 
 def getComposite(rows):
