@@ -23,25 +23,24 @@ echo $PATH
 VENV=strecenv
 
 package_list=(
-    "affine"
-    "fiona"
-    "gdal"
-    "h5py"
+    "fiona>=1.8.20"
+    "gdal=3.4.2"
+    "h5py>=2.10.0"
     "impactutils"
     "ipython"
     "jupyter"
     "libcomcat"
     "mapio"
-    "numpy"
-    "obspy"
+    "numpy>=1.21"
+    "obspy>=1.2.2"
     "openpyxl"
-    "pandas"
-    "pyproj"
-    "pytest"
+    "pandas>=1.2.5"
+    "pyproj>=2.6.1"
+    "pytest>=6.2.4"
     "pytest-cov"
-    "python>=3.6"
+    "python>=3.8"
     "rasterio"
-    "shapely"
+    "shapely>=1.7.1"
     "xlrd"
     "xlwt"
 )
@@ -117,12 +116,22 @@ echo ". $HOME/miniconda/etc/profile.d/conda.sh" >> $prof
 echo "Activate base virtual environment"
 conda activate base
 
+# check to see if mamba is installed in the base environment
+if ! command -v mamba &> /dev/null
+then
+    echo "Installing mamba into base environment..."
+    conda install mamba -n base -c conda-forge -y
+    echo "Done installing mamba."
+else
+    echo "Mamba already installed."
+fi
+
 # Remove existing shakemap environment if it exists
 conda remove -y -n $VENV --all
 
 # Create a conda virtual environment
 echo "Creating the $VENV virtual environment:"
-conda create -y -n $VENV -c conda-forge --channel-priority ${package_list[*]}
+mamba create -y -n $VENV -c conda-forge --channel-priority ${package_list[*]}
 
 # Bail out at this point if the conda create command fails.
 # Clean up zip files we've downloaded
